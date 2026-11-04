@@ -23,7 +23,7 @@ const MENU_SPEED = 8;
 const rnd = (a, b) => a + Math.random() * (b - a);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const speedAt = (d) => 10.5 + 15.5 * (1 - Math.exp(-d / 1900));
+const speedAt = (d) => 13 + 17 * (1 - Math.exp(-d / 1500));
 const diffAt = (d) => 1 - Math.exp(-d / 2300);
 const ease = (t) => t * t * (3 - 2 * t);
 
@@ -644,6 +644,7 @@ class Game {
     this.speedFactor = Math.min(1, this.speedFactor + dt * 0.35);
     const target = speedAt(this.dist) * this.speedFactor;
     this.speed += (target - this.speed) * Math.min(1, dt * 3);
+    this.sound.setTempo(this.speed);
     this.dist += this.speed * dt;
     this.score += this.speed * dt;
     this.generate();

@@ -3,14 +3,31 @@
 
 const midi = (m) => 440 * Math.pow(2, (m - 69) / 12);
 
-// 32 eighth-note steps per phrase. 0 = rest.
-const PHRASE_A = [62, 63, 66, 67, 69, 0, 67, 66, 67, 69, 70, 69, 67, 66, 63, 0,
-  62, 63, 66, 67, 69, 70, 72, 70, 69, 67, 66, 63, 62, 0, 0, 0];
-const PHRASE_B = [69, 0, 70, 69, 67, 0, 66, 67, 69, 70, 72, 74, 72, 70, 69, 0,
-  67, 69, 70, 69, 67, 66, 63, 66, 67, 66, 63, 62, 62, 0, 0, 0];
-const SONG = [PHRASE_A, PHRASE_A, PHRASE_B, PHRASE_A];
-const BASS = [38, 0, 0, 0, 38, 0, 45, 0];
-const DRUM = ['D', 'T', '', 'T', 'D', '', 'T', '']; // maqsum rhythm
+// Music: the opening theme of Hava Nagila (traditional), then a klezmer freylekh in the same
+// Freygish mode (E F G# A B C D). Clarinet lead, accordion off-beat chords, oom-pah bass, drum.
+// Each bar is 8 eighth-note steps; notes are [midi, length in steps].
+const HAVA = [
+  [[71, 2], [71, 2], [74, 1], [72, 1], [71, 2]],
+  [[74, 2], [74, 2], [77, 1], [76, 1], [74, 2]],
+  [[76, 2], [76, 2], [80, 1], [77, 1], [76, 2]],
+  [[74, 2], [72, 1], [72, 1], [71, 4]],
+];
+const HAVA_END = [[74, 1], [72, 1], [71, 1], [69, 1], [68, 4]];
+const FREYLEKH = [
+  [[64, 1], [65, 1], [68, 1], [69, 1], [71, 2], [69, 1], [68, 1]],
+  [[69, 1], [71, 1], [72, 1], [71, 1], [69, 2], [68, 2]],
+  [[68, 1], [69, 1], [71, 1], [72, 1], [74, 1], [72, 1], [71, 1], [69, 1]],
+  [[68, 2], [65, 1], [68, 1], [64, 4]],
+];
+const FREYLEKH_HI = FREYLEKH.map((bar) => bar.map(([m, l]) => [m + 12, l]));
+const BARS = [
+  ...HAVA.map((n, i) => ({ n, c: ['E', 'Dm', 'E', 'E'][i] })),
+  ...[...HAVA.slice(0, 3), HAVA_END].map((n, i) => ({ n, c: ['E', 'Dm', 'E', 'E'][i] })),
+  ...FREYLEKH.map((n, i) => ({ n, c: ['E', 'Am', 'Dm', 'E'][i] })),
+  ...FREYLEKH_HI.map((n, i) => ({ n, c: ['E', 'Am', 'Dm', 'E'][i] })),
+];
+const CHORDS = { E: [64, 68, 71], Dm: [62, 65, 69], Am: [57, 60, 64] };
+const ROOT = { E: [40, 47], Dm: [38, 45], Am: [45, 40] };
 
 export class Sound {
   constructor() {
@@ -162,29 +179,54 @@ export class Sound {
     if (this.timer) { clearInterval(this.timer); this.timer = null; }
   }
 
+  setTempo(gameSpeed) { this.bpm = Math.min(172, 132 + Math.max(0, gameSpeed - 13) * 2.4); }
+
   schedule() {
     const c = this.ctx; if (!c) return;
-    const stepDur = 60 / 116 / 2;
     while (this.nextTime < c.currentTime + 0.14) {
+      const stepDur = 60 / (this.bpm || 132) / 2;
       const s = this.step;
-      const phrase = SONG[Math.floor(s / 32) % SONG.length];
+      const bar = BARS[Math.floor(s / 8) % BARS.length];
+      const pos = s % 8;
       const at = this.nextTime - c.currentTime;
       if (!this.muted) {
-        const m = phrase[s % 32];
-        if (m) this.pluck(midi(m), at, 0.09);
-        const b = BASS[s % 8];
-        if (b) this.pluck(midi(b), at, 0.13, 0.5);
-        const d = DRUM[s % 8];
-        if (d === 'D') this.tone(95, 0.22, { vol: 0.32, to: 48, at, dest: this.music });
-        else if (d === 'T') this.hiss(0.06, { vol: 0.13, type: 'highpass', freq: 3500, at, dest: this.music });
+        let t = 0;
+        for (const [m, len] of bar.n) {
+          if (t === pos) this.clarinet(midi(m), at, len * stepDur);
+          t += len;
+        }
+        if (pos % 2 === 1) for (const m of CHORDS[bar.c]) this.pluck(midi(m), at, 0.035, 0.16, 'accordion');
+        if (pos === 0 || pos === 4) this.pluck(midi(ROOT[bar.c][pos === 0 ? 0 : 1]), at, 0.15, 0.3);
+        if (pos === 0 || pos === 4) this.tone(95, 0.2, { vol: 0.3, to: 48, at, dest: this.music });
+        else if (pos === 2 || pos === 6) this.hiss(0.07, { vol: 0.12, type: 'highpass', freq: 3000, at, dest: this.music });
       }
       this.step++;
       this.nextTime += stepDur;
     }
   }
 
+  // Klezmer clarinet: a reedy square wave that scoops up into the note, with vibrato.
+  clarinet(freq, at, dur) {
+    const c = this.ctx; const t = c.currentTime + Math.max(0, at);
+    const o = c.createOscillator(); o.type = 'square';
+    o.frequency.setValueAtTime(freq * 0.97, t);
+    o.frequency.exponentialRampToValueAtTime(freq, t + 0.05);
+    const lfo = c.createOscillator(); lfo.frequency.value = 5.5;
+    const lg = c.createGain(); lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(freq * 0.012, t + Math.min(0.25, dur));
+    lfo.connect(lg); lg.connect(o.frequency);
+    const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2200; f.Q.value = 2;
+    const g = c.createGain();
+    const end = t + Math.max(0.08, dur * 0.92);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.07, t + 0.025);
+    g.gain.setValueAtTime(0.06, end - 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, end + 0.06);
+    o.connect(f); f.connect(g); g.connect(this.music);
+    o.start(t); lfo.start(t); o.stop(end + 0.1); lfo.stop(end + 0.1);
+  }
+
   // Oud-like pluck: two detuned oscillators, fast attack, filtered decay.
-  pluck(freq, at, vol, len = 0.32) {
+  pluck(freq, at, vol, len = 0.32, kind = 'oud') {
     const c = this.ctx; const t = c.currentTime + Math.max(0, at);
     const g = c.createGain();
     const f = c.createBiquadFilter(); f.type = 'lowpass';
@@ -192,7 +234,7 @@ export class Sound {
     g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(vol, t + 0.006);
     g.gain.exponentialRampToValueAtTime(0.0001, t + len);
-    [['sawtooth', 1], ['triangle', 1.004]].forEach(([type, k]) => {
+    (kind === 'accordion' ? [['sawtooth', 1], ['sawtooth', 1.006], ['square', 0.997]] : [['sawtooth', 1], ['triangle', 1.004]]).forEach(([type, k]) => {
       const o = c.createOscillator(); o.type = type; o.frequency.value = freq * k;
       o.connect(f); o.start(t); o.stop(t + len + 0.05);
     });
