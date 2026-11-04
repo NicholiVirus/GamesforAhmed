@@ -116,6 +116,15 @@ export class Sound {
         [69, 67, 66, 63, 62].forEach((m, i) => this.tone(midi(m), 0.32, { type: 'triangle', vol: 0.11, at: i * 0.16 }));
         break;
       case 'click': this.tone(880, 0.05, { type: 'triangle', vol: 0.06 }); break;
+      case 'tick': this.tone(660, 0.12, { type: 'triangle', vol: 0.12 }); break;
+      case 'go': this.tone(988, 0.25, { type: 'triangle', vol: 0.14 }); this.tone(1319, 0.3, { type: 'sine', vol: 0.07, at: 0.04 }); break;
+      case 'whistle':
+        [[740, 0], [880, 0], [740, 0.42], [880, 0.42]].forEach(([f, at]) =>
+          this.tone(f, 0.36, { type: 'triangle', vol: 0.07, at, attack: 0.04, filter: 2400 }));
+        break;
+      case 'chug': this.hiss(0.09, { vol: 0.16 + n * 0.05, type: 'bandpass', freq: 500 + n * 300, to: 260 }); break;
+      case 'whoosh': this.hiss(1.1, { vol: 0.32, type: 'bandpass', freq: 400, to: 3200 }); break;
+      case 'brake': this.tone(2200, 0.7, { type: 'sine', vol: 0.03, to: 1500 }); this.hiss(0.8, { vol: 0.2, type: 'highpass', freq: 3000, to: 1200 }); break;
       case 'thunder': this.hiss(1.4, { vol: 0.32, freq: 380, to: 60 }); this.hiss(0.25, { vol: 0.18, freq: 1600, to: 300, at: 0.05 }); break;
       case 'banner': this.tone(midi(62), 0.6, { type: 'triangle', vol: 0.08 }); this.tone(midi(69), 0.6, { type: 'triangle', vol: 0.06, at: 0.12 }); break;
       default: break;

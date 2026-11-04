@@ -149,7 +149,12 @@ export class World {
     this.props = [];
     this.pools = {};
     this.propCursor = -20;
+    this.propBack = -20;
     this.propMinX = 0;
+    this.propsOn = true;
+    this.scrollPos = 0;
+    this.lastDist = 0;
+    this.scrollCap = Infinity;
     this.weights = [1, 0, 0, 0];
   }
 
@@ -192,24 +197,24 @@ export class World {
 
   buildGround() {
     const aniso = Math.min(8, this.renderer.capabilities.getMaxAnisotropy());
-    this.sandTex = sandTexture(); this.sandTex.repeat.set(40, 30); this.sandTex.anisotropy = aniso;
+    this.sandTex = sandTexture(); this.sandTex.repeat.set(40, 380 / 11); this.sandTex.anisotropy = aniso;
     this.groundMat = new THREE.MeshLambertMaterial({ map: this.sandTex });
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 330), this.groundMat);
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 380), this.groundMat);
     ground.rotation.x = -Math.PI / 2;
-    ground.position.set(0, -0.02, -150);
+    ground.position.set(0, -0.02, -125);
     this.scene.add(ground);
 
-    this.roadTex = roadTexture(); this.roadTex.repeat.set(1, 50); this.roadTex.anisotropy = aniso;
+    this.roadTex = roadTexture(); this.roadTex.repeat.set(1, 380 / 6.6); this.roadTex.anisotropy = aniso;
     this.roadMat = new THREE.MeshLambertMaterial({ map: this.roadTex });
-    const road = new THREE.Mesh(new THREE.PlaneGeometry(6.6, 330), this.roadMat);
+    const road = new THREE.Mesh(new THREE.PlaneGeometry(6.6, 380), this.roadMat);
     road.rotation.x = -Math.PI / 2;
-    road.position.set(0, 0, -150);
+    road.position.set(0, 0, -125);
     this.scene.add(road);
 
     this.curbMat = new THREE.MeshLambertMaterial({ color: 0x8a7a66 });
     for (const sx of [-1, 1]) {
-      const curb = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.14, 330), this.curbMat);
-      curb.position.set(sx * 3.4, 0.07, -150);
+      const curb = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.14, 380), this.curbMat);
+      curb.position.set(sx * 3.4, 0.07, -125);
       this.scene.add(curb);
     }
   }
@@ -327,6 +332,7 @@ export class World {
     }
     this.camera.aspect = aspect;
     this.camera.fov = vfov;
+    this.baseFov = vfov;
     this.camera.updateProjectionMatrix();
     this.camDist = dist;
   }
@@ -375,12 +381,16 @@ export class World {
     this.sky.position.copy(this.camera.position);
     this.stars.position.copy(this.camera.position);
 
-    this.sandTex.offset.y = (dist / 11) % 1;
-    this.roadTex.offset.y = (dist / 6.6) % 1;
+    // Ground scrolls with distance, but its speed can be capped so very fast travel does not strobe.
+    const dd = dist - this.lastDist;
+    this.lastDist = dist;
+    this.scrollPos += Math.abs(dd) > 400 ? 0 : Math.max(-this.scrollCap * dt, Math.min(this.scrollCap * dt, dd));
+    this.sandTex.offset.y = (((this.scrollPos / 11) % 1) + 1) % 1;
+    this.roadTex.offset.y = (((this.scrollPos / 6.6) % 1) + 1) % 1;
 
     this.updateSea(dist, dt);
     this.updateBackdrops(dt, dist);
-    this.updateProps(dist);
+    this.updateProps(dist, speed < 0);
     this.updateParticles(dt, speed);
   }
 
@@ -451,35 +461,44 @@ export class World {
 
   release(key, m) { m.visible = false; (this.pools[key] || (this.pools[key] = [])).push(m); }
 
-  updateProps(dist) {
-    while (this.propCursor < dist + 175) {
-      const wz = this.propCursor;
-      const biome = BIOMES[biomeIndexAt(wz)];
-      for (const side of [-1, 1]) {
-        if (Math.random() < 0.18) continue;
-        const def = pickScenery(biome.id);
-        const { geo, key } = sceneryGeo(def);
-        const m = this.getMesh(key, geo);
-        m.position.set(side * Math.max(this.propMinX, rnd(def.x[0], def.x[1])), 0, 0);
-        m.rotation.set(0, def.face ? (side < 0 ? Math.PI / 2 : -Math.PI / 2) + rnd(-0.25, 0.25) : rnd(0, Math.PI * 2), 0);
-        m.scale.setScalar(def.s ? rnd(def.s[0], def.s[1]) : rnd(0.85, 1.15));
-        this.props.push({ m, key, wz: wz + rnd(-2, 2), sway: def.sway, ph: rnd(0, 6) });
+  spawnPropRow(wz) {
+    const biome = BIOMES[biomeIndexAt(wz)];
+    for (const side of [-1, 1]) {
+      if (Math.random() < 0.18) continue;
+      const def = pickScenery(biome.id);
+      const { geo, key } = sceneryGeo(def);
+      const m = this.getMesh(key, geo);
+      m.position.set(side * Math.max(this.propMinX, rnd(def.x[0], def.x[1])), 0, 0);
+      m.rotation.set(0, def.face ? (side < 0 ? Math.PI / 2 : -Math.PI / 2) + rnd(-0.25, 0.25) : rnd(0, Math.PI * 2), 0);
+      m.scale.setScalar(def.s ? rnd(def.s[0], def.s[1]) : rnd(0.85, 1.15));
+      this.props.push({ m, key, wz: wz + rnd(-2, 2), sway: def.sway, ph: rnd(0, 6) });
+    }
+  }
+
+  // Props are spawned ahead while running forward, and behind while the train carries you back.
+  updateProps(dist, reverse = false) {
+    if (this.propsOn) {
+      while (this.propCursor < dist + 175) { this.spawnPropRow(this.propCursor); this.propCursor += rnd(4.5, 9); }
+      if (reverse) {
+        while (this.propBack > dist - 34) { this.propBack -= rnd(4.5, 9); this.spawnPropRow(this.propBack); }
       }
-      this.propCursor += rnd(4.5, 9);
     }
     for (let i = this.props.length - 1; i >= 0; i--) {
       const p = this.props[i];
       const z = dist - p.wz;
-      if (z > 22) { this.release(p.key, p.m); this.props.splice(i, 1); continue; }
+      if (z > 40 || z < -230) { this.release(p.key, p.m); this.props.splice(i, 1); continue; }
       p.m.position.z = z;
       if (p.sway) p.m.rotation.z = Math.sin(this.time * 2 + p.ph) * 0.14;
     }
+    if (reverse) this.propCursor = Math.min(this.propCursor, dist + 230);
+    else this.propBack = Math.max(this.propBack, dist - 40);
   }
 
-  resetProps(dist) {
+  resetProps(dist, behind = 20) {
     for (const p of this.props) this.release(p.key, p.m);
     this.props.length = 0;
-    this.propCursor = dist - 20;
+    this.propCursor = dist - behind;
+    this.propBack = dist - behind;
   }
 
   // Particles: { pool, i, x,y,z, vx,vy,vz, life, max, r,g,b, grav }

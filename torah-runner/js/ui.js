@@ -9,7 +9,8 @@ export class UI {
   constructor(h) {
     this.h = h;
     this.last = {};
-    this.screens = ['screen-loading', 'screen-start', 'screen-pause', 'screen-over', 'screen-scroll', 'screen-error'];
+    this.screens = ['screen-loading', 'screen-start', 'screen-pause', 'screen-over', 'screen-scroll', 'screen-error', 'screen-word'];
+    this.wordArmed = false;
     const on = (id, fn) => { const el = $(id); if (el) el.addEventListener('click', (e) => { e.stopPropagation(); fn(); }); };
     on('btn-play', () => h.play());
     on('btn-again', () => h.play());
@@ -23,6 +24,8 @@ export class UI {
     on('btn-scroll', () => h.openScroll());
     on('btn-scroll-2', () => h.openScroll());
     on('btn-scroll-close', () => h.closeScroll());
+    on('btn-word-continue', () => h.continueWord());
+    on('btn-skip', () => h.skipRide());
     this.icons = {};
   }
 
@@ -40,7 +43,7 @@ export class UI {
     }
   }
 
-  hud(v) { $('hud').hidden = !v; if (!v) { $('banner').hidden = true; $('toast').hidden = true; } }
+  hud(v) { $('hud').hidden = !v; if (!v) $('banner').hidden = true; }
 
   setHearts(n, max) {
     const key = n + '/' + max;
@@ -121,15 +124,42 @@ export class UI {
     this.bannerT = setTimeout(() => { el.hidden = true; }, 3400);
   }
 
-  wordToast(word) {
-    const el = $('toast');
-    el.innerHTML = `<span class="toast-kicker">Word complete</span>
-      <span class="toast-he" lang="he" dir="rtl">${word.he}</span>
-      <span class="toast-tr">${word.tr} <em>means</em> ${word.en.toLowerCase()}</span>`;
+  // The word card freezes the run. Its button only works after a short delay,
+  // so a swipe that was already under way cannot dismiss it by accident.
+  wordCard(word, learned, total) {
+    $('wc-he').textContent = word.he;
+    $('wc-tr').innerHTML = `<b>${word.tr}</b> means <b>${word.en.toLowerCase()}</b>`;
+    $('wc-letters').innerHTML = [...word.he].map((ch) =>
+      `<li><span lang="he">${ch}</span><small>${LETTER_NAMES[ch] || ''}</small></li>`).join('');
+    $('wc-count').textContent = `${learned} of ${total} words on your scroll`;
+    const btn = $('btn-word-continue');
+    this.wordArmed = false;
+    btn.disabled = true;
+    this.show('screen-word');
+    clearTimeout(this.armT);
+    this.armT = setTimeout(() => {
+      this.wordArmed = true;
+      btn.disabled = false;
+      btn.focus({ preventScroll: true });
+    }, 750);
+  }
+
+  countdown(n) {
+    const el = $('countdown');
+    if (n === null) { el.hidden = true; return; }
+    el.textContent = String(n);
     el.hidden = false;
-    el.classList.remove('in'); void el.offsetWidth; el.classList.add('in');
-    clearTimeout(this.toastT);
-    this.toastT = setTimeout(() => { el.hidden = true; }, 2600);
+    el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  }
+
+  ride(on) {
+    $('ride-banner').hidden = !on;
+    $('btn-skip').hidden = !on;
+  }
+
+  flash() {
+    const el = $('flash');
+    el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
   }
 
   popup(text, cls = '') {

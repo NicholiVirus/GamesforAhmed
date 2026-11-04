@@ -136,25 +136,51 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .banner-name small { font-family: var(--font-ui); font-size: 1rem; font-weight: 700; opacity: 0.85; }
 .banner-line { font-size: 1rem; font-weight: 500; margin-top: 4px; }
 
-#toast {
-  position: absolute; z-index: 7; left: 50%; top: 50%; translate: -50% -50%; pointer-events: none;
-  display: grid; justify-items: center; gap: 2px; padding: 14px 30px 16px; min-width: 220px; text-align: center;
-  background: linear-gradient(180deg, #f3e5c2, var(--klaf)); color: var(--ink); border-radius: 4px;
-  box-shadow: 0 16px 40px rgba(10, 8, 30, 0.5);
-}
-#toast::before, #toast::after {
-  content: ""; position: absolute; top: -10px; bottom: -10px; width: 16px; border-radius: 8px;
-  background: linear-gradient(90deg, #4a2810, var(--wood-light) 50%, var(--wood));
-}
-#toast::before { left: -18px; } #toast::after { right: -18px; }
-#toast.in { animation: toastIn 2.6s ease forwards; }
-@keyframes toastIn { 0% { opacity: 0; transform: scale(0.7); } 10% { opacity: 1; transform: scale(1.06); } 16%, 82% { opacity: 1; transform: none; } 100% { opacity: 0; transform: scale(0.96); } }
-.toast-kicker { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tekhelet); }
-.toast-he { font-family: var(--font-display); font-size: 3.4rem; line-height: 1.1; }
-.toast-tr { font-size: 1rem; font-weight: 700; }
-.toast-tr em { font-style: normal; font-weight: 400; color: var(--ink-soft); }
-
 #fly-layer { position: absolute; inset: 0; z-index: 8; pointer-events: none; }
+
+/* ---------- word card (pauses the run) */
+.screen.word-screen { background: radial-gradient(110% 80% at 50% 50%, rgba(18, 15, 43, 0.15), rgba(18, 15, 43, 0.6)); }
+#screen-word .scroll { width: min(420px, calc(100% - 48px)); text-align: center; animation: cardIn 0.45s cubic-bezier(0.2, 1.4, 0.4, 1); }
+@keyframes cardIn { from { opacity: 0; transform: scale(0.8) translateY(16px); } to { opacity: 1; transform: none; } }
+.wc-kicker { margin: 0; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--tekhelet); }
+.wc-he { margin: 4px 0 0; font-family: var(--font-display); font-size: clamp(3.2rem, 14vw, 4.6rem); line-height: 1.05; color: var(--ink); }
+.wc-tr { margin: 2px 0 0; font-size: 1.1rem; color: var(--ink-soft); }
+.wc-tr b { color: var(--ink); }
+.wc-letters { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.wc-letters li {
+  display: grid; justify-items: center; min-width: 52px; padding: 5px 6px 4px; border-radius: 6px;
+  background: rgba(255, 252, 240, 0.55); box-shadow: inset 0 0 0 1px rgba(77, 63, 44, 0.2);
+}
+.wc-letters span { font-family: var(--font-display); font-size: 1.5rem; line-height: 1.1; color: var(--ink); }
+.wc-letters small { font-size: 0.68rem; font-weight: 700; color: var(--gold-deep); white-space: nowrap; }
+.wc-count { margin: 12px 0 0; font-size: 0.85rem; color: var(--ink-soft); }
+#screen-word .actions { justify-content: center; }
+#btn-word-continue { min-width: 220px; justify-content: center; font-size: 1.2rem; padding-block: 16px; }
+#btn-word-continue:disabled { opacity: 0.55; cursor: default; }
+
+/* ---------- countdown, train ride, flash */
+#countdown {
+  position: absolute; z-index: 9; left: 50%; top: 44%; translate: -50% -50%; pointer-events: none;
+  font-family: var(--font-display); font-size: clamp(5rem, 22vw, 9rem); line-height: 1; color: var(--gold);
+  text-shadow: 0 0 24px rgba(255, 205, 90, 0.75), 0 4px 0 var(--gold-deep), 0 10px 26px rgba(10, 8, 30, 0.6);
+}
+#countdown.pop { animation: cdPop 0.6s ease-out forwards; }
+@keyframes cdPop { 0% { opacity: 0; transform: scale(1.8); } 25% { opacity: 1; transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: scale(0.85); } }
+#ride-banner {
+  position: absolute; z-index: 6; left: 50%; translate: -50% 0; top: calc(16px + env(safe-area-inset-top, 0px));
+  display: grid; justify-items: center; text-align: center; pointer-events: none; width: max-content; max-width: 92vw;
+  text-shadow: 0 2px 12px rgba(10, 8, 30, 0.75);
+}
+#ride-banner b { font-family: var(--font-display); font-weight: 400; font-size: clamp(1.8rem, 6vw, 2.8rem); line-height: 1.05; color: #fff; }
+#ride-banner span { font-size: 1rem; font-weight: 700; color: var(--gold); }
+#btn-skip {
+  position: absolute; z-index: 9; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  background: var(--hud-bg); color: var(--hud-fg); box-shadow: inset 0 0 0 1.5px rgba(255, 248, 231, 0.45);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); padding: 12px 18px;
+}
+#flash { position: absolute; inset: 0; z-index: 8; pointer-events: none; background: #fffbe8; opacity: 0; }
+#flash.on { animation: flash 0.45s ease-out; }
+@keyframes flash { 0% { opacity: 0.85; } 100% { opacity: 0; } }
 .fly {
   position: fixed; width: 48px; height: 48px; margin: -24px 0 0 -24px; display: grid; place-items: center;
   font-family: var(--font-display); font-size: 36px; color: var(--gold); text-shadow: 0 0 12px rgba(255, 210, 100, 0.95), 0 2px 4px rgba(0,0,0,.4);
@@ -299,11 +325,14 @@ kbd {
   .best { margin-top: 8px; }
   .banner-name { font-size: 2rem; }
   #banner { top: calc(30% + env(safe-area-inset-top, 0px)); }
-  .toast-he { font-size: 2.6rem; }
+  .wc-he { font-size: 3rem; }
+  .wc-letters { margin-top: 8px; }
+  #screen-word .scroll { padding-block: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .slot.next, #hearts.pulse, #hearts.shake { animation: none; }
-  #banner.in, #toast.in { animation-duration: 0.01s; animation-delay: 0s; opacity: 1; }
+  #banner.in { animation-duration: 0.01s; animation-delay: 0s; opacity: 1; }
+  #countdown.pop, #flash.on { animation: none; }
   .fly { transition: none; }
 }
 </style>
@@ -336,9 +365,14 @@ kbd {
   </div>
 
   <div id="banner" hidden role="status"></div>
-  <div id="toast" hidden role="status"></div>
   <div id="hint" hidden></div>
   <div id="fly-layer" aria-hidden="true"></div>
+  <div id="flash" aria-hidden="true"></div>
+  <div id="countdown" hidden aria-live="assertive"></div>
+  <div id="ride-banner" hidden role="status"><b>All aboard!</b><span>Riding back to Egypt</span></div>
+  <button id="btn-skip" class="btn" type="button" hidden>Skip ride
+    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3v10l6-5zM8 3v10l6-5z"/></svg>
+  </button>
 
   <section id="screen-loading" class="screen center">
     <div class="scroll panel-small">
@@ -454,6 +488,22 @@ kbd {
       <ul class="scroll-list" id="scroll-list"></ul>
       <div class="actions">
         <button id="btn-scroll-close" class="btn btn-primary" type="button" data-autofocus>Close</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-word" class="screen center word-screen" hidden aria-labelledby="wc-kicker">
+    <div class="scroll">
+      <span class="roller l" aria-hidden="true"></span><span class="roller r" aria-hidden="true"></span>
+      <p class="wc-kicker" id="wc-kicker">Word complete</p>
+      <p class="wc-he" id="wc-he" lang="he" dir="rtl"></p>
+      <p class="wc-tr" id="wc-tr"></p>
+      <ul class="wc-letters" id="wc-letters" dir="rtl"></ul>
+      <p class="wc-count" id="wc-count"></p>
+      <div class="actions">
+        <button id="btn-word-continue" class="btn btn-primary" type="button">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>Keep running
+        </button>
       </div>
     </div>
   </section>

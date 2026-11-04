@@ -8,6 +8,7 @@ import {
   buildPlayer, buildShield, OBSTACLES, BIOME_OBSTACLES, obstacleGeo, flatMat,
   letterTexture, powerTexture, mannaTex, shadowTex,
 } from './models.js';
+import { TrainRide } from './train.js';
 
 const LANES = [-2, 0, 2];
 const GRAV = 30;
@@ -61,6 +62,7 @@ class Game {
     this.ui = new UI({
       play: () => this.start(), pause: () => this.pause(), resume: () => this.resume(), home: () => this.home(),
       sound: () => this.toggleSound(), openScroll: () => this.openScroll(), closeScroll: () => this.closeScroll(),
+      continueWord: () => this.continueWord(), skipRide: () => this.skipRide(),
     });
 
     // Player, shield and a soft shadow.
@@ -109,6 +111,9 @@ class Game {
     this.flashT = 0;
     this.touch = null;
     this.state = 'menu';
+    this.camLook = new THREE.Vector3(0, 1, -10);
+    this.ride = new TrainRide(this);
+    this.ridePose = 'stand';
     this.resetRun();
     this.world.onThunder = () => this.sound.play('thunder');
     this.bindInput();
@@ -131,7 +136,7 @@ class Game {
   }
 
   // ------------------------------------------------------------ run state
-  resetRun() {
+  resetRun(keepProps = false) {
     for (const o of this.obs) this.releaseObs(o);
     this.obs.length = 0;
     for (const m of this.manna) this.freeManna(m);
@@ -166,7 +171,7 @@ class Game {
     this.deadT = 0;
     this.dustT = 0;
     this.world.propMinX = this.state === 'menu' ? 9.5 : 0;
-    this.world.resetProps(0);
+    if (!keepProps) this.world.resetProps(0);
     this.ring.visible = false;
     this.p.body.rotation.set(0, 0, 0);
     this.p.body.position.set(0, 0, 0);
@@ -193,6 +198,13 @@ class Game {
         else if (k === 'p' || k === 'P' || k === 'Escape') this.pause();
       } else if (this.state === 'paused') {
         if (k === 'p' || k === 'P' || k === 'Escape') { e.preventDefault(); this.resume(); }
+      } else if (this.state === 'word') {
+        if (['ArrowUp', ' ', 'Spacebar', 'Enter'].includes(k)) e.preventDefault();
+        if (!e.repeat && ['Enter', ' ', 'Spacebar', 'ArrowUp'].includes(k)) this.continueWord();
+      } else if (this.state === 'ride') {
+        if ([' ', 'Spacebar', 'Enter', 'Escape'].includes(k)) { e.preventDefault(); if (!e.repeat) this.skipRide(); }
+      } else if (this.state === 'countdown') {
+        if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', 'Spacebar'].includes(k)) e.preventDefault();
       } else if (this.state === 'menu' || this.state === 'over') {
         const onButton = e.target && e.target.closest && e.target.closest('button, summary, a');
         if ((k === 'Enter' || k === ' ') && !onButton && document.getElementById('screen-scroll').hidden) {
@@ -259,6 +271,7 @@ class Game {
 
   // ------------------------------------------------------------ screens
   start() {
+    if ((this.state === 'over' || this.state === 'paused') && this.dist > 25) { this.startRide(); return; }
     this.sound.init();
     this.sound.play('click');
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
@@ -267,11 +280,7 @@ class Game {
     this.resetRun();
     if (!fromMenu) this.camBlend = 1;
     this.ui.show(null);
-    this.ui.hud(true);
-    this.ui.last = {};
-    this.ui.setHearts(this.hearts, MAX_HEARTS);
-    this.ui.setWord(this.word, this.letterIdx);
-    this.ui.setPowers([]);
+    this.refreshHud();
     if (!this.muted) this.sound.startMusic();
     const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
     if (!this.store.played || this.store.runs < 3) {
@@ -294,10 +303,109 @@ class Game {
   resume() {
     if (this.state !== 'paused') return;
     this.sound.init();
-    this.state = 'playing';
     this.ui.show(null);
     if (!this.muted) this.sound.startMusic();
-    this.last = performance.now();
+    // Count back in, and clear anything you would hit before you could react.
+    this.startCountdown(() => this.clearAhead(Math.max(6, this.speed * 0.5), false));
+  }
+
+  // ------------------------------------------------------------ word pause, countdown, train
+  startCountdown(onGo) {
+    this.state = 'countdown';
+    this.cdT = 0;
+    this.cdN = 0;
+    this.onGo = onGo;
+  }
+
+  updateCountdown(dt) {
+    this.cdT += dt;
+    const n = 3 - Math.floor(this.cdT / 0.6);
+    if (n >= 1 && n !== this.cdN) { this.cdN = n; this.ui.countdown(n); this.sound.play('tick'); }
+    if (this.cdT >= 1.8) {
+      this.ui.countdown(null);
+      this.sound.play('go');
+      this.state = 'playing';
+      const f = this.onGo;
+      this.onGo = null;
+      if (f) f();
+    }
+  }
+
+  clearAhead(range, golden) {
+    for (const o of this.obs) {
+      const ahead = o.wz - this.dist;
+      if (o.alive && ahead > -1 && ahead < range) this.blast(o);
+    }
+    if (golden) {
+      this.ring.visible = true;
+      this.ringT = 0;
+    }
+  }
+
+  continueWord() {
+    if (this.state !== 'word' || !this.ui.wordArmed) return;
+    this.sound.play('click');
+    this.ui.show(null);
+    this.ui.setWord(this.word, this.letterIdx);
+    this.startCountdown(() => {
+      this.clearAhead(Math.max(26, this.speed * 1.7), true);
+      this.invuln = Math.max(this.invuln, 0.4);
+    });
+  }
+
+  startRide() {
+    this.sound.init();
+    this.sound.play('click');
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    for (const o of this.obs) this.releaseObs(o);
+    this.obs.length = 0;
+    for (const m of this.manna) this.freeManna(m);
+    this.manna.length = 0;
+    for (const q of this.pickups) this.releasePickup(q);
+    this.pickups.length = 0;
+    this.mannaPool.flush();
+    this.ring.visible = false;
+    this.ui.show(null);
+    this.ui.hud(false);
+    this.ui.hideHint();
+    this.state = 'ride';
+    this.speed = 0;
+    this.lane = 1;
+    this.vy = 0; this.grounded = true; this.slideT = 0; this.hurtT = 0; this.invuln = 0;
+    this.powers = { shield: 0, magnet: 0, double: 0 };
+    this.p.root.visible = true;
+    this.ride.start();
+    if (!this.muted) this.sound.startMusic();
+  }
+
+  refreshHud() {
+    this.ui.hud(true);
+    this.ui.last = {};
+    this.ui.setHearts(this.hearts, MAX_HEARTS);
+    this.ui.setWord(this.word, this.letterIdx);
+    this.ui.setPowers([]);
+    this.ui.setScore(this.score);
+    this.ui.setDist(this.dist);
+    this.ui.setManna(this.mannaCount);
+  }
+
+  skipRide() {
+    if (this.state === 'ride') this.ride.skip();
+  }
+
+  endRide() {
+    const cam = this.world.camera;
+    cam.fov = this.world.baseFov;
+    cam.updateProjectionMatrix();
+    this.state = 'countdown';
+    this.resetRun(true);
+    this.camBlend = 1;
+    this.refreshHud();
+    this.generate();
+    this.updateObstacles(0);
+    this.store.runs = (this.store.runs || 0) + 1;
+    saveStore(this.store);
+    this.startCountdown(null);
   }
 
   home() {
@@ -780,11 +888,16 @@ class Game {
         saveStore(this.store);
         this.score += 150 + 25 * letters.length;
         this.sound.play('word');
-        this.ui.wordToast(w);
         this.wordPos++;
         this.letterIdx = 0;
         this.nextLetterWz = Math.max(this.nextLetterWz, this.spawnCursor + 15);
         this.world.burst(this.x, 1.5, 0, 30, { color: [1, 0.9, 0.5], speed: 5, up: 5, life: 1 });
+        // Freeze the run while the word card is up, so nothing can be hit.
+        this.state = 'word';
+        this.touch = null;
+        this.ui.setWord(w, letters.length);
+        setTimeout(() => { if (this.state === 'word') this.ui.wordCard(w, this.learned.size, WORDS.length); }, 450);
+        return;
       } else {
         this.sound.play('letter');
       }
@@ -818,6 +931,12 @@ class Game {
     if (this.state === 'dying' || this.state === 'over') {
       const t = Math.min(1, this.deadT / 0.5);
       tgt = { body: -1.35 * ease(t), by: 0.12 * t, bz: -0.4 * t, lL: 0.3, lR: -0.2, aL: 2.6, aR: 2.4 };
+    } else if (this.state === 'ride') {
+      const rp = this.ridePose;
+      if (rp === 'hop') tgt = { body: -0.08, by: 0, bz: 0, lL: 0.9, lR: -0.45, aL: 2.5, aR: 2.3 };
+      else if (rp === 'cheer') tgt = { body: 0, by: 0, bz: 0, lL: 0, lR: 0, aL: 2.8, aR: 2.5 + Math.sin(this.time * 12) * 0.35 };
+      else if (rp === 'ride') tgt = { body: 0.05, by: 0, bz: 0, lL: 0.05, lR: -0.05, aL: 0.5, aR: 2.6 + Math.sin(this.time * 9) * 0.3 };
+      else tgt = { body: 0, by: 0, bz: 0, lL: 0, lR: 0, aL: 0.15, aR: 0.15 };
     } else if (sliding) {
       tgt = { body: 1.1, by: -0.2, bz: -0.55, lL: 0.5, lR: 0.4, aL: -0.4, aR: -0.6 };
     } else if (!this.grounded) {
@@ -890,7 +1009,17 @@ class Game {
       my + (gy - my) * b + (Math.random() - 0.5) * sk,
       Math.cos(a) * r,
     );
-    cam.lookAt(mlx + (lx - mlx) * b, mly + (ly - mly) * b, mlz + (lz - mlz) * b);
+    this.camLook.set(mlx + (lx - mlx) * b, mly + (ly - mly) * b, mlz + (lz - mlz) * b);
+    cam.lookAt(this.camLook);
+  }
+
+  gameCamPose() {
+    const D = this.world.camDist;
+    const portrait = window.innerHeight > window.innerWidth;
+    return {
+      pos: new THREE.Vector3(this.x * 0.55, 2.75 + D * 0.12 + this.y * 0.3, D),
+      look: new THREE.Vector3(this.x * 0.35, 1.1 + this.y * 0.25, portrait ? -9 : -12),
+    };
   }
 
   // ------------------------------------------------------------ loop
@@ -912,16 +1041,27 @@ class Game {
       this.dist += this.speed * dt;
       this.updateObstacles(dt);
       if (this.deadT > 1.3) this.finish();
+    } else if (this.state === 'ride') {
+      if (this.ride.update(dt)) this.endRide();
+    } else if (this.state === 'countdown') {
+      worldDt = 0;
+      this.updateCountdown(dt);
     } else {
       worldDt = this.state === 'over' ? dt : 0;
       if (this.state === 'over') this.deadT += dt;
     }
     if (this.state !== 'paused') {
       this.animatePlayer(dt);
-      this.world.update(worldDt, this.dist, this.state === 'playing' || this.state === 'menu' ? this.speed : 0);
+      const worldSpeed = this.state === 'playing' || this.state === 'menu' ? this.speed : this.state === 'ride' ? -this.ride.v : 0;
+      this.world.update(worldDt, this.dist, worldSpeed);
       if (this.state !== 'playing') { this.updateManna(0); this.updatePickups(0); }
     }
-    this.updateCamera(this.state === 'paused' ? 0 : dt);
+    if (this.state === 'ride') {
+      const pose = this.gameCamPose();
+      this.ride.updateCamera(dt, pose.pos, pose.look);
+    } else {
+      this.updateCamera(this.state === 'paused' ? 0 : dt);
+    }
     this.world.render();
     this.adaptQuality(raw, t);
   }

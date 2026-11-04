@@ -12,6 +12,8 @@ A 3D lane runner. Run from Egypt, through the parted Red Sea and the wilderness,
 - **Controls:** ← → change lane · ↑ / Space jump · ↓ slide · P pause · M sound. On touch screens: swipe, or tap to jump.
 - **Words:** 29 words covering all 22 letters of the Alef-Bet, each with its transliteration and meaning. Words you finish are saved in "My scroll".
 - **Power-ups:** cloud shield, magnet, double manna, shofar blast, extra heart.
+- **Word pause:** finishing a word freezes the run and shows the word card. Tap "Keep running" for a 3-2-1 countdown; a golden wave clears the road just ahead. Resuming from pause also counts down.
+- **Train back:** after a lost run, "Run again" sends a steam train that carries you back through every region to Egypt (tap "Skip ride" to jump straight there).
 
 ### Code
 | File | What it does |
@@ -21,6 +23,7 @@ A 3D lane runner. Run from Egypt, through the parted Red Sea and the wilderness,
 | `torah-runner/js/world.js` | Sky, ground, Red Sea walls, distant landmarks, particles |
 | `torah-runner/js/models.js` | Low-poly runner, obstacles and pickup textures |
 | `torah-runner/js/scenery.js` | Roadside props for each region |
+| `torah-runner/js/train.js` | The train ride back to the start |
 | `torah-runner/js/audio.js` | Synthesized sound effects and music |
 | `torah-runner/js/data.js` | Words, letter names, regions |
 
