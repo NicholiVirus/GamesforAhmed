@@ -262,7 +262,7 @@ class Game {
   }
 
   doJump() {
-    this.vy = this.powers.sneakers > 0 ? JUMP_V * 1.55 : JUMP_V;
+    this.vy = this.powers.sneakers > 0 ? JUMP_V * 1.95 : JUMP_V;
     this.grounded = false;
     this.slideT = 0;
     this.sound.play('jump');
@@ -635,10 +635,14 @@ class Game {
       return ln;
     };
     if (this.nextLetterWz < b - 4) {
-      const wz = clamp(this.nextLetterWz, a + 4, b - 4);
+      // Keep letters clear of the barrier just behind them, so you have time to react.
+      const wz = clamp(Math.max(this.nextLetterWz, a + Math.max(4, speedAt(a) * 0.55)), a + 4, b - 4);
+      const ln = place(wz);
       // Some letters float out of reach from the ground: jump to grab them.
-      const high = wz > 120 && Math.random() < 0.45;
-      this.addPickup('letter', null, wz, place(wz), high ? 2.7 : 1.05);
+      // Never put a high letter right after or before a slide-under barrier in its lane.
+      const slideNear = (this.prevRow && this.prevRow.lanes[ln] === 'high') || (row && row.lanes[ln] === 'high');
+      const high = wz > 120 && !slideNear && Math.random() < 0.45;
+      this.addPickup('letter', null, wz, ln, high ? 2.7 : 1.05);
       this.nextLetterWz = wz + speedAt(wz) * rnd(3.4, 4.8);
     }
     if (this.nextPowerWz < b - 4 && a > 60) {
@@ -934,6 +938,7 @@ class Game {
       const z = this.dist - p.wz;
       if (z > 5) { this.releasePickup(p); this.pickups.splice(i, 1); continue; }
       const y = p.y + Math.sin(this.time * 3 + p.ph) * 0.12;
+      if (p.kind === 'letter' && this.powers.jetpack > 0 && z > -45 && z < 1) p.y += (JET_Y + 0.6 - p.y) * Math.min(1, dt * 4);
       if (p.kind === 'letter') {
         const mat = this.letterMat(need);
         if (p.sprite.material !== mat) p.sprite.material = mat;
