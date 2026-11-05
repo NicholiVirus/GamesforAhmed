@@ -18,7 +18,7 @@ export const SHOP = [
   { type: 'double', name: '2× manna', price: 200, about: 'Double manna for 10 s' },
   { type: 'sneakers', name: 'Jump sneakers', price: 200, about: 'Super-high jumps' },
   { type: 'jetpack', name: 'Jet pack', price: 300, about: 'Fly over everything' },
-  { type: 'heart', name: 'Extra heart', price: 250, about: 'Start a run with 4 hearts' },
+  { type: 'heart', name: 'Extra heart', price: 250, about: 'One heart appears on the road in your next run' },
 ];
 // Permanent upgrades: each level costs more.
 export const UPGRADES = [
@@ -44,7 +44,7 @@ const MENU_SPEED = 8;
 const rnd = (a, b) => a + Math.random() * (b - a);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const speedAt = (d) => 13 + 17 * (1 - Math.exp(-d / 1500));
+const speedAt = (d) => 18 + 24 * (1 - Math.exp(-d / 2600));
 const diffAt = (d) => 1 - Math.exp(-d / 2300);
 const ease = (t) => t * t * (3 - 2 * t);
 
@@ -198,7 +198,7 @@ class Game {
     this.letterIdx = 0;
     this.nextLetterWz = 42;
     this.nextPowerWz = rnd(260, 360);
-    this.nextHeartWz = 520;
+    this.nextHeartWz = Infinity; // hearts only come from the shop
     this.wordsDone = [];
     this.combo = 0; this.comboT = 0;
     this.biomeShown = -1;
@@ -407,7 +407,7 @@ class Game {
       inv[it.type]--;
       used.push(it.name);
       if (it.type === 'jetpack') this.startJetpack();
-      else if (it.type === 'heart') { this.maxHearts = MAX_HEARTS + 1; this.hearts = this.maxHearts; this.ui.setHearts(this.hearts, this.maxHearts); }
+      else if (it.type === 'heart') { this.nextHeartWz = this.dist + 250; } // one heart to pick up
       else this.powers[it.type] = POWERS[it.type].time;
     }
     if (used.length) {
@@ -885,10 +885,10 @@ class Game {
       this.addPickup('power', type, wz, place(wz), 1.05);
       this.nextPowerWz = wz + rnd(260, 400);
     }
-    if (this.hearts < this.maxHearts && this.nextHeartWz < b - 4) {
+    if (this.nextHeartWz < b - 4) {
       const wz = clamp(this.nextHeartWz, a + 4, b - 4);
       this.addPickup('power', 'heart', wz, place(wz), 1.05);
-      this.nextHeartWz = wz + rnd(450, 700);
+      this.nextHeartWz = Infinity;
     }
     if (row) {
       const ln = row.safe;
@@ -1240,7 +1240,8 @@ class Game {
     }
     this.world.burst(p.x, y, z, 16, { color: [1, 0.95, 0.75], speed: 4, up: 3, life: 0.6 });
     if (p.type === 'heart') {
-      this.hearts = Math.min(this.maxHearts, this.hearts + 1);
+      if (this.hearts >= this.maxHearts) this.maxHearts++;
+      this.hearts++;
       this.sound.play('heart');
       this.ui.popup('+1 life', 'heart');
     } else if (p.type === 'sneakers') {
