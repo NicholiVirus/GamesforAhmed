@@ -9,6 +9,7 @@ import {
   letterTexture, powerTexture, mannaTex, shadowTex,
 } from './models.js';
 import { TrainRide } from './train.js';
+import { Chaser } from './chaser.js';
 
 const LANES = [-2, 0, 2];
 // What the main-menu shop sells, priced in manna saved from your runs.
@@ -141,6 +142,7 @@ class Game {
     this.state = 'menu';
     this.camLook = new THREE.Vector3(0, 1, -10);
     this.ride = new TrainRide(this);
+    this.chaser = new Chaser(this.scene);
     this.ridePose = 'stand';
     this.resetRun();
     this.world.onThunder = () => this.sound.play('thunder');
@@ -211,6 +213,7 @@ class Game {
     this.p.body.position.set(0, 0, 0);
     this.p.root.visible = true;
     if (this.p.wear) { this.p.wear('egypt'); this.outfit = 'egypt'; }
+    if (this.chaser) { this.chaser.reset(); this.chaser.setEra('egypt'); }
   }
 
   get word() { return this.wordOrder[this.wordPos % this.wordOrder.length]; }
@@ -601,6 +604,7 @@ class Game {
     if (this.outfit === id) return;
     this.outfit = id;
     this.p.wear(id);
+    this.chaser.setEra(id);
     if (this.state === 'playing') this.world.burst(this.x, 1.0, 0, 14, { color: [1, 0.95, 0.8], speed: 2.5, up: 2, life: 0.5 });
   }
 
@@ -1113,6 +1117,13 @@ class Game {
       return;
     }
     this.hearts -= 1;
+    // The chaser closes in. Crash again while they are right behind you and you are caught.
+    if (this.chaser.bump() && this.hearts > 0) {
+      this.ui.popup(`Caught by ${this.chaser.name().replace(/^(A|An|The) /, (m) => m.toLowerCase())}!`);
+      this.hearts = 0;
+    } else if (this.hearts > 0) {
+      this.ui.popup(`${this.chaser.name()} is right behind you!`);
+    }
     this.invuln = 1.6;
     this.hurtT = 1.6;
     this.flashT = 0.35;
@@ -1409,6 +1420,7 @@ class Game {
     }
     if (this.state !== 'paused') {
       this.animatePlayer(dt);
+      this.chaser.update(['playing', 'dying', 'over', 'menu', 'ride'].includes(this.state) ? dt : 0, this.x, this.y, this.state);
       const worldSpeed = this.state === 'playing' || this.state === 'menu' ? this.speed : this.state === 'ride' ? -this.ride.v : 0;
       this.world.update(worldDt, this.dist, worldSpeed);
       if (this.state !== 'playing') { this.updateManna(0); this.updatePickups(0); }
