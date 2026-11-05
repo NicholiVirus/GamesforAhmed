@@ -2,7 +2,7 @@
 
 ## Torah Runner
 
-A 3D lane runner. Run from Egypt, through the parted Red Sea, the Oasis of Elim, the wilderness and the night camp under the pillar of fire, to Mount Sinai, looping until 10,000 m, where you arrive in Jerusalem, the Holy City. Ramps lead up onto raised walkways you run along before dropping back down. Some letters float high: jump to grab them. Catch the golden Hebrew letters in order to write words of the Torah on your scroll.
+A 3D lane runner. Run from Egypt, through the parted Red Sea, the Oasis of Elim, the wilderness and the night camp under the pillar of fire, to Mount Sinai, looping until 3,000 m, where you arrive in Jerusalem, the Holy City. Ramps lead up onto raised walkways you run along before dropping back down. Some letters float high: jump to grab them. Catch the golden Hebrew letters in order to write words of the Torah on your scroll.
 
 - **Play:** open `torah-runner/index.html` through any static web server (ES modules don't load from `file://`).
   ```sh

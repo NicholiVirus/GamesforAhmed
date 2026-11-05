@@ -294,7 +294,7 @@ export const LETTER_NAMES = {
 // Metres per region. One lap = 4 regions.
 export const BIOME_LEN = 650;
 // After this many metres the journey arrives in Jerusalem and stays there.
-export const JLM_START = 10000;
+export const JLM_START = 3000;
 // Regions before Jerusalem loop in order; Jerusalem is the last entry in BIOMES.
 export const CYCLE = 6;
 
