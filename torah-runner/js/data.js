@@ -304,7 +304,8 @@ export const STORY = [
   { id: 'airport', at: JLM_START + BIOME_LEN * 2 },
   { id: 'newyork', at: JLM_START + BIOME_LEN * 3 },
   { id: 'donut', at: JLM_START + BIOME_LEN * 4 },
-  { id: 'newyork', at: JLM_START + BIOME_LEN * 5 },
+  { id: 'park', at: JLM_START + BIOME_LEN * 5 },
+  { id: 'harbor', at: JLM_START + BIOME_LEN * 6 },
 ];
 // You must pass the Hebrew test at the gate, just before New York.
 export const GATE_AT = JLM_START + BIOME_LEN * 3 - 40;
@@ -387,12 +388,27 @@ export const BIOMES = [
     hemiSky: 0xffd9b0, hemiGround: 0x5a4030, light: 0xffe0b8, lightI: 2.0, hemiI: 1.6,
     sunDir: [0, 0.9, -0.4], stars: 0,
   },
+  {
+    id: 'park', name: 'Central Park', he: 'סנטרל פארק', line: 'Green trees in the middle of the city',
+    skyTop: 0x3a86d8, skyHorizon: 0xd8ecd2, skyBottom: 0x9ab87a, fog: 0xcfe2c4,
+    ground: 0x7fb05a, road: 0xc8c0b0, sun: 0xffffff,
+    hemiSky: 0xeaffe0, hemiGround: 0x5a7a40, light: 0xfffbe8, lightI: 2.2, hemiI: 1.3,
+    sunDir: [-0.3, 0.6, -1], stars: 0,
+  },
+  {
+    id: 'harbor', name: 'Liberty Harbor', he: 'נמל החירות', line: 'The finish of a long journey to freedom',
+    skyTop: 0x2c5fa8, skyHorizon: 0xf2c49a, skyBottom: 0x6a8aa0, fog: 0xc8b8b0,
+    ground: 0x8a8a86, road: 0xb0aaa0, sun: 0xffd8a8,
+    hemiSky: 0xfff0e0, hemiGround: 0x506070, light: 0xffe0c0, lightI: 2.1, hemiI: 1.35,
+    sunDir: [0.4, 0.15, -1], stars: 0,
+  },
 ];
 
 export const POWERS = {
   shield: { label: 'Star shield', color: '#7fd3ff', time: 12 },
   jetpack: { label: 'Jet pack', color: '#ff9a3c', time: 4.5 },
   sneakers: { label: 'Jump sneakers', color: '#4aa8ff', time: 10 },
+  shabbat: { label: 'Shabbat calm', color: '#ffd36a', time: 6 },
   magnet: { label: 'Magnet', color: '#ff6b5a', time: 10 },
   double: { label: '2× manna', color: '#ffd24a', time: 10 },
   shofar: { label: 'Shofar blast', color: '#f3e3c3', time: 0 },

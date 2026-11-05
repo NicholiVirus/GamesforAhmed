@@ -92,6 +92,8 @@ export const OUTFITS = {
   telaviv: { top: 0xff8a3d, hem: 0xff8a3d, belt: 0xff8a3d, pants: 0x3a8fc8, shoe: 0xffffff, wrap: null, cap: 0xffd24a, short: true },
   airport: { top: 0x8a9098, hem: 0x7a8088, belt: 0x7a8088, pants: 0x2f4a7a, shoe: 0xffffff, wrap: null, cap: 0x2a2a30 },
   newyork: { top: 0xd8402f, hem: 0xb8302a, belt: 0x222222, pants: 0x2f4a7a, shoe: 0x1a1a1a, wrap: null, cap: 0x1a1a1a },
+  park: { top: 0x3f9a5a, hem: 0x2f7a48, belt: 0x6b3e1e, pants: 0xd8c8a0, shoe: 0x6b3e1e, wrap: null, cap: 0x3f9a5a },
+  harbor: { top: 0x2c4ea3, hem: 0xffffff, belt: 0xffffff, pants: 0xf2f2ee, shoe: 0x1a1a1a, wrap: null, cap: 0xffffff },
   donut: { top: 0xf38bb8, hem: 0xffffff, belt: 0xffffff, pants: 0x3a3a44, shoe: 0xffffff, wrap: null, cap: 0xffffff },
 };
 
@@ -601,6 +603,8 @@ export const BIOME_OBSTACLES = {
   airport: { low: ['suitcases'], high: ['barrier'], tall: ['cart'], roll: [] },
   newyork: { low: ['hydrants'], high: ['barrier'], tall: ['taxi'], roll: [] },
   donut: { low: ['turnstiles'], high: ['barrier'], tall: ['bigdonut'], roll: [] },
+  park: { low: ['bush', 'hydrants'], high: ['barrier'], tall: ['taxi', 'kiosk'], roll: [] },
+  harbor: { low: ['suitcases', 'hydrants'], high: ['barrier'], tall: ['cart', 'taxi'], roll: [] },
   sinai: { low: ['ledge'], high: ['stonearch'], tall: ['boulder'], roll: ['rollstone'] },
 };
 
@@ -748,6 +752,13 @@ export function powerTexture(type) {
       }
       g.strokeStyle = '#ffd24a'; g.lineWidth = s * 0.02;
       for (const dy of [-0.16, -0.21]) { g.beginPath(); g.moveTo(c - s * 0.05, c + dy * s); g.lineTo(c + s * 0.12, c + dy * s - s * 0.02); g.stroke(); }
+    } else if (type === 'shabbat') {
+      // Two Shabbat candles.
+      for (const x of [-0.07, 0.07]) {
+        g.fillStyle = '#f6f0dc'; g.fillRect(c + x * s - s * 0.03, c - s * 0.06, s * 0.06, s * 0.22);
+        g.fillStyle = '#ffb02e'; g.beginPath(); g.ellipse(c + x * s, c - s * 0.11, s * 0.025, s * 0.05, 0, 0, Math.PI * 2); g.fill();
+      }
+      g.fillStyle = '#c99a5b'; g.fillRect(c - s * 0.15, c + s * 0.16, s * 0.3, s * 0.04);
     } else if (type === 'jetpack') {
       g.fillStyle = '#ffb347';
       for (const x of [-0.07, 0.07]) { g.beginPath(); g.moveTo(c + x * s - s * 0.04, c + s * 0.1); g.lineTo(c + x * s, c + s * 0.24); g.lineTo(c + x * s + s * 0.04, c + s * 0.1); g.fill(); }

@@ -46,7 +46,8 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const speedAt = (d) => 18 + 24 * (1 - Math.exp(-d / 2600));
-const diffAt = (d) => 1 - Math.exp(-d / 2300);
+// Difficulty: a gentle first 400 m, then it ramps up.
+const diffAt = (d) => 1 - Math.exp(-Math.max(0, d - 400) / 2300);
 const ease = (t) => t * t * (3 - 2 * t);
 
 const OBS_COLOR = {
@@ -128,7 +129,7 @@ class Game {
     this.ringT = 0;
 
     const icons = {};
-    for (const t of ['shield', 'magnet', 'double', 'shofar', 'heart', 'jetpack', 'sneakers']) icons[t] = powerTexture(t).image.toDataURL();
+    for (const t of ['shield', 'magnet', 'double', 'shofar', 'heart', 'jetpack', 'sneakers', 'shabbat']) icons[t] = powerTexture(t).image.toDataURL();
     this.ui.setIcons(icons);
     this.ui.shopItems = SHOP;
     this.ui.upgrades = UPGRADES;
@@ -183,6 +184,8 @@ class Game {
     this.banked = false;
     this.passiveT = 0;
     this.revives = 0;
+    this.streak = 0;
+    this.mult = 1;
     this.boarded = false;
     this.endTitle = null;
     this.lane = 1; this.prevLane = 1;
@@ -632,7 +635,7 @@ class Game {
     this.ui.setHearts(this.hearts, this.maxHearts);
     this.ui.setWord(this.word, this.letterIdx);
     this.ui.setPowers([]);
-    this.ui.setScore(this.score);
+    this.ui.setScore(this.score, this.mult || 1);
     this.ui.setDist(this.dist);
     this.ui.setManna(this.mannaCount);
   }
@@ -907,7 +910,7 @@ class Game {
     if (this.nextPowerWz < b - 4 && a > 60) {
       const wz = clamp(this.nextPowerWz, a + 4, b - 4);
       const r = Math.random();
-      const type = r < 0.17 ? 'shield' : r < 0.33 ? 'magnet' : r < 0.45 ? 'double' : r < 0.56 ? 'shofar' : r < 0.78 ? 'jetpack' : 'sneakers';
+      const type = r < 0.15 ? 'shield' : r < 0.29 ? 'magnet' : r < 0.4 ? 'double' : r < 0.5 ? 'shofar' : r < 0.7 ? 'jetpack' : r < 0.86 ? 'sneakers' : 'shabbat';
       this.addPickup('power', type, wz, place(wz), 1.05);
       this.nextPowerWz = wz + rnd(260, 400);
     }
@@ -938,7 +941,9 @@ class Game {
   update(dt) {
     this.runTime = (this.runTime || 0) + dt;
     this.speedFactor = Math.min(1, this.speedFactor + dt * 0.35);
-    const target = speedAt(this.dist) * this.speedFactor * (1 + 0.05 * this.upLevel('speed'));
+    // Shabbat calm slows the world down for a few seconds.
+    const calm = this.powers.shabbat > 0 ? 0.55 : 1;
+    const target = speedAt(this.dist) * this.speedFactor * calm * (1 + 0.05 * this.upLevel('speed'));
     // Passive manna upgrade: a trickle of manna while you run.
     const pl = this.upLevel('passive');
     if (pl > 0) {
@@ -948,12 +953,17 @@ class Game {
     this.speed += (target - this.speed) * Math.min(1, dt * 3);
     this.sound.setTempo(this.speed);
     this.dist += this.speed * dt;
-    this.score += this.speed * dt;
+    this.score += this.speed * dt * (this.mult || 1);
     if (!this.boarded && this.dist >= GATE_AT) { this.startBoardingTest(); return; }
     this.generate();
 
     const bi = biomeIndexAt(this.dist);
     if (bi !== this.biomeShown) this.dressFor(bi);
+    if (bi !== this.biomeShown && this.biomeShown !== -1 && this.state === 'playing') {
+      // Bonus for reaching a new place.
+      this.mannaCount += 50;
+      setTimeout(() => this.ui.popup('New place! +50'), 1200);
+    }
     if (bi !== this.biomeShown) {
       if (this.biomeShown !== -1 || this.dist > 1) {
         this.ui.banner(BIOMES[bi], this.dist >= JLM_START ? 1 : Math.floor(this.dist / LAP) + 1);
@@ -968,12 +978,12 @@ class Game {
     this.updateManna(dt);
     this.updatePickups(dt);
 
-    this.ui.setScore(this.score);
+    this.ui.setScore(this.score, this.mult || 1);
     this.ui.setDist(this.dist);
     this.ui.setManna(this.mannaCount);
     this.ui.setHearts(this.hearts, this.maxHearts);
     const list = [];
-    for (const k of ['jetpack', 'sneakers', 'shield', 'magnet', 'double']) if (this.powers[k] > 0) list.push({ type: k, frac: this.powers[k] / (k === 'jetpack' ? this.jetTime() : POWERS[k].time) });
+    for (const k of ['jetpack', 'sneakers', 'shabbat', 'shield', 'magnet', 'double']) if (this.powers[k] > 0) list.push({ type: k, frac: this.powers[k] / (k === 'jetpack' ? this.jetTime() : POWERS[k].time) });
     this.ui.setPowers(list);
   }
 
@@ -1129,6 +1139,9 @@ class Game {
       return;
     }
     this.hearts -= 1;
+    if ((this.mult || 1) > 1) this.ui.popup('Streak lost');
+    this.streak = 0;
+    this.mult = 1;
     // The chaser closes in. Crash again while they are right behind you and you are caught.
     if (this.chaser.bump() && this.hearts > 0) {
       this.ui.popup(`Caught by ${this.chaser.name().replace(/^(A|An|The) /, (m) => m.toLowerCase())}!`);
@@ -1198,7 +1211,12 @@ class Game {
 
   collectManna(m, y, z) {
     this.mannaCount += this.powers.double > 0 ? 2 : 1;
-    this.score += this.powers.double > 0 ? 10 : 5;
+    // Coin streak: every 25 coins without crashing raises the score multiplier (up to ×5).
+    this.streak = (this.streak || 0) + 1;
+    const mult = Math.min(5, 1 + Math.floor(this.streak / 25));
+    if (mult > (this.mult || 1)) { this.ui.popup(`Streak ×${mult}!`); this.sound.play('letter'); }
+    this.mult = mult;
+    this.score += (this.powers.double > 0 ? 10 : 5) * mult;
     this.sound.play('manna', this.combo);
     this.combo++;
     this.comboT = 1.1;

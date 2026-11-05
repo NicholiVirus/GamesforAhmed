@@ -301,6 +301,38 @@ function buildDonutStall() {
   ]);
 }
 
+function buildParkTree() {
+  const P = [part(CYL6, 0x6b4a2a, [0, 1.2, 0], [0, 0, 0], [0.22, 2.4, 0.22])];
+  for (let k = 0; k < 5; k++) P.push(part(ICO, k % 2 ? 0x4f8f3a : 0x6aa84a, [rnd(-0.8, 0.8), rnd(2.6, 3.6), rnd(-0.8, 0.8)], [k, k, 0], [rnd(1, 1.4), rnd(0.9, 1.2), rnd(1, 1.4)]));
+  return merge(P);
+}
+function buildBench() {
+  return merge([
+    box(0x7a4a24, [0, 0.45, 0], [1.6, 0.08, 0.45]), box(0x7a4a24, [0, 0.8, -0.2], [1.6, 0.35, 0.06]),
+    box(0x2a2a2a, [-0.7, 0.22, 0], [0.06, 0.44, 0.4]), box(0x2a2a2a, [0.7, 0.22, 0], [0.06, 0.44, 0.4]),
+  ]);
+}
+function buildPond() {
+  return merge([part(new THREE.CylinderGeometry(3, 3.2, 0.06, 14), 0x4a9ac8, [0, 0.03, 0], [0, 0, 0], [1, 1, 0.6], 0.02),
+    part(ICO, 0xffffff, [0.6, 0.15, 0.2], [0, 0, 0], [0.2, 0.15, 0.3])]);
+}
+function buildLiberty() {
+  const green = 0x6fb8a0;
+  return merge([
+    box(0xb8a888, [0, 3, 0], [6, 6, 6]),
+    box(0xa89878, [0, 7, 0], [4, 2, 4]),
+    part(new THREE.CylinderGeometry(0.9, 1.4, 6, 8), green, [0, 11, 0]),
+    part(ICO, green, [0, 14.6, 0], [0, 0, 0], [0.8, 0.9, 0.8]),
+    ...Array.from({ length: 7 }, (_, k) => part(new THREE.ConeGeometry(0.15, 0.8, 4), green, [Math.cos(k) * 0.7, 15.5, Math.sin(k) * 0.5], [Math.sin(k) * 0.5, 0, Math.cos(k) * 0.5])),
+    box(green, [0.9, 15.5, 0], [0.3, 3.2, 0.3], [0, 0, -0.15]),
+    part(new THREE.ConeGeometry(0.35, 0.8, 6), 0xffc23a, [1.15, 17.5, 0]),
+    box(green, [-0.9, 11.6, 0.6], [0.6, 0.9, 0.2]),
+  ]);
+}
+function buildPier() {
+  return merge([box(0x8a6a48, [0, 0.4, 0], [3, 0.2, 6]), ...[-1.3, 1.3].flatMap((x) => [-2.5, 0, 2.5].map((z) => box(0x5a4030, [x, 0.1, z], [0.25, 0.8, 0.25])))]);
+}
+
 // side: 'edge' props sit just off the road; 'near' and 'far' are further out. face = turn toward the road.
 export const SCENERY = {
   egypt: [
@@ -359,6 +391,17 @@ export const SCENERY = {
   newyork: [
     { type: 'sky', build: buildSkyscraper, variants: 6, x: [7, 16], w: 7, face: true },
     { type: 'lamp', build: buildStreetLamp, variants: 1, x: [4, 5], w: 3, face: true },
+  ],
+  park: [
+    { type: 'ptree', build: buildParkTree, variants: 4, x: [4.5, 14], w: 7, face: false },
+    { type: 'bench', build: buildBench, variants: 1, x: [4, 5], w: 2, face: true },
+    { type: 'pond', build: buildPond, variants: 1, x: [9, 16], w: 1, face: false },
+    { type: 'lamp', build: buildStreetLamp, variants: 1, x: [4, 5], w: 2, face: true },
+  ],
+  harbor: [
+    { type: 'pier', build: buildPier, variants: 1, x: [6, 12], w: 3, face: true },
+    { type: 'lamp', build: buildStreetLamp, variants: 1, x: [4, 5], w: 3, face: true },
+    { type: 'bench', build: buildBench, variants: 1, x: [4, 5], w: 2, face: true },
   ],
   donut: [
     { type: 'tilewall', build: buildTileWall, variants: 1, x: [4.6, 4.8], w: 6, face: true },

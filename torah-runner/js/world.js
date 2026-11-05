@@ -422,6 +422,21 @@ export class World {
     this.backdrops.push({ group: ny, mats: [nm2] });
     // Donut shop: underground, nothing on the horizon.
     this.backdrops.push({ group: new THREE.Group(), mats: [] });
+    // Central Park: the city skyline beyond the trees.
+    const pk = new THREE.Group(), pkm = mk();
+    pk.add(new THREE.Mesh(merge(skyline(20, 30, 110, [0x7a8a9c, 0x8a8478, 0x6a7a8c], 260, -360)), pkm));
+    this.backdrops.push({ group: pk, mats: [pkm] });
+    // Liberty Harbor: water to the horizon and the lady with the torch.
+    const hb = new THREE.Group(), hbm = mk();
+    hb.add(new THREE.Mesh(merge([
+      part(cube, 0x3a6a9a, [0, 0.4, -250], [0, 0, 0], [800, 0.8, 300], 0.02),
+      part(cube, 0xa89878, [60, 15, -330], [0, 0, 0], [30, 30, 30], 0.02),
+      part(new THREE.CylinderGeometry(5, 8, 40, 8), 0x6fb8a0, [60, 50, -330]),
+      part(new THREE.IcosahedronGeometry(5, 0), 0x6fb8a0, [60, 74, -330]),
+      part(cube, 0x6fb8a0, [66, 82, -330], [0, 0, -0.15], [2.5, 22, 2.5]),
+      part(new THREE.ConeGeometry(3, 6, 6), 0xffc23a, [68, 95, -330]),
+    ]), hbm));
+    this.backdrops.push({ group: hb, mats: [hbm] });
     for (const b of this.backdrops) { b.group.visible = false; this.scene.add(b.group); }
   }
 

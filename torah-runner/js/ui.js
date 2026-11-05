@@ -70,7 +70,7 @@ export class UI {
     if (lost) el.classList.add('shake');
   }
 
-  setScore(v) { const s = fmt(v); if (this.last.score !== s) { this.last.score = s; $('score').textContent = s; } }
+  setScore(v, mult = 1) { const s = fmt(v) + (mult > 1 ? ` ×${mult}` : ''); if (this.last.score !== s) { this.last.score = s; $('score').textContent = s; } }
   setDist(m) { const s = fmt(m) + ' m'; if (this.last.dist !== s) { this.last.dist = s; $('dist').textContent = s; } }
   setManna(n) {
     if (this.last.manna === n) return;
