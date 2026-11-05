@@ -487,6 +487,7 @@ export const BIOME_OBSTACLES = {
   wild: { low: ['rocks', 'bush'], high: ['tent'], tall: ['camel'], roll: ['tumble'] },
   elim: { low: ['jars', 'rocks'], high: ['banner'], tall: ['well', 'camel'], roll: [] },
   night: { low: ['rocks', 'bush'], high: ['tent'], tall: ['camel', 'boulder'], roll: ['tumble'] },
+  jerusalem: { low: ['bricks', 'jars'], high: ['stonearch', 'banner'], tall: ['block', 'well'], roll: [] },
   sinai: { low: ['ledge'], high: ['stonearch'], tall: ['boulder'], roll: ['rollstone'] },
 };
 

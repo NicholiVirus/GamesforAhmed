@@ -1,15 +1,16 @@
 // The environment: renderer, sky, light, scrolling ground, the parted sea, distant landmarks,
 // roadside props and particle effects. Gameplay objects live in main.js.
 import * as THREE from './three.js';
-import { BIOMES, BIOME_LEN } from './data.js';
+import { BIOMES, BIOME_LEN, JLM_START, CYCLE } from './data.js';
 import { part, merge, jagged, ICO, softDot } from './models.js';
 import { pickScenery, sceneryGeo } from './scenery.js';
 import { flatMat } from './models.js';
 
-const LAP = BIOME_LEN * BIOMES.length;
+const LAP = BIOME_LEN * CYCLE;
+const JLM = BIOMES.length - 1;
 const rnd = (a, b) => a + Math.random() * (b - a);
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-export const biomeIndexAt = (wz) => Math.floor((((wz % LAP) + LAP) % LAP) / BIOME_LEN);
+export const biomeIndexAt = (wz) => (wz >= JLM_START ? JLM : Math.floor((((wz % LAP) + LAP) % LAP) / BIOME_LEN));
 
 function tex(w, h, draw) {
   const c = document.createElement('canvas');
@@ -360,6 +361,26 @@ export class World {
     this.bolt = bolt;
     this.mountain = mountain;
     this.backdrops.push({ group: sinai, mats: [sm, sc] });
+    // Jerusalem: golden stone city walls with towers and gates on the hills.
+    const jlm = new THREE.Group();
+    const jm = mk();
+    const stone = 0xe8d2a2, stone2 = 0xd8bd88;
+    const parts = [part(new THREE.SphereGeometry(1, 12, 6), 0xc9b07c, [0, -6, 0], [0, 0, 0], [260, 22, 60], 0.03)];
+    parts.push(part(new THREE.BoxGeometry(1, 1, 1), stone, [0, 14, 0], [0, 0, 0], [300, 20, 6], 0.03));
+    for (let x = -150; x <= 150; x += 6) parts.push(part(new THREE.BoxGeometry(1, 1, 1), stone2, [x, 25, 0], [0, 0, 0], [3, 2.5, 6.4], 0.03));
+    for (const x of [-140, -95, -45, 0, 45, 95, 140]) {
+      parts.push(part(new THREE.BoxGeometry(1, 1, 1), stone, [x, 18, 0], [0, 0, 0], [14, 30, 10], 0.03));
+      for (const dx of [-5, 0, 5]) parts.push(part(new THREE.BoxGeometry(1, 1, 1), stone2, [x + dx, 34.5, 0], [0, 0, 0], [2.6, 3, 10.4], 0.03));
+    }
+    parts.push(part(new THREE.BoxGeometry(1, 1, 1), 0x6b4a2a, [0, 9, 3.2], [0, 0, 0], [10, 14, 0.5], 0.02));
+    for (let k = 0; k < 16; k++) {
+      const x = -130 + k * 17, h = 10 + (k % 3) * 4;
+      parts.push(part(new THREE.BoxGeometry(1, 1, 1), k % 2 ? stone : 0xf0dcb0, [x, 24 + h / 2, -25 - (k % 4) * 8], [0, 0, 0], [12, h, 12], 0.03));
+    }
+    const city = new THREE.Mesh(merge(parts), jm);
+    city.position.set(0, 0, -360);
+    jlm.add(city);
+    this.backdrops.push({ group: jlm, mats: [jm] });
     for (const b of this.backdrops) { b.group.visible = false; this.scene.add(b.group); }
   }
 
@@ -384,10 +405,12 @@ export class World {
   // Blend region colours by distance so the sky changes as the next region comes into view.
   blend(dist) {
     const p = ((dist % LAP) + LAP) % LAP;
-    const i = Math.floor(p / BIOME_LEN);
+    let i = Math.floor(p / BIOME_LEN);
     const local = p - i * BIOME_LEN;
-    const t = smooth(BIOME_LEN - 110, BIOME_LEN - 10, local);
-    const j = (i + 1) % BIOMES.length;
+    let t = smooth(BIOME_LEN - 110, BIOME_LEN - 10, local);
+    let j = (i + 1) % CYCLE;
+    // Arriving in Jerusalem: blend from wherever you are into the holy city, then stay.
+    if (dist >= JLM_START - 160) { j = JLM; t = smooth(JLM_START - 160, JLM_START - 10, dist); if (dist >= JLM_START) i = JLM; }
     const A = this.pal[i], B = this.pal[j], c = this.cur;
     for (const k of ['skyTop', 'skyHorizon', 'skyBottom', 'fog', 'ground', 'road', 'sun', 'hemiSky', 'hemiGround', 'light']) c[k].copy(A[k]).lerp(B[k], t);
     c.sunDir.copy(A.sunDir).lerp(B.sunDir, t).normalize();
@@ -440,7 +463,9 @@ export class World {
     const lapStart = Math.floor(dist / LAP) * LAP;
     let start = lapStart + BIOME_LEN, end = lapStart + BIOME_LEN * 2;
     if (end < dist - 30) { start += LAP; end += LAP; }
+    if (start >= JLM_START) start = end = Infinity;
     const z1 = Math.min(25, dist - start), z0 = Math.max(-330, dist - end);
+    if (!isFinite(start)) { z1; }
     const show = z1 > z0 + 0.5;
     for (const w of this.seaWalls) {
       w.inner.visible = w.back.visible = show;

@@ -293,6 +293,10 @@ export const LETTER_NAMES = {
 
 // Metres per region. One lap = 4 regions.
 export const BIOME_LEN = 650;
+// After this many metres the journey arrives in Jerusalem and stays there.
+export const JLM_START = 10000;
+// Regions before Jerusalem loop in order; Jerusalem is the last entry in BIOMES.
+export const CYCLE = 6;
 
 export const BIOMES = [
   {
@@ -336,6 +340,13 @@ export const BIOMES = [
     ground: 0x94796a, road: 0xa89283, sun: 0xffb27c,
     hemiSky: 0xc2b0ea, hemiGround: 0x4f3d3d, light: 0xffc89e, lightI: 1.9, hemiI: 1.35,
     sunDir: [0.45, 0.12, -1], stars: 1,
+  },
+  {
+    id: 'jerusalem', name: 'Jerusalem, the Holy City', he: 'ירושלים', line: 'Built as a city joined together (Psalm 122)',
+    skyTop: 0x3d7fc8, skyHorizon: 0xf6dcae, skyBottom: 0xe2cfa4, fog: 0xf1dfba,
+    ground: 0xd8c49c, road: 0xf0e2c4, sun: 0xfff3d0,
+    hemiSky: 0xfff0d6, hemiGround: 0xa89070, light: 0xffeccc, lightI: 2.3, hemiI: 1.3,
+    sunDir: [0.35, 0.3, -1], stars: 0,
   },
 ];
 

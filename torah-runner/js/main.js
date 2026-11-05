@@ -1,6 +1,6 @@
 // Torah Runner: gameplay, input and the main loop.
 import * as THREE from './three.js';
-import { WORDS, BIOMES, BIOME_LEN, POWERS } from './data.js';
+import { WORDS, BIOMES, BIOME_LEN, POWERS, CYCLE, JLM_START } from './data.js';
 import { Sound } from './audio.js';
 import { World, PointPool, biomeIndexAt } from './world.js';
 import { UI } from './ui.js';
@@ -37,7 +37,7 @@ const RAMP_V = 16.5;
 const JET_Y = 5.4;
 const MAX_HEARTS = 3;
 const SPAWN_AHEAD = 150;
-const LAP = BIOME_LEN * BIOMES.length;
+const LAP = BIOME_LEN * CYCLE;
 const STORE_KEY = 'torah-runner-v1';
 const MENU_SPEED = 8;
 
@@ -659,7 +659,7 @@ class Game {
     this.bankManna();
     saveStore(this.store);
     const bi = biomeIndexAt(this.dist);
-    const lap = Math.floor(this.dist / LAP) + 1;
+    const lap = this.dist >= JLM_START ? 1 : Math.floor(this.dist / LAP) + 1;
     const place = BIOMES[bi].name.replace(/^The /, 'the ');
     const n = this.wordsDone.length;
     const partial = this.letterIdx > 0 ? `${[...this.word.he].slice(0, this.letterIdx).join('')} of ${this.word.he}` : '';
@@ -896,7 +896,7 @@ class Game {
     const bi = biomeIndexAt(this.dist);
     if (bi !== this.biomeShown) {
       if (this.biomeShown !== -1 || this.dist > 1) {
-        this.ui.banner(BIOMES[bi], Math.floor(this.dist / LAP) + 1);
+        this.ui.banner(BIOMES[bi], this.dist >= JLM_START ? 1 : Math.floor(this.dist / LAP) + 1);
         this.sound.play('banner');
       }
       this.biomeShown = bi;

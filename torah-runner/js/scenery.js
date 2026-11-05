@@ -175,6 +175,43 @@ function buildCampfire() {
   return merge(P);
 }
 
+function buildOlive() {
+  const P = [
+    part(CYL6, 0x6b5a44, [0, 0.8, 0], [0, 0, 0.18], [0.22, 1.6, 0.22]),
+    part(CYL6, 0x6b5a44, [0.3, 1.6, 0], [0, 0, -0.6], [0.14, 0.9, 0.14]),
+  ];
+  for (let k = 0; k < 6; k++) P.push(part(ICO, k % 2 ? 0x7d8f5a : 0x93a36e, [rnd(-0.9, 0.9), rnd(2.0, 2.7), rnd(-0.9, 0.9)], [k, k, 0], [rnd(0.6, 0.9), rnd(0.45, 0.6), rnd(0.6, 0.9)]));
+  return merge(P);
+}
+
+function buildCypress() {
+  return merge([
+    part(CYL6, 0x5a4632, [0, 0.4, 0], [0, 0, 0], [0.12, 0.8, 0.12]),
+    part(new THREE.ConeGeometry(0.7, 5.5, 7), 0x2f5a32, [0, 3.4, 0]),
+  ]);
+}
+
+function buildStoneHouse() {
+  const w = rnd(3, 4.5), h = rnd(2.6, 4.2), d = 3;
+  const stone = [0xead6aa, 0xe2c896, 0xf0dfb8][Math.floor(rnd(0, 3))];
+  const P = [
+    box(stone, [0, h / 2, 0], [w, h, d]),
+    box(0xd2b783, [0, h + 0.1, 0], [w + 0.15, 0.2, d + 0.15]),
+    box(0x3a2a1c, [0, 0.75, d / 2 + 0.01], [0.8, 1.5, 0.04]),
+    box(0x2c4ea3, [-w * 0.28, h * 0.65, d / 2 + 0.01], [0.45, 0.45, 0.04]),
+    box(0x2c4ea3, [w * 0.28, h * 0.65, d / 2 + 0.01], [0.45, 0.45, 0.04]),
+  ];
+  if (Math.random() < 0.5) P.push(part(new THREE.SphereGeometry(0.9, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), stone, [0, h + 0.2, 0]));
+  return merge(P);
+}
+
+function buildWallTower() {
+  const P = [box(0xe8d2a2, [0, 2.6, 0], [3, 5.2, 3])];
+  for (const [x, z] of [[-1.1, -1.1], [1.1, -1.1], [-1.1, 1.1], [1.1, 1.1], [0, 1.1], [0, -1.1], [1.1, 0], [-1.1, 0]]) P.push(box(0xd8bd88, [x, 5.55, z], [0.7, 0.7, 0.7]));
+  P.push(box(0x3a2a1c, [0, 1.2, 1.51], [1.1, 2.0, 0.04]));
+  return merge(P);
+}
+
 // side: 'edge' props sit just off the road; 'near' and 'far' are further out. face = turn toward the road.
 export const SCENERY = {
   egypt: [
@@ -211,6 +248,12 @@ export const SCENERY = {
     { type: 'camelS', build: buildCamel, variants: 1, x: [7, 15], w: 2, face: false },
     { type: 'rock', build: buildRock, variants: 4, x: [4.2, 12], w: 2, face: false },
     { type: 'scrub', build: buildScrub, variants: 3, x: [3.6, 7], w: 2, face: false },
+  ],
+  jerusalem: [
+    { type: 'olive', build: buildOlive, variants: 4, x: [4.4, 12], w: 4, face: false },
+    { type: 'cypress', build: buildCypress, variants: 1, x: [5, 14], w: 2, face: false },
+    { type: 'shouse', build: buildStoneHouse, variants: 4, x: [8, 18], w: 4, face: true },
+    { type: 'tower', build: buildWallTower, variants: 1, x: [10, 18], w: 1, face: true },
   ],
   sinai: [
     { type: 'cliff', build: buildCliff, variants: 4, x: [7, 18], w: 5, face: false },
