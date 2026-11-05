@@ -319,6 +319,9 @@ kbd {
 .pips { display: flex; gap: 3px; margin-top: 3px; }
 .pips i { width: 14px; height: 5px; border-radius: 2px; background: rgba(77, 63, 44, 0.2); }
 .pips i.on { background: var(--tekhelet); }
+.star-btn { position: relative; width: auto; padding: 0 10px 0 4px; gap: 2px; grid-auto-flow: column; }
+.star-btn img { width: 34px; height: 34px; }
+.star-btn span { font-weight: 800; font-variant-numeric: tabular-nums; }
 .maxed { font-weight: 800; color: var(--tekhelet); padding-inline: 12px; }
 #screen-shop .shop-list { max-height: min(56vh, 520px); overflow-y: auto; }
 .sl-tr { font-weight: 700; }
@@ -371,6 +374,9 @@ kbd {
       </div>
       <div class="hud-right">
         <div id="manna" class="chip" aria-label="Manna collected"><span class="manna-dot"></span><span id="manna-count">0</span></div>
+        <button id="btn-star" class="icon-btn star-btn" type="button" aria-label="Use a Star shield" hidden>
+          <img data-icon="shield" alt=""><span id="star-count">0</span>
+        </button>
         <button id="btn-pause" class="icon-btn" type="button" aria-label="Pause">
           <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2" width="3.6" height="12" rx="1"/><rect x="9.4" y="2" width="3.6" height="12" rx="1"/></svg>
         </button>

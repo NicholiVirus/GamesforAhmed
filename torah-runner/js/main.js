@@ -13,7 +13,7 @@ import { TrainRide } from './train.js';
 const LANES = [-2, 0, 2];
 // What the main-menu shop sells, priced in manna saved from your runs.
 export const SHOP = [
-  { type: 'shield', name: 'Star shield', price: 150, about: 'Blocks one crash' },
+  { type: 'shield', name: 'Star shield', price: 150, about: 'Keep it, use it any time: double-tap, E, or the star button' },
   { type: 'magnet', name: 'Magnet', price: 150, about: 'Pulls manna to you' },
   { type: 'double', name: '2× manna', price: 200, about: 'Double manna for 10 s' },
   { type: 'sneakers', name: 'Jump sneakers', price: 200, about: 'Super-high jumps' },
@@ -87,7 +87,7 @@ class Game {
     this.ui = new UI({
       play: () => this.start(), pause: () => this.pause(), resume: () => this.resume(), home: () => this.home(),
       sound: () => this.toggleSound(), openScroll: () => this.openScroll(), closeScroll: () => this.closeScroll(),
-      openShop: () => this.openShop(), buy: (t) => this.buy(t), buyUpgrade: (id) => this.buyUpgrade(id), closeShop: () => this.ui.show('screen-start'),
+      openShop: () => this.openShop(), buy: (t) => this.buy(t), buyUpgrade: (id) => this.buyUpgrade(id), useStar: () => this.useStar(), closeShop: () => this.ui.show('screen-start'),
       continueWord: () => this.continueWord(), skipRide: () => this.skipRide(),
     });
 
@@ -231,6 +231,7 @@ class Game {
         else if (k === 'ArrowUp' || k === 'w' || k === 'W' || k === ' ' || k === 'Spacebar') this.jump();
         else if (k === 'ArrowDown' || k === 's' || k === 'S') this.slide();
         else if (k === 'p' || k === 'P' || k === 'Escape') this.pause();
+        else if (k === 'e' || k === 'E' || k === 'Shift') this.useStar();
       } else if (this.state === 'paused') {
         if (k === 'p' || k === 'P' || k === 'Escape') { e.preventDefault(); this.resume(); }
       } else if (this.state === 'word') {
@@ -268,7 +269,11 @@ class Game {
     const end = (e) => {
       const t = this.touch;
       if (!t || t.id !== e.pointerId) return;
-      if (!t.fired && this.state === 'playing' && performance.now() - t.t < 350) this.jump();
+      if (!t.fired && this.state === 'playing' && performance.now() - t.t < 350) {
+        // Double-tap uses a Star shield from your stash, like the hoverboard in Subway Surfers.
+        const now = performance.now();
+        if (now - (this.lastTap || 0) < 320) { this.useStar(); this.lastTap = 0; } else { this.jump(); this.lastTap = now; }
+      }
       this.touch = null;
     };
     surface.addEventListener('pointerup', end);
@@ -394,6 +399,7 @@ class Game {
     const inv = this.store.inv || {};
     const used = [];
     for (const it of SHOP) {
+      if (it.type === 'shield') continue; // Star shields are kept in your stash and used when you choose.
       if (!(inv[it.type] > 0)) continue;
       inv[it.type]--;
       used.push(it.name);
@@ -493,7 +499,22 @@ class Game {
     if (!this.muted) this.sound.startMusic();
   }
 
+  starCount() { return ((this.store.inv || {}).shield) || 0; }
+
+  // Spend one Star shield from the stash, any time during a run.
+  useStar() {
+    if (this.state !== 'playing' || this.powers.shield > 0 || this.starCount() < 1) { if (this.starCount() < 1) this.sound.play('bump'); return; }
+    this.store.inv.shield--;
+    saveStore(this.store);
+    this.powers.shield = POWERS.shield.time;
+    this.sound.play('power');
+    this.ui.popup('Star shield!');
+    this.world.burst(this.x, 1, 0, 20, { color: [0.6, 0.85, 1], speed: 4, up: 3, life: 0.6 });
+    this.ui.setStars(this.starCount());
+  }
+
   refreshHud() {
+    this.ui.setStars(this.starCount());
     this.ui.hud(true);
     this.ui.last = {};
     this.ui.setHearts(this.hearts, this.maxHearts);

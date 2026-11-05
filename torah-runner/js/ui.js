@@ -25,6 +25,7 @@ export class UI {
     on('btn-scroll-2', () => h.openScroll());
     on('btn-scroll-close', () => h.closeScroll());
     on('btn-shop', () => h.openShop());
+    on('btn-star', () => h.useStar());
     on('btn-shop-close', () => h.closeShop());
     const list = $('shop-list');
     if (list) list.addEventListener('click', (e) => {
@@ -172,6 +173,12 @@ export class UI {
         ${btn(`data-buy="${it.type}"`, it.price, wallet >= it.price)}
       </li>`).join('');
     $('shop-list').innerHTML = `<li class="shop-head">Upgrades · keep forever</li>${ups}<li class="shop-head">Power-ups · used on your next run</li>${items}`;
+  }
+
+  setStars(n) {
+    const b = $('btn-star');
+    b.hidden = n < 1;
+    $('star-count').textContent = String(n);
   }
 
   countdown(n) {
