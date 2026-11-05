@@ -292,22 +292,22 @@ export const LETTER_NAMES = {
 };
 
 // Metres per region. One lap = 4 regions.
-export const BIOME_LEN = 650;
+export const BIOME_LEN = 1950;
 // After this many metres the journey arrives in Jerusalem and stays there.
-export const JLM_START = 3000;
+export const JLM_START = 9000;
 // Regions before Jerusalem loop in order; Jerusalem is the last entry in BIOMES.
 export const CYCLE = 6;
 // The story route after the loop: where each place starts, in metres. The last one never ends.
 export const STORY = [
   { id: 'jerusalem', at: JLM_START },
-  { id: 'telaviv', at: JLM_START + 650 },
-  { id: 'airport', at: JLM_START + 1300 },
-  { id: 'newyork', at: JLM_START + 1950 },
-  { id: 'donut', at: JLM_START + 2600 },
-  { id: 'newyork', at: JLM_START + 3250 },
+  { id: 'telaviv', at: JLM_START + BIOME_LEN },
+  { id: 'airport', at: JLM_START + BIOME_LEN * 2 },
+  { id: 'newyork', at: JLM_START + BIOME_LEN * 3 },
+  { id: 'donut', at: JLM_START + BIOME_LEN * 4 },
+  { id: 'newyork', at: JLM_START + BIOME_LEN * 5 },
 ];
 // You must pass the Hebrew test at the gate, just before New York.
-export const GATE_AT = JLM_START + 1950 - 40;
+export const GATE_AT = JLM_START + BIOME_LEN * 3 - 40;
 
 export const BIOMES = [
   {
