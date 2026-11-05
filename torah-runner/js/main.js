@@ -323,9 +323,9 @@ class Game {
 
   updateCountdown(dt) {
     this.cdT += dt;
-    const n = 3 - Math.floor(this.cdT / 0.6);
+    const n = 3 - Math.floor(this.cdT / 0.334);
     if (n >= 1 && n !== this.cdN) { this.cdN = n; this.ui.countdown(n); this.sound.play('tick'); }
-    if (this.cdT >= 1.8) {
+    if (this.cdT >= 1.0) {
       this.ui.countdown(null);
       this.sound.play('go');
       this.state = 'playing';

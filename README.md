@@ -12,7 +12,7 @@ A 3D lane runner. Run from Egypt, through the parted Red Sea, the Oasis of Elim,
 - **Controls:** ← → change lane · ↑ / Space jump · ↓ slide · P pause · M sound. On touch screens: swipe, or tap to jump.
 - **Words:** 280 words (animals, food, colors, numbers, family, holidays, Torah names and values) covering all 22 letters of the Alef-Bet, each with its transliteration and meaning. Words you finish are saved in "My scroll".
 - **Power-ups:** Star of David shield, jet pack, magnet, double manna, shofar blast, extra heart.
-- **Word pause:** finishing a word freezes the run and shows the word card. Tap "Keep running" for a 3-2-1 countdown; a golden wave clears the road just ahead. Resuming from pause also counts down.
+- **Word pause:** finishing a word freezes the run and shows the word card. Tap "Keep running" for a 1-second 3-2-1 countdown; a golden wave clears the road just ahead. Resuming from pause also counts down.
 - **Music:** a synthesized klezmer band (clarinet, accordion, bass, drum) plays the traditional Hava Nagila theme and a freylekh dance tune; it speeds up as you run faster.
 - **Train back:** after a lost run, "Run again" sends a steam train that carries you back through every region to Egypt (tap "Skip ride" to jump straight there).
 
