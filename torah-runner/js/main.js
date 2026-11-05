@@ -826,7 +826,7 @@ class Game {
     const kind = () => { const r = Math.random(); return r < 0.4 ? 'low' : r < 0.7 ? 'high' : 'tall'; };
     const prevFree = [0, 1, 2].filter((i) => !this.prevRow || !this.prevRow.lanes[i]);
     // Ramp up onto an elevated walkway: run along the top, then drop off the end.
-    if (d > 0.03 && Math.random() < 0.16) {
+    if (d > 0.01 && Math.random() < 0.45) {
       const sp = speedAt(wz);
       const ln = safe;
       const n = 2 + Math.floor(Math.random() * 2);
