@@ -322,6 +322,10 @@ kbd {
 .star-btn { position: relative; width: auto; padding: 0 10px 0 4px; gap: 2px; grid-auto-flow: column; }
 .star-btn img { width: 34px; height: 34px; }
 .star-btn span { font-weight: 800; font-variant-numeric: tabular-nums; }
+.quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.quiz-opt { justify-content: center; padding: 14px 10px; font-size: 1rem; }
+.quiz-opt.right { background: #3f9a5a; color: #fff; box-shadow: none; }
+.quiz-opt.wrong { background: #c9483d; color: #fff; box-shadow: none; }
 .maxed { font-weight: 800; color: var(--tekhelet); padding-inline: 12px; }
 #screen-shop .shop-list { max-height: min(56vh, 520px); overflow-y: auto; }
 .sl-tr { font-weight: 700; }
@@ -500,6 +504,18 @@ kbd {
         <button id="btn-scroll-2" class="btn btn-ghost" type="button"><span>My scroll</span></button>
         <button id="btn-home-2" class="btn btn-ghost" type="button">Main menu</button>
       </div>
+    </div>
+  </section>
+
+  <section id="screen-quiz" class="screen center word-screen" hidden aria-labelledby="quiz-title">
+    <div class="scroll" style="text-align:center">
+      <span class="roller l" aria-hidden="true"></span><span class="roller r" aria-hidden="true"></span>
+      <p class="wc-kicker" id="quiz-title">Second chance · word quiz</p>
+      <p class="wc-he" id="quiz-he" lang="he" dir="rtl"></p>
+      <p class="wc-tr" id="quiz-tr"></p>
+      <p class="wc-count">What does it mean?</p>
+      <div class="quiz-options" id="quiz-options"></div>
+      <p class="wc-count" id="quiz-progress"></p>
     </div>
   </section>
 

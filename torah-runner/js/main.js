@@ -180,6 +180,7 @@ class Game {
     this.hearts = MAX_HEARTS;
     this.banked = false;
     this.passiveT = 0;
+    this.revives = 0;
     this.lane = 1; this.prevLane = 1;
     this.x = 0; this.y = 0; this.vy = 0;
     this.grounded = true;
@@ -499,6 +500,68 @@ class Game {
     if (!this.muted) this.sound.startMusic();
   }
 
+  // ------------------------------------------------------------ second-chance quiz
+  // Out of hearts? Answer a quiz on your words to keep running. Each revive in the same run
+  // asks 3 more questions. Words you answer correctly count as known and are never asked again.
+  startQuiz() {
+    const known = new Set(this.store.known || []);
+    const n = 3 * (this.revives + 1);
+    const fresh = (list) => list.filter((w) => !known.has(w.he));
+    const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    let pool = shuffle(fresh(WORDS.filter((w) => this.learned.has(w.he))));
+    if (pool.length < n) pool = pool.concat(shuffle(fresh(WORDS.filter((w) => !this.learned.has(w.he)))));
+    if (pool.length < n) return false;
+    this.quiz = { qs: pool.slice(0, n), i: 0, right: 0 };
+    this.state = 'quiz';
+    this.sound.play('bump');
+    this.ui.hideHint();
+    this.askQuiz();
+    return true;
+  }
+
+  askQuiz() {
+    const q = this.quiz;
+    const w = q.qs[q.i];
+    const wrong = WORDS.filter((x) => x.en !== w.en).sort(() => Math.random() - 0.5).slice(0, 3).map((x) => x.en);
+    const options = [w.en, ...wrong].sort(() => Math.random() - 0.5);
+    const need = Math.ceil((q.qs.length * 2) / 3);
+    this.ui.quiz(w, options, q.i, q.qs.length, q.right, need, (pick) => this.answerQuiz(pick));
+  }
+
+  answerQuiz(pick) {
+    const q = this.quiz;
+    const w = q.qs[q.i];
+    const ok = pick === w.en;
+    if (ok) {
+      q.right++;
+      this.store.known = [...new Set([...(this.store.known || []), w.he])];
+      saveStore(this.store);
+      this.sound.play('letter');
+    } else this.sound.play('bump');
+    q.i++;
+    setTimeout(() => {
+      if (this.state !== 'quiz') return;
+      if (q.i < q.qs.length) { this.askQuiz(); return; }
+      const need = Math.ceil((q.qs.length * 2) / 3);
+      if (q.right >= need) {
+        this.revives++;
+        this.hearts = 1;
+        this.hurtT = 0;
+        this.ui.show(null);
+        this.ui.setHearts(this.hearts, this.maxHearts);
+        this.ui.popup(`${q.right}/${q.qs.length} correct! Keep running`);
+        this.sound.play('word');
+        this.startCountdown(() => { this.clearAhead(Math.max(26, this.speed * 1.7), true); this.invuln = Math.max(this.invuln, 1.5); });
+      } else {
+        this.ui.show(null);
+        this.state = 'dying';
+        this.deadT = 0;
+        this.sound.stopMusic();
+        this.sound.play('over');
+      }
+    }, 900);
+  }
+
   starCount() { return ((this.store.inv || {}).shield) || 0; }
 
   // Spend one Star shield from the stash, any time during a run.
@@ -577,6 +640,7 @@ class Game {
   closeScroll() { this.ui.show(this.scrollReturn || 'screen-start'); }
 
   die() {
+    if (this.startQuiz()) return;
     this.state = 'dying';
     this.deadT = 0;
     this.sound.stopMusic();

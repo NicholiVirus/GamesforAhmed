@@ -9,7 +9,7 @@ export class UI {
   constructor(h) {
     this.h = h;
     this.last = {};
-    this.screens = ['screen-loading', 'screen-start', 'screen-pause', 'screen-over', 'screen-scroll', 'screen-error', 'screen-word', 'screen-shop'];
+    this.screens = ['screen-loading', 'screen-start', 'screen-pause', 'screen-over', 'screen-scroll', 'screen-error', 'screen-word', 'screen-shop', 'screen-quiz'];
     this.wordArmed = false;
     const on = (id, fn) => { const el = $(id); if (el) el.addEventListener('click', (e) => { e.stopPropagation(); fn(); }); };
     on('btn-play', () => h.play());
@@ -173,6 +173,25 @@ export class UI {
         ${btn(`data-buy="${it.type}"`, it.price, wallet >= it.price)}
       </li>`).join('');
     $('shop-list').innerHTML = `<li class="shop-head">Upgrades · keep forever</li>${ups}<li class="shop-head">Power-ups · used on your next run</li>${items}`;
+  }
+
+  quiz(word, options, i, total, right, need, onPick) {
+    $('quiz-progress').textContent = `Question ${i + 1} of ${total} · ${right} right · need ${need} to keep running`;
+    $('quiz-he').textContent = word.he;
+    $('quiz-tr').textContent = word.tr;
+    const box = $('quiz-options');
+    box.innerHTML = options.map((o) => `<button class="btn btn-ghost quiz-opt" type="button">${o}</button>`).join('');
+    let done = false;
+    box.querySelectorAll('button').forEach((b) => b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (done) return;
+      done = true;
+      const ok = b.textContent === word.en;
+      b.classList.add(ok ? 'right' : 'wrong');
+      if (!ok) box.querySelectorAll('button').forEach((x) => { if (x.textContent === word.en) x.classList.add('right'); });
+      onPick(b.textContent);
+    }));
+    this.show('screen-quiz');
   }
 
   setStars(n) {
