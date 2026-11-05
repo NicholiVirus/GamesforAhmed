@@ -44,10 +44,14 @@ function saveStore(s) {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) { /* storage unavailable */ }
 }
 
+// A fresh random order of all the words every run (Fisher-Yates shuffle).
 function makeWordOrder() {
-  const rest = WORDS.slice(1).map((w) => ({ w, k: [...w.he].length + Math.random() * 2.2 }));
-  rest.sort((a, b) => a.k - b.k);
-  return [WORDS[0], ...rest.map((r) => r.w)];
+  const list = WORDS.slice();
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [list[i], list[j]] = [list[j], list[i]];
+  }
+  return list;
 }
 
 class Game {
