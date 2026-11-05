@@ -212,6 +212,95 @@ function buildWallTower() {
   return merge(P);
 }
 
+function buildBauhaus() {
+  const w = rnd(4, 6), floors = 2 + Math.floor(rnd(0, 3)), h = floors * 1.6;
+  const P = [box(0xf6f3ec, [0, h / 2, 0], [w, h, 4])];
+  for (let f = 0; f < floors; f++) {
+    const y = 0.9 + f * 1.6;
+    P.push(box(0xe9e4d8, [0, y - 0.45, 2.2], [w * 0.9, 0.12, 0.6]));
+    P.push(box(0xffffff, [0, y - 0.15, 2.48], [w * 0.9, 0.5, 0.06]));
+    P.push(box(0x6aa0c8, [-w * 0.25, y + 0.2, 2.01], [w * 0.3, 0.6, 0.02]), box(0x6aa0c8, [w * 0.25, y + 0.2, 2.01], [w * 0.3, 0.6, 0.02]));
+  }
+  return merge(P);
+}
+function buildUmbrella() {
+  const c = [0xd8402f, 0x2c4ea3, 0xf0b93a, 0x3fae5a][Math.floor(rnd(0, 4))];
+  return merge([
+    box(0xffffff, [0, 1.1, 0], [0.06, 2.2, 0.06]),
+    part(new THREE.ConeGeometry(1.3, 0.5, 8), c, [0, 2.3, 0]),
+    box(0xf2efe6, [0.8, 0.25, 0.3], [0.6, 0.12, 1.6], [0.2, 0.3, 0]),
+  ]);
+}
+function buildLifeguard() {
+  return merge([
+    ...[[-0.6, -0.6], [0.6, -0.6], [-0.6, 0.6], [0.6, 0.6]].map(([x, z]) => box(0xf6f3ec, [x, 1.2, z], [0.12, 2.4, 0.12])),
+    box(0xf6f3ec, [0, 2.6, 0], [1.6, 0.9, 1.6]),
+    box(0xd8402f, [0, 3.2, 0], [1.9, 0.12, 1.9]),
+    box(0x2c4ea3, [0, 2.7, 0.81], [1.2, 0.4, 0.02]),
+  ]);
+}
+function buildTerminal() {
+  const w = rnd(14, 22);
+  return merge([
+    box(0xd8dde2, [0, 3, 0], [w, 6, 8]),
+    box(0x7fb0d8, [0, 3.2, 4.01], [w * 0.95, 3.6, 0.02]),
+    box(0xb8bec4, [0, 6.3, 0], [w + 1, 0.4, 9]),
+    box(0x2c4ea3, [0, 5.4, 4.05], [w * 0.4, 0.6, 0.04]),
+  ]);
+}
+function buildPlane() {
+  return merge([
+    part(new THREE.CylinderGeometry(1.1, 1.1, 14, 12), 0xf6f6f6, [0, 2.4, 0], [Math.PI / 2, 0, 0]),
+    part(new THREE.ConeGeometry(1.1, 2.4, 12), 0xf6f6f6, [0, 2.4, 8.2], [Math.PI / 2, 0, 0]),
+    box(0xf6f6f6, [0, 2.0, 0.5], [15, 0.3, 2.6]),
+    box(0x2c4ea3, [0, 4.2, -6.2], [0.3, 3.2, 2.2]),
+    box(0xf6f6f6, [0, 2.6, -6.4], [5.5, 0.25, 1.5]),
+    box(0x2c4ea3, [0, 2.4, 0], [0.05, 0.4, 13.6]),
+    box(0x2c4ea3, [1.11, 2.5, 0], [0.02, 0.3, 13]), box(0x2c4ea3, [-1.11, 2.5, 0], [0.02, 0.3, 13]),
+    part(new THREE.CylinderGeometry(0.45, 0.45, 2, 10), 0x9aa0a6, [4, 1.6, 1], [Math.PI / 2, 0, 0]),
+    part(new THREE.CylinderGeometry(0.45, 0.45, 2, 10), 0x9aa0a6, [-4, 1.6, 1], [Math.PI / 2, 0, 0]),
+    box(0x333333, [0, 0.6, 5], [0.2, 1.2, 0.2]), box(0x333333, [1.5, 0.6, -0.5], [0.2, 1.2, 0.2]), box(0x333333, [-1.5, 0.6, -0.5], [0.2, 1.2, 0.2]),
+  ]);
+}
+function buildTower2() {
+  return merge([
+    part(new THREE.CylinderGeometry(0.9, 1.3, 14, 8), 0xe2e4e6, [0, 7, 0]),
+    part(new THREE.CylinderGeometry(2.4, 1.8, 2.2, 8), 0x5f8fb8, [0, 15.1, 0]),
+    part(new THREE.CylinderGeometry(2.6, 2.6, 0.4, 8), 0xd8dde2, [0, 16.4, 0]),
+  ]);
+}
+function buildSkyscraper() {
+  const w = rnd(4, 7), d = rnd(4, 7), h = rnd(16, 40);
+  const glass = [0x5a6e88, 0x6a7a8c, 0x8a7a6a, 0x4a5a70][Math.floor(rnd(0, 4))];
+  const P = [box(glass, [0, h / 2, 0], [w, h, d], [0, 0, 0], 0.02)];
+  for (let y = 2; y < h - 1; y += 1.6) P.push(box(Math.random() < 0.55 ? 0xffd890 : 0x2a3444, [0, y, d / 2 + 0.02], [w * 0.85, 0.5, 0.02], [0, 0, 0], 0));
+  if (Math.random() < 0.4) P.push(box(glass, [0, h + 2, 0], [w * 0.5, 4, d * 0.5]), box(0xcccccc, [0, h + 6, 0], [0.2, 4, 0.2]));
+  return merge(P);
+}
+function buildStreetLamp() {
+  return merge([
+    box(0x2a2a2a, [0, 2, 0], [0.12, 4, 0.12]),
+    box(0x2a2a2a, [0.4, 4, 0], [0.9, 0.08, 0.08]),
+    box(0xfff0b0, [0.8, 3.85, 0], [0.35, 0.18, 0.25]),
+  ]);
+}
+function buildTileWall() {
+  const P = [box(0xeeeae0, [0, 3, 0], [8, 6, 0.6])];
+  P.push(box(0x2c4ea3, [0, 2.2, 0.31], [8, 0.4, 0.02]));
+  P.push(box(0xf0b93a, [0, 2.6, 0.31], [8, 0.15, 0.02]));
+  return merge(P);
+}
+function buildDonutStall() {
+  return merge([
+    box(0x8a5a3a, [0, 0.55, 0], [3, 1.1, 1.2]),
+    box(0xf38bb8, [0, 2.6, -0.4], [3.2, 0.5, 0.3]),
+    box(0x6b4a2a, [-1.45, 1.6, -0.4], [0.12, 2.2, 0.12]), box(0x6b4a2a, [1.45, 1.6, -0.4], [0.12, 2.2, 0.12]),
+    part(new THREE.TorusGeometry(0.55, 0.25, 8, 16), 0xf38bb8, [0, 3.5, -0.4]),
+    ...[-1, -0.35, 0.35, 1].map((x, k) => part(new THREE.TorusGeometry(0.16, 0.08, 6, 12), [0xd9a066, 0xf38bb8, 0x7a4a2a, 0xffd24a][k], [x, 1.18, 0.1], [Math.PI / 2, 0, 0])),
+    box(0xfff3c4, [0, 2.2, -0.4], [2.8, 0.06, 0.06]),
+  ]);
+}
+
 // side: 'edge' props sit just off the road; 'near' and 'far' are further out. face = turn toward the road.
 export const SCENERY = {
   egypt: [
@@ -254,6 +343,27 @@ export const SCENERY = {
     { type: 'cypress', build: buildCypress, variants: 1, x: [5, 14], w: 2, face: false },
     { type: 'shouse', build: buildStoneHouse, variants: 4, x: [8, 18], w: 4, face: true },
     { type: 'tower', build: buildWallTower, variants: 1, x: [10, 18], w: 1, face: true },
+  ],
+  telaviv: [
+    { type: 'bauhaus', build: buildBauhaus, variants: 4, x: [9, 18], w: 4, face: true },
+    { type: 'palm', build: buildPalm, variants: 4, x: [4.4, 9], w: 3, face: false },
+    { type: 'umbrella', build: buildUmbrella, variants: 4, x: [5, 12], w: 3, face: false },
+    { type: 'lifeguard', build: buildLifeguard, variants: 1, x: [7, 12], w: 1, face: true },
+  ],
+  airport: [
+    { type: 'terminal', build: buildTerminal, variants: 2, x: [16, 26], w: 2, face: true },
+    { type: 'plane', build: buildPlane, variants: 1, x: [14, 24], w: 2, face: false },
+    { type: 'ctower', build: buildTower2, variants: 1, x: [18, 28], w: 1, face: false },
+    { type: 'lamp', build: buildStreetLamp, variants: 1, x: [4, 5], w: 3, face: true },
+  ],
+  newyork: [
+    { type: 'sky', build: buildSkyscraper, variants: 6, x: [7, 16], w: 7, face: true },
+    { type: 'lamp', build: buildStreetLamp, variants: 1, x: [4, 5], w: 3, face: true },
+  ],
+  donut: [
+    { type: 'tilewall', build: buildTileWall, variants: 1, x: [4.6, 4.8], w: 6, face: true },
+    { type: 'stall', build: buildDonutStall, variants: 1, x: [6.5, 8], w: 3, face: true },
+    { type: 'lamp', build: buildStreetLamp, variants: 1, x: [4.2, 4.4], w: 2, face: true },
   ],
   sinai: [
     { type: 'cliff', build: buildCliff, variants: 4, x: [7, 18], w: 5, face: false },

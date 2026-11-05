@@ -194,6 +194,8 @@ export class UI {
     this.show('screen-quiz');
   }
 
+  quizTitle(t) { $('quiz-title').textContent = t; }
+
   setStars(n) {
     const b = $('btn-star');
     b.hidden = n < 1;

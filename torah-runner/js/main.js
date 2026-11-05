@@ -1,6 +1,6 @@
 // Torah Runner: gameplay, input and the main loop.
 import * as THREE from './three.js';
-import { WORDS, BIOMES, BIOME_LEN, POWERS, CYCLE, JLM_START } from './data.js';
+import { WORDS, BIOMES, BIOME_LEN, POWERS, CYCLE, JLM_START, GATE_AT } from './data.js';
 import { Sound } from './audio.js';
 import { World, PointPool, biomeIndexAt } from './world.js';
 import { UI } from './ui.js';
@@ -181,6 +181,8 @@ class Game {
     this.banked = false;
     this.passiveT = 0;
     this.revives = 0;
+    this.boarded = false;
+    this.endTitle = null;
     this.lane = 1; this.prevLane = 1;
     this.x = 0; this.y = 0; this.vy = 0;
     this.grounded = true;
@@ -519,6 +521,18 @@ class Game {
     return true;
   }
 
+  // At Ben Gurion Airport you must pass a 5-question Hebrew test (4 right) to fly to New York.
+  startBoardingTest() {
+    const pool = WORDS.slice().sort(() => Math.random() - 0.5).slice(0, 5);
+    this.quiz = { qs: pool, i: 0, right: 0, mode: 'board' };
+    this.state = 'quiz';
+    this.touch = null;
+    this.ui.hideHint();
+    this.ui.quizTitle('Ben Gurion Airport · Hebrew boarding test');
+    this.sound.play('banner');
+    this.askQuiz();
+  }
+
   askQuiz() {
     const q = this.quiz;
     const w = q.qs[q.i];
@@ -543,6 +557,24 @@ class Game {
       if (this.state !== 'quiz') return;
       if (q.i < q.qs.length) { this.askQuiz(); return; }
       const need = Math.ceil((q.qs.length * 2) / 3);
+      if (q.mode === 'board') {
+        this.ui.show(null);
+        this.ui.quizTitle('Second chance · word quiz');
+        if (q.right >= need) {
+          this.boarded = true;
+          this.ui.flash();
+          this.sound.play('whoosh');
+          this.ui.popup(`${q.right}/${q.qs.length}! Boarding pass approved. Flying to New York!`);
+          this.startCountdown(() => { this.clearAhead(Math.max(30, this.speed * 2), true); this.invuln = Math.max(this.invuln, 1.5); });
+        } else {
+          this.endTitle = 'You missed your flight';
+          this.state = 'dying';
+          this.deadT = 0;
+          this.sound.stopMusic();
+          this.sound.play('over');
+        }
+        return;
+      }
       if (q.right >= need) {
         this.revives++;
         this.hearts = 1;
@@ -666,7 +698,7 @@ class Game {
     this.ui.hud(false);
     this.ui.hideHint();
     this.ui.gameOver({
-      title: `You reached ${place}`,
+      title: this.endTitle || `You reached ${place}`,
       sub: (lap > 1 ? `Journey ${lap}. ` : '') + (n ? `You wrote ${n} word${n === 1 ? '' : 's'} of Torah on your scroll.` : 'Catch the golden letters in order to write a word on your scroll.'),
       score, dist: this.dist, manna: this.mannaCount, words: this.wordsDone, newBest, partial,
     });
@@ -891,6 +923,7 @@ class Game {
     this.sound.setTempo(this.speed);
     this.dist += this.speed * dt;
     this.score += this.speed * dt;
+    if (!this.boarded && this.dist >= GATE_AT) { this.startBoardingTest(); return; }
     this.generate();
 
     const bi = biomeIndexAt(this.dist);

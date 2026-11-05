@@ -457,6 +457,81 @@ function buildWell() {
   return merge(P);
 }
 
+// ---- modern-city obstacles (Tel Aviv, airport, New York, donut shop)
+function buildSuitcases() {
+  const cols = [0x2c4ea3, 0xd8402f, 0xf0b93a, 0x3f9a5a];
+  const P = [];
+  [[-0.55, 0.3, 0], [0.05, 0.28, 0.05], [0.6, 0.32, -0.05], [-0.25, 0.68, 0], [0.35, 0.66, 0.02]].forEach(([x, y, z], k) => {
+    P.push(box(cols[k % 4], [x, y, z], [0.55, 0.38 + (k % 2) * 0.06, 0.32]));
+    P.push(box(0x222222, [x, y + 0.24, z], [0.2, 0.06, 0.05]));
+  });
+  return merge(P);
+}
+function buildBarrierArm() {
+  return merge([
+    box(0x444444, [-1.0, 0.75, 0], [0.22, 1.5, 0.22]),
+    box(0xf2f2f2, [0, 1.35, 0], [2.1, 0.16, 0.12]),
+    ...[-0.8, -0.4, 0, 0.4, 0.8].map((x) => box(0xd8402f, [x, 1.35, 0.01], [0.2, 0.17, 0.13])),
+    box(0xf2f2f2, [0, 1.12, 0], [2.0, 0.08, 0.08]),
+  ]);
+}
+function buildLuggageCart() {
+  const P = [box(0x9aa0a6, [0, 0.3, 0], [1.4, 0.1, 1.8]), box(0x9aa0a6, [0, 1.1, -0.85], [1.4, 1.6, 0.08])];
+  for (const [x, z] of [[-0.6, -0.8], [0.6, -0.8], [-0.6, 0.8], [0.6, 0.8]]) P.push(box(0x222222, [x, 0.13, z], [0.12, 0.26, 0.26]));
+  [[0.6, 0.2], [1.05, -0.1], [1.5, 0.15], [1.9, -0.05], [2.3, 0.1]].forEach(([y, x], k) => P.push(box([0x2c4ea3, 0xd8402f, 0x3f9a5a, 0xf0b93a, 0x7a4a9a][k], [x, y, 0], [1.2, 0.42, 1.5])));
+  return merge(P);
+}
+function buildTaxi() {
+  return merge([
+    box(0xf5c518, [0, 0.75, 0], [1.6, 0.7, 3.8]),
+    box(0xf5c518, [0, 1.35, -0.2], [1.4, 0.55, 2.0]),
+    box(0x2a3a4a, [0, 1.36, 0.82], [1.3, 0.45, 0.04]),
+    box(0x2a3a4a, [0.71, 1.36, -0.2], [0.02, 0.4, 1.7]),
+    box(0x2a3a4a, [-0.71, 1.36, -0.2], [0.02, 0.4, 1.7]),
+    box(0x111111, [0, 0.62, 0], [1.62, 0.1, 3.82]),
+    box(0xffffff, [0, 1.72, -0.2], [0.5, 0.18, 0.3]),
+    ...[[-0.8, 1.3], [0.8, 1.3], [-0.8, -1.3], [0.8, -1.3]].map(([x, z]) => part(new THREE.CylinderGeometry(0.34, 0.34, 0.25, 10), 0x111111, [x, 0.34, z], [0, 0, Math.PI / 2])),
+    box(0xfff3c4, [-0.55, 0.85, 1.91], [0.3, 0.16, 0.02]), box(0xfff3c4, [0.55, 0.85, 1.91], [0.3, 0.16, 0.02]),
+  ]);
+}
+function buildHydrants() {
+  const P = [];
+  for (const x of [-0.6, 0, 0.6]) {
+    P.push(part(new THREE.CylinderGeometry(0.2, 0.24, 0.65, 10), 0xd8402f, [x, 0.33, 0]));
+    P.push(part(new THREE.SphereGeometry(0.22, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), 0xd8402f, [x, 0.65, 0]));
+    P.push(box(0xb0302a, [x, 0.45, 0], [0.62, 0.1, 0.12]));
+  }
+  return merge(P);
+}
+function buildTurnstiles() {
+  const P = [];
+  for (const x of [-0.7, 0, 0.7]) {
+    P.push(box(0xb8bcc2, [x, 0.42, 0], [0.32, 0.84, 0.7]));
+    P.push(box(0x3fae5a, [x, 0.86, 0.2], [0.18, 0.04, 0.12]));
+    P.push(box(0xd8dde2, [x + 0.25, 0.7, 0], [0.5, 0.06, 0.06]));
+  }
+  return merge(P);
+}
+function buildGiantDonut() {
+  return merge([
+    part(new THREE.TorusGeometry(1.0, 0.48, 10, 20), 0xd9a066, [0, 1.5, 0]),
+    part(new THREE.TorusGeometry(1.0, 0.5, 10, 20, Math.PI * 2), 0xf38bb8, [0, 1.5, 0.08], [0, 0, 0], [1, 1, 0.55]),
+    ...Array.from({ length: 16 }, (_, k) => {
+      const a = (k / 16) * Math.PI * 2;
+      return box([0xffffff, 0x4aa8ff, 0xffd24a, 0x3fae5a][k % 4], [Math.cos(a) * 1.0, 1.5 + Math.sin(a) * 1.0, 0.36], [0.16, 0.05, 0.05], [0, 0, a * 2]);
+    }),
+    box(0x6b4a2a, [0, 0.2, 0], [1.2, 0.4, 0.6]),
+  ]);
+}
+function buildJuiceKiosk() {
+  return merge([
+    box(0xffffff, [0, 1.1, 0], [1.6, 2.2, 1.4]),
+    box(0xff8a3d, [0, 2.35, 0.1], [1.9, 0.3, 1.7]),
+    box(0x3fae5a, [0, 1.25, 0.71], [1.4, 0.6, 0.02]),
+    ...[[-0.4, 0xff8a3d], [0, 0xffd24a], [0.4, 0xd8402f]].map(([x, c]) => part(ICO, c, [x, 1.65, 0.72], [0, 0, 0], [0.16, 0.16, 0.16])),
+  ]);
+}
+
 // kind: low = jump, high = slide, tall = change lane. Boxes: [x0, x1, y0, y1, z0, z1] around the lane centre.
 export const OBSTACLES = {
   bricks: { kind: 'low', build: buildBricks, boxes: [[-0.9, 0.9, 0, 0.82, -0.33, 0.33]] },
@@ -475,6 +550,14 @@ export const OBSTACLES = {
   ledge: { kind: 'low', build: buildLedge, boxes: [[-0.92, 0.92, 0, 0.78, -0.38, 0.38]] },
   stonearch: { kind: 'high', build: buildStoneArch, boxes: [[-1, 1, 1.08, 2.0, -0.33, 0.33]] },
   boulder: { kind: 'tall', build: buildBoulder, boxes: [[-1.0, 1.0, 0, 2.4, -1.0, 1.0]] },
+  suitcases: { kind: 'low', build: buildSuitcases, boxes: [[-0.88, 0.88, 0, 0.82, -0.2, 0.2]] },
+  barrier: { kind: 'high', build: buildBarrierArm, boxes: [[-1, 1, 1.05, 1.45, -0.1, 0.1]] },
+  cart: { kind: 'tall', build: buildLuggageCart, boxes: [[-0.75, 0.75, 0, 2.6, -0.9, 0.9]] },
+  taxi: { kind: 'tall', build: buildTaxi, boxes: [[-0.8, 0.8, 0, 1.9, -1.9, 1.9]] },
+  hydrants: { kind: 'low', build: buildHydrants, boxes: [[-0.85, 0.85, 0, 0.75, -0.25, 0.25]] },
+  turnstiles: { kind: 'low', build: buildTurnstiles, boxes: [[-0.88, 0.88, 0, 0.85, -0.35, 0.35]] },
+  bigdonut: { kind: 'tall', build: buildGiantDonut, boxes: [[-0.95, 0.95, 0, 3, -0.5, 0.5]] },
+  kiosk: { kind: 'tall', build: buildJuiceKiosk, boxes: [[-0.8, 0.8, 0, 2.5, -0.7, 0.7]] },
   ramp: { kind: 'ramp', build: buildRamp, boxes: [[-0.9, 0.9, 0, 1.25, -1.6, 1.6]] },
   deck: { kind: 'deck', build: buildDeck, boxes: [[-0.95, 0.95, 0, 1.25, -8, 8]] },
   well: { kind: 'tall', build: buildWell, boxes: [[-0.9, 0.9, 0, 3, -0.9, 0.9]] },
@@ -488,6 +571,10 @@ export const BIOME_OBSTACLES = {
   elim: { low: ['jars', 'rocks'], high: ['banner'], tall: ['well', 'camel'], roll: [] },
   night: { low: ['rocks', 'bush'], high: ['tent'], tall: ['camel', 'boulder'], roll: ['tumble'] },
   jerusalem: { low: ['bricks', 'jars'], high: ['stonearch', 'banner'], tall: ['block', 'well'], roll: [] },
+  telaviv: { low: ['suitcases', 'jars'], high: ['banner'], tall: ['kiosk'], roll: [] },
+  airport: { low: ['suitcases'], high: ['barrier'], tall: ['cart'], roll: [] },
+  newyork: { low: ['hydrants'], high: ['barrier'], tall: ['taxi'], roll: [] },
+  donut: { low: ['turnstiles'], high: ['barrier'], tall: ['bigdonut'], roll: [] },
   sinai: { low: ['ledge'], high: ['stonearch'], tall: ['boulder'], roll: ['rollstone'] },
 };
 

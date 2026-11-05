@@ -1,16 +1,17 @@
 // The environment: renderer, sky, light, scrolling ground, the parted sea, distant landmarks,
 // roadside props and particle effects. Gameplay objects live in main.js.
 import * as THREE from './three.js';
-import { BIOMES, BIOME_LEN, JLM_START, CYCLE } from './data.js';
+import { BIOMES, BIOME_LEN, JLM_START, CYCLE, STORY } from './data.js';
 import { part, merge, jagged, ICO, softDot } from './models.js';
 import { pickScenery, sceneryGeo } from './scenery.js';
 import { flatMat } from './models.js';
 
 const LAP = BIOME_LEN * CYCLE;
-const JLM = BIOMES.length - 1;
+const idOf = (id) => BIOMES.findIndex((b) => b.id === id);
+const storyAt = (wz) => { let k = 0; for (let i = 0; i < STORY.length; i++) if (wz >= STORY[i].at) k = i; return k; };
 const rnd = (a, b) => a + Math.random() * (b - a);
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-export const biomeIndexAt = (wz) => (wz >= JLM_START ? JLM : Math.floor((((wz % LAP) + LAP) % LAP) / BIOME_LEN));
+export const biomeIndexAt = (wz) => (wz >= JLM_START ? idOf(STORY[storyAt(wz)].id) : Math.floor((((wz % LAP) + LAP) % LAP) / BIOME_LEN));
 
 function tex(w, h, draw) {
   const c = document.createElement('canvas');
@@ -381,6 +382,46 @@ export class World {
     city.position.set(0, 0, -360);
     jlm.add(city);
     this.backdrops.push({ group: jlm, mats: [jm] });
+    const cube = new THREE.BoxGeometry(1, 1, 1);
+    const skyline = (count, minH, maxH, colors, spread, z) => {
+      const P = [];
+      for (let k = 0; k < count; k++) {
+        const x = -spread + (k / count) * spread * 2 + rnd(-6, 6), h = rnd(minH, maxH), w = rnd(10, 22);
+        P.push(part(cube, colors[k % colors.length], [x, h / 2, z - rnd(0, 60)], [0, 0, 0], [w, h, w], 0.04));
+      }
+      return P;
+    };
+    // Tel Aviv: white towers along the sea.
+    const ta = new THREE.Group(), tm = mk();
+    ta.add(new THREE.Mesh(merge([
+      ...skyline(14, 15, 60, [0xf4f1ea, 0xe8ecef, 0xdfe6ea], 200, -340),
+      part(cube, 0x3a8fc8, [-250, 0.5, -300], [0, 0, 0], [200, 1, 400], 0.02),
+    ]), tm));
+    this.backdrops.push({ group: ta, mats: [tm] });
+    // Airport: a plane climbing over the hills.
+    const ap = new THREE.Group(), am = mk();
+    ap.add(new THREE.Mesh(merge(skyline(8, 6, 14, [0xd8dde2, 0xc8ced4], 220, -360)), am));
+    const jet = new THREE.Mesh(merge([
+      part(new THREE.CylinderGeometry(2, 2, 26, 10), 0xffffff, [0, 0, 0], [Math.PI / 2, 0, 0]),
+      part(cube, 0xffffff, [0, 0, 2], [0, 0, 0], [30, 0.6, 5]),
+      part(cube, 0x2c4ea3, [0, 4, -11], [0, 0, 0], [0.6, 7, 4]),
+    ]), am);
+    jet.position.set(-60, 60, -300);
+    jet.rotation.set(-0.25, 0.6, 0);
+    ap.add(jet);
+    this.jetPlane = jet;
+    this.backdrops.push({ group: ap, mats: [am] });
+    // New York: a dense skyline with a spire.
+    const ny = new THREE.Group(), nm2 = mk();
+    ny.add(new THREE.Mesh(merge([
+      ...skyline(26, 30, 140, [0x4a5a70, 0x6a7a8c, 0x8a8478, 0x5a6478], 260, -330),
+      part(cube, 0x9aa0a8, [20, 110, -360], [0, 0, 0], [24, 220, 24], 0.03),
+      part(cube, 0x9aa0a8, [20, 232, -360], [0, 0, 0], [10, 24, 10], 0.03),
+      part(cube, 0xdddddd, [20, 262, -360], [0, 0, 0], [1.5, 36, 1.5], 0.03),
+    ]), nm2));
+    this.backdrops.push({ group: ny, mats: [nm2] });
+    // Donut shop: underground, nothing on the horizon.
+    this.backdrops.push({ group: new THREE.Group(), mats: [] });
     for (const b of this.backdrops) { b.group.visible = false; this.scene.add(b.group); }
   }
 
@@ -410,7 +451,16 @@ export class World {
     let t = smooth(BIOME_LEN - 110, BIOME_LEN - 10, local);
     let j = (i + 1) % CYCLE;
     // Arriving in Jerusalem: blend from wherever you are into the holy city, then stay.
-    if (dist >= JLM_START - 160) { j = JLM; t = smooth(JLM_START - 160, JLM_START - 10, dist); if (dist >= JLM_START) i = JLM; }
+    if (dist >= JLM_START - 160) {
+      // Story route: blend into the next place over the last 150 m of each one.
+      if (dist < JLM_START) { j = idOf(STORY[0].id); t = smooth(JLM_START - 160, JLM_START - 10, dist); }
+      else {
+        const k = storyAt(dist);
+        i = idOf(STORY[k].id);
+        const nx = STORY[k + 1];
+        if (nx) { j = idOf(nx.id); t = smooth(nx.at - 160, nx.at - 10, dist); } else { j = i; t = 0; }
+      }
+    }
     const A = this.pal[i], B = this.pal[j], c = this.cur;
     for (const k of ['skyTop', 'skyHorizon', 'skyBottom', 'fog', 'ground', 'road', 'sun', 'hemiSky', 'hemiGround', 'light']) c[k].copy(A[k]).lerp(B[k], t);
     c.sunDir.copy(A.sunDir).lerp(B.sunDir, t).normalize();
@@ -496,6 +546,7 @@ export class World {
       for (const m of b.mats) m.opacity = Math.min(1, w * 1.15);
     });
     this.pillar.rotation.y += dt * 0.15;
+    if (this.jetPlane) { this.jetPlane.position.x += dt * 14; this.jetPlane.position.y += dt * 3; if (this.jetPlane.position.x > 260) this.jetPlane.position.set(-260, 40, -300); }
     this.firePillar.rotation.y -= dt * 0.4;
     this.firePillar.children.forEach((m, i) => { m.position.x = Math.cos(i * 1.7 + this.time * 2) * 3; });
     this.fireGlow.material.opacity = this.weights[4] * (0.5 + Math.sin(this.time * 6) * 0.08);

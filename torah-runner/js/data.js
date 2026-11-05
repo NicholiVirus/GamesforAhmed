@@ -297,6 +297,17 @@ export const BIOME_LEN = 650;
 export const JLM_START = 3000;
 // Regions before Jerusalem loop in order; Jerusalem is the last entry in BIOMES.
 export const CYCLE = 6;
+// The story route after the loop: where each place starts, in metres. The last one never ends.
+export const STORY = [
+  { id: 'jerusalem', at: JLM_START },
+  { id: 'telaviv', at: JLM_START + 650 },
+  { id: 'airport', at: JLM_START + 1300 },
+  { id: 'newyork', at: JLM_START + 1950 },
+  { id: 'donut', at: JLM_START + 2600 },
+  { id: 'newyork', at: JLM_START + 3250 },
+];
+// You must pass the Hebrew test at the gate, just before New York.
+export const GATE_AT = JLM_START + 1950 - 40;
 
 export const BIOMES = [
   {
@@ -347,6 +358,34 @@ export const BIOMES = [
     ground: 0xd8c49c, road: 0xf0e2c4, sun: 0xfff3d0,
     hemiSky: 0xfff0d6, hemiGround: 0xa89070, light: 0xffeccc, lightI: 2.3, hemiI: 1.3,
     sunDir: [0.35, 0.3, -1], stars: 0,
+  },
+  {
+    id: 'telaviv', name: 'Tel Aviv', he: 'תל אביב', line: 'The white city by the sea',
+    skyTop: 0x2f8ae0, skyHorizon: 0xcfeaf6, skyBottom: 0xd9d2b8, fog: 0xd6ebf2,
+    ground: 0xeedcb0, road: 0xd8d4cc, sun: 0xffffff,
+    hemiSky: 0xf0faff, hemiGround: 0x9a8f7a, light: 0xffffff, lightI: 2.3, hemiI: 1.3,
+    sunDir: [-0.4, 0.5, -1], stars: 0,
+  },
+  {
+    id: 'airport', name: 'Ben Gurion Airport', he: 'נתב"ג', line: 'Pass the Hebrew test to board your flight',
+    skyTop: 0x3c7fc4, skyHorizon: 0xe4ecf2, skyBottom: 0xbfc4c8, fog: 0xe2e8ec,
+    ground: 0xb8bcae, road: 0x9a9ca0, sun: 0xffffff,
+    hemiSky: 0xf2f6ff, hemiGround: 0x7a7a74, light: 0xffffff, lightI: 2.2, hemiI: 1.35,
+    sunDir: [0.2, 0.6, -1], stars: 0,
+  },
+  {
+    id: 'newyork', name: 'New York', he: 'ניו יורק', line: 'The city that never sleeps',
+    skyTop: 0x16224a, skyHorizon: 0xd88a6a, skyBottom: 0x55505a, fog: 0x7a6a78,
+    ground: 0x8c8a88, road: 0x6e6e72, sun: 0xffb080,
+    hemiSky: 0xd0c8ff, hemiGround: 0x4a4650, light: 0xffd2a8, lightI: 2.0, hemiI: 1.45,
+    sunDir: [0.3, 0.12, -1], stars: 0.5,
+  },
+  {
+    id: 'donut', name: 'The Underground Donut Shop', he: 'סופגניות', line: 'Sufganiyot, deep under the city',
+    skyTop: 0x1a120e, skyHorizon: 0x3a2a22, skyBottom: 0x2a1e18, fog: 0x2e221c,
+    ground: 0x8a7a6a, road: 0xc9c0b0, sun: 0x000000,
+    hemiSky: 0xffd9b0, hemiGround: 0x5a4030, light: 0xffe0b8, lightI: 2.0, hemiI: 1.6,
+    sunDir: [0, 0.9, -0.4], stars: 0,
   },
 ];
 
