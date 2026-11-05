@@ -18,6 +18,17 @@ export const SHOP = [
   { type: 'double', name: '2× manna', price: 200, about: 'Double manna for 10 s' },
   { type: 'sneakers', name: 'Jump sneakers', price: 200, about: 'Super-high jumps' },
   { type: 'jetpack', name: 'Jet pack', price: 300, about: 'Fly over everything' },
+  { type: 'heart', name: 'Extra heart', price: 250, about: 'Start a run with 4 hearts' },
+];
+// Permanent upgrades: each level costs more.
+export const UPGRADES = [
+  { id: 'speed', name: 'Swift feet', about: '+5% running speed per level', price: 1000, max: 5, icon: 'sneakers' },
+  { id: 'passive', name: 'Manna blessing', about: '+1 manna every 2 s per level', price: 800, max: 5, icon: 'double' },
+  { id: 'jet', name: 'Bigger jet tanks', about: '+2 s of jet pack per level', price: 900, max: 5, icon: 'jetpack' },
+];
+const ACHIEVEMENTS = [
+  { words: 5, manna: 100 }, { words: 10, manna: 200 }, { words: 25, manna: 400 }, { words: 50, manna: 750 },
+  { words: 100, manna: 1500 }, { words: 150, manna: 2000 }, { words: 200, manna: 3000 }, { words: 280, manna: 5000 },
 ];
 const GRAV = 30;
 const JUMP_V = 10.2;
@@ -76,7 +87,7 @@ class Game {
     this.ui = new UI({
       play: () => this.start(), pause: () => this.pause(), resume: () => this.resume(), home: () => this.home(),
       sound: () => this.toggleSound(), openScroll: () => this.openScroll(), closeScroll: () => this.closeScroll(),
-      openShop: () => this.openShop(), buy: (t) => this.buy(t), closeShop: () => this.ui.show('screen-start'),
+      openShop: () => this.openShop(), buy: (t) => this.buy(t), buyUpgrade: (id) => this.buyUpgrade(id), closeShop: () => this.ui.show('screen-start'),
       continueWord: () => this.continueWord(), skipRide: () => this.skipRide(),
     });
 
@@ -119,6 +130,7 @@ class Game {
     for (const t of ['shield', 'magnet', 'double', 'shofar', 'heart', 'jetpack', 'sneakers']) icons[t] = powerTexture(t).image.toDataURL();
     this.ui.setIcons(icons);
     this.ui.shopItems = SHOP;
+    this.ui.upgrades = UPGRADES;
 
     this.time = 0;
     this.runPh = 0;
@@ -164,7 +176,10 @@ class Game {
     this.speed = this.state === 'menu' ? MENU_SPEED : speedAt(0);
     this.score = 0;
     this.mannaCount = 0;
+    this.maxHearts = MAX_HEARTS;
     this.hearts = MAX_HEARTS;
+    this.banked = false;
+    this.passiveT = 0;
     this.lane = 1; this.prevLane = 1;
     this.x = 0; this.y = 0; this.vy = 0;
     this.grounded = true;
@@ -318,8 +333,47 @@ class Game {
 
   // ------------------------------------------------------------ shop
   openShop() {
-    this.ui.renderShop(this.store.wallet || 0, this.store.inv || {});
+    this.ui.renderShop(this.store.wallet || 0, this.store.inv || {}, this.store.up || {});
     this.ui.show('screen-shop');
+  }
+
+  upLevel(id) { return ((this.store.up || {})[id]) || 0; }
+
+  jetTime() { return POWERS.jetpack.time + 2 * this.upLevel('jet'); }
+
+  bankManna() {
+    if (this.banked) return;
+    this.banked = true;
+    this.store.wallet = (this.store.wallet || 0) + this.mannaCount;
+  }
+
+  // Bonus manna for every new word, and bigger bonuses at word-count milestones.
+  wordBonus(isNew) {
+    let bonus = 0;
+    const msgs = [];
+    if (isNew) { bonus += 25; msgs.push('New word +25'); }
+    const n = this.learned.size;
+    const m = ACHIEVEMENTS.find((a) => a.words === n);
+    if (isNew && m) { bonus += m.manna; msgs.push(`${m.words} words learned! +${m.manna}`); }
+    if (bonus) {
+      this.mannaCount += bonus;
+      setTimeout(() => this.ui.popup(msgs.join(' · ')), 500);
+    }
+  }
+
+  buyUpgrade(id) {
+    const u = UPGRADES.find((x) => x.id === id);
+    const lvl = this.upLevel(id);
+    const price = u && u.price * (lvl + 1);
+    const wallet = this.store.wallet || 0;
+    if (!u || lvl >= u.max || wallet < price) { this.sound.play('bump'); return; }
+    this.store.wallet = wallet - price;
+    this.store.up = this.store.up || {};
+    this.store.up[id] = lvl + 1;
+    saveStore(this.store);
+    this.sound.init();
+    this.sound.play('word');
+    this.ui.renderShop(this.store.wallet, this.store.inv || {}, this.store.up);
   }
 
   buy(type) {
@@ -332,7 +386,7 @@ class Game {
     saveStore(this.store);
     this.sound.init();
     this.sound.play('power');
-    this.ui.renderShop(this.store.wallet, this.store.inv);
+    this.ui.renderShop(this.store.wallet, this.store.inv, this.store.up || {});
   }
 
   // Power-ups bought in the shop switch on at the start of the next run (one of each).
@@ -344,6 +398,7 @@ class Game {
       inv[it.type]--;
       used.push(it.name);
       if (it.type === 'jetpack') this.startJetpack();
+      else if (it.type === 'heart') { this.maxHearts = MAX_HEARTS + 1; this.hearts = this.maxHearts; this.ui.setHearts(this.hearts, this.maxHearts); }
       else this.powers[it.type] = POWERS[it.type].time;
     }
     if (used.length) {
@@ -413,6 +468,7 @@ class Game {
   }
 
   startRide() {
+    if (this.state === 'paused') { this.bankManna(); saveStore(this.store); }
     this.sound.init();
     this.sound.play('click');
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
@@ -440,7 +496,7 @@ class Game {
   refreshHud() {
     this.ui.hud(true);
     this.ui.last = {};
-    this.ui.setHearts(this.hearts, MAX_HEARTS);
+    this.ui.setHearts(this.hearts, this.maxHearts);
     this.ui.setWord(this.word, this.letterIdx);
     this.ui.setPowers([]);
     this.ui.setScore(this.score);
@@ -469,6 +525,7 @@ class Game {
   }
 
   home() {
+    if (this.state === 'paused') { this.bankManna(); saveStore(this.store); }
     this.sound.stopMusic();
     this.sound.play('click');
     this.state = 'menu';
@@ -514,7 +571,7 @@ class Game {
     this.store.bestScore = this.best.score;
     this.store.bestDist = this.best.dist;
     this.store.learned = [...this.learned];
-    this.store.wallet = (this.store.wallet || 0) + this.mannaCount;
+    this.bankManna();
     saveStore(this.store);
     const bi = biomeIndexAt(this.dist);
     const lap = Math.floor(this.dist / LAP) + 1;
@@ -711,7 +768,7 @@ class Game {
       this.addPickup('power', type, wz, place(wz), 1.05);
       this.nextPowerWz = wz + rnd(260, 400);
     }
-    if (this.hearts < MAX_HEARTS && this.nextHeartWz < b - 4) {
+    if (this.hearts < this.maxHearts && this.nextHeartWz < b - 4) {
       const wz = clamp(this.nextHeartWz, a + 4, b - 4);
       this.addPickup('power', 'heart', wz, place(wz), 1.05);
       this.nextHeartWz = wz + rnd(450, 700);
@@ -738,7 +795,13 @@ class Game {
   update(dt) {
     this.runTime = (this.runTime || 0) + dt;
     this.speedFactor = Math.min(1, this.speedFactor + dt * 0.35);
-    const target = speedAt(this.dist) * this.speedFactor;
+    const target = speedAt(this.dist) * this.speedFactor * (1 + 0.05 * this.upLevel('speed'));
+    // Passive manna upgrade: a trickle of manna while you run.
+    const pl = this.upLevel('passive');
+    if (pl > 0) {
+      this.passiveT += dt;
+      if (this.passiveT >= 2) { this.passiveT -= 2; this.mannaCount += pl; }
+    }
     this.speed += (target - this.speed) * Math.min(1, dt * 3);
     this.sound.setTempo(this.speed);
     this.dist += this.speed * dt;
@@ -763,9 +826,9 @@ class Game {
     this.ui.setScore(this.score);
     this.ui.setDist(this.dist);
     this.ui.setManna(this.mannaCount);
-    this.ui.setHearts(this.hearts, MAX_HEARTS);
+    this.ui.setHearts(this.hearts, this.maxHearts);
     const list = [];
-    for (const k of ['jetpack', 'sneakers', 'shield', 'magnet', 'double']) if (this.powers[k] > 0) list.push({ type: k, frac: this.powers[k] / POWERS[k].time });
+    for (const k of ['jetpack', 'sneakers', 'shield', 'magnet', 'double']) if (this.powers[k] > 0) list.push({ type: k, frac: this.powers[k] / (k === 'jetpack' ? this.jetTime() : POWERS[k].time) });
     this.ui.setPowers(list);
   }
 
@@ -878,14 +941,14 @@ class Game {
   }
 
   startJetpack() {
-    this.powers.jetpack = POWERS.jetpack.time;
+    this.powers.jetpack = this.jetTime();
     this.grounded = false;
     this.slideT = 0;
     this.sound.play('whoosh');
     // A weaving trail of manna up in the air.
     const sp = Math.max(this.speed, speedAt(this.dist));
     let ln = this.lane;
-    for (let z = this.dist + 12; z < this.dist + sp * (POWERS.jetpack.time - 0.8); z += 2.4) {
+    for (let z = this.dist + 12; z < this.dist + sp * (this.jetTime() - 0.8); z += 2.4) {
       if (Math.random() < 0.06) ln = clamp(ln + (Math.random() < 0.5 ? -1 : 1), 0, 2);
       this.addManna(z, ln, JET_Y + 0.6);
     }
@@ -1034,7 +1097,9 @@ class Game {
       if (this.letterIdx >= letters.length) {
         const w = this.word;
         this.wordsDone.push(w);
+        const isNew = !this.learned.has(w.he);
         this.learned.add(w.he);
+        this.wordBonus(isNew);
         this.store.learned = [...this.learned];
         saveStore(this.store);
         this.score += 150 + 25 * letters.length;
@@ -1057,7 +1122,7 @@ class Game {
     }
     this.world.burst(p.x, y, z, 16, { color: [1, 0.95, 0.75], speed: 4, up: 3, life: 0.6 });
     if (p.type === 'heart') {
-      this.hearts = Math.min(MAX_HEARTS, this.hearts + 1);
+      this.hearts = Math.min(this.maxHearts, this.hearts + 1);
       this.sound.play('heart');
       this.ui.popup('+1 life', 'heart');
     } else if (p.type === 'sneakers') {

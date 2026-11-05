@@ -315,6 +315,12 @@ kbd {
 .shop-name small { color: var(--ink-soft); font-size: 0.78rem; }
 .shop-list .btn { padding: 8px 12px; font-size: 0.9rem; gap: 6px; font-variant-numeric: tabular-nums; }
 .shop-list .btn:disabled { opacity: 0.5; cursor: default; }
+.shop-list li.shop-head { display: block; background: none; padding: 6px 2px 0; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold-deep); }
+.pips { display: flex; gap: 3px; margin-top: 3px; }
+.pips i { width: 14px; height: 5px; border-radius: 2px; background: rgba(77, 63, 44, 0.2); }
+.pips i.on { background: var(--tekhelet); }
+.maxed { font-weight: 800; color: var(--tekhelet); padding-inline: 12px; }
+#screen-shop .shop-list { max-height: min(56vh, 520px); overflow-y: auto; }
 .sl-tr { font-weight: 700; }
 .panel-small { width: min(360px, calc(100% - 48px)); text-align: center; }
 .panel-small .actions { justify-content: center; }
@@ -495,7 +501,7 @@ kbd {
     <div class="scroll">
       <span class="roller l" aria-hidden="true"></span><span class="roller r" aria-hidden="true"></span>
       <h2 id="shop-title">Manna shop</h2>
-      <p class="lede">You have <b class="shop-wallet"><span class="manna-dot"></span> <span id="shop-wallet">0</span></b> manna. What you buy switches on at the start of your next run.</p>
+      <p class="lede">You have <b class="shop-wallet"><span class="manna-dot"></span> <span id="shop-wallet">0</span></b> manna. Upgrades last forever. Power-ups switch on at the start of your next run. Every new word you spell earns bonus manna.</p>
       <ul class="shop-list" id="shop-list"></ul>
       <div class="actions">
         <button id="btn-shop-close" class="btn btn-primary" type="button" data-autofocus>Done</button>

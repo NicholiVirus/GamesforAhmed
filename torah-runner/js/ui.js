@@ -27,7 +27,12 @@ export class UI {
     on('btn-shop', () => h.openShop());
     on('btn-shop-close', () => h.closeShop());
     const list = $('shop-list');
-    if (list) list.addEventListener('click', (e) => { const b = e.target.closest('button[data-buy]'); if (b) { e.stopPropagation(); h.buy(b.dataset.buy); } });
+    if (list) list.addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-buy], button[data-up]');
+      if (!b) return;
+      e.stopPropagation();
+      if (b.dataset.up) h.buyUpgrade(b.dataset.up); else h.buy(b.dataset.buy);
+    });
     on('btn-word-continue', () => h.continueWord());
     on('btn-skip', () => h.skipRide());
     this.icons = {};
@@ -148,15 +153,25 @@ export class UI {
     }, 750);
   }
 
-  renderShop(wallet, inv) {
+  renderShop(wallet, inv, up) {
     $('shop-wallet').textContent = Math.floor(wallet).toLocaleString('en-US');
-    $('shop-list').innerHTML = this.shopItems.map((it) => `
-      <li>
+    const btn = (attr, price, ok) => `<button class="btn ${ok ? 'btn-primary' : 'btn-ghost'}" type="button" ${attr} ${ok ? '' : 'disabled'}>
+          <span class="manna-dot"></span>${price.toLocaleString('en-US')}</button>`;
+    const ups = this.upgrades.map((u) => {
+      const lvl = up[u.id] || 0, maxed = lvl >= u.max, price = u.price * (lvl + 1);
+      const pips = Array.from({ length: u.max }, (_, i) => `<i class="${i < lvl ? 'on' : ''}"></i>`).join('');
+      return `<li>
+        ${this.icons[u.icon] ? `<img src="${this.icons[u.icon]}" alt="">` : ''}
+        <span class="shop-name"><b>${u.name}</b><small>${u.about}</small><span class="pips" aria-label="Level ${lvl} of ${u.max}">${pips}</span></span>
+        ${maxed ? '<span class="maxed">Max</span>' : btn(`data-up="${u.id}"`, price, wallet >= price)}
+      </li>`;
+    }).join('');
+    const items = this.shopItems.map((it) => `<li>
         ${this.icons[it.type] ? `<img src="${this.icons[it.type]}" alt="">` : ''}
         <span class="shop-name"><b>${it.name}</b><small>${it.about}${inv[it.type] ? ` · ready: ${inv[it.type]}` : ''}</small></span>
-        <button class="btn ${wallet >= it.price ? 'btn-primary' : 'btn-ghost'}" type="button" data-buy="${it.type}" ${wallet >= it.price ? '' : 'disabled'}>
-          <span class="manna-dot"></span>${it.price}</button>
+        ${btn(`data-buy="${it.type}"`, it.price, wallet >= it.price)}
       </li>`).join('');
+    $('shop-list').innerHTML = `<li class="shop-head">Upgrades · keep forever</li>${ups}<li class="shop-head">Power-ups · used on your next run</li>${items}`;
   }
 
   countdown(n) {
