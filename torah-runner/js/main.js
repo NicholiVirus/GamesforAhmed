@@ -590,9 +590,15 @@ class Game {
       const sp = speedAt(wz);
       const ln = safe;
       const n = 2 + Math.floor(Math.random() * 2);
-      this.spawnObstacle('ramp', ln, wz);
-      for (let k = 0; k < n; k++) this.spawnObstacle('deck', ln, wz + 1.6 + 8 + k * 16);
-      const len = 3.2 + n * 16;
+      // Sometimes a tall version: a ramp twice as long up to a walkway twice as high.
+      const sy = Math.random() < 0.4 ? 2 : 1;
+      const r = this.spawnObstacle('ramp', ln, wz + 1.6 * sy);
+      r.sy = sy; r.sz = sy; r.mesh.scale.set(1, sy, sy);
+      for (let k = 0; k < n; k++) {
+        const o = this.spawnObstacle('deck', ln, wz + 3.2 * sy + 8 + k * 16);
+        o.sy = sy; o.mesh.scale.set(1, sy, 1);
+      }
+      const len = 3.2 * sy + n * 16;
       // Once the run gets harder, a tall obstacle can sit beside the walkway.
       if (d > 0.2) {
         const talls = set.tall.filter((t) => !OBSTACLES[t].roll);
@@ -600,7 +606,7 @@ class Game {
         const side = [0, 1, 2].filter((i) => i !== ln);
         if (Math.random() < 0.6) this.spawnObstacle(pick(talls), pick(side), wz + len * 0.5);
       }
-      for (let z = wz + 1; z < wz + len - 1; z += 1.8) this.addManna(z, ln, 2.0);
+      for (let z = wz + 3.2 * sy; z < wz + len - 1; z += 1.8) this.addManna(z, ln, 1.25 * sy + 0.75);
       this.lastSafe = ln;
       return { lanes: [null, null, null], safe: ln, wz, extra: len + sp * 0.45 };
     }
@@ -793,7 +799,7 @@ class Game {
       if (o.def.roll) o.mesh.rotation.x = o.spin;
       o.shadow.position.set(o.x, 0.025, z);
       if (this.state === 'playing' && this.hits(o, zp, z, pb)) {
-        if (o.kind === 'ramp') { /* walkable */ } else if (o.kind === 'deck') { if (this.y < 1.1) this.onHit(o); } else this.onHit(o);
+        if (o.kind === 'ramp') { /* walkable */ } else if (o.kind === 'deck') { if (this.y < 1.25 * (o.sy || 1) - 0.15) this.onHit(o); } else this.onHit(o);
       }
     }
   }
@@ -804,8 +810,9 @@ class Game {
     for (const o of this.obs) {
       if (!o.alive || (o.kind !== 'ramp' && o.kind !== 'deck') || Math.abs(this.x - o.x) > 0.7) continue;
       const lz = -(this.dist - o.wz);
-      if (o.kind === 'deck') { if (lz >= -8.05 && lz <= 8.05) h = Math.max(h, 1.25); }
-      else if (lz >= -1.6 && lz <= 1.6) h = Math.max(h, ((1.6 - lz) / 3.2) * 1.25);
+      const sy = o.sy || 1, half = 1.6 * (o.sz || 1);
+      if (o.kind === 'deck') { if (lz >= -8.05 && lz <= 8.05) h = Math.max(h, 1.25 * sy); }
+      else if (lz >= -half && lz <= half) h = Math.max(h, ((half - lz) / (2 * half)) * 1.25 * sy);
     }
     return h;
   }
@@ -838,8 +845,8 @@ class Game {
   hits(o, zp, z, pb) {
     const zMin = Math.min(zp, z), zMax = Math.max(zp, z);
     for (const b of o.def.boxes) {
-      const yb = o.y + o.by;
-      if (pb[1] > o.x + b[0] && pb[0] < o.x + b[1] && pb[3] > yb + b[2] && pb[2] < yb + b[3] &&
+      const yb = o.y + o.by, ys = o.sy || 1;
+      if (pb[1] > o.x + b[0] && pb[0] < o.x + b[1] && pb[3] > yb + b[2] * ys && pb[2] < yb + b[3] * ys &&
         pb[5] > zMin + b[4] && pb[4] < zMax + b[5]) return true;
     }
     return false;
