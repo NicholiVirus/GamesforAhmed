@@ -810,7 +810,7 @@ class Game {
       const a = this.spawnCursor;
       if (a < 55) { this.fillGap(a, 55, null); this.spawnCursor = 55; continue; }
       const sp = speedAt(a), d = diffAt(a);
-      const gapT = 1.45 - 0.62 * d + rnd(0, 0.35);
+      const gapT = 1.1 - 0.4 * d + rnd(0, 0.25);
       const b = a + Math.max(11, sp * gapT);
       const row = this.makeRow(b, d, BIOMES[biomeIndexAt(b)].id);
       this.fillGap(a, b, row);
@@ -850,7 +850,7 @@ class Game {
       this.lastSafe = ln;
       return { lanes: [null, null, null], safe: ln, wz, extra: len + sp * 0.45 };
     }
-    const wSingle = 0.5 - 0.3 * d, wDouble = 0.32 + 0.2 * d, wTriple = d > 0.2 ? 0.08 + 0.22 * d : 0;
+    const wSingle = 0.25 - 0.15 * d, wDouble = 0.5 + 0.2 * d, wTriple = d > 0.1 ? 0.15 + 0.3 * d : 0;
     const wRoll = set.roll.length && prevFree.length ? 0.16 : 0;
     let r = Math.random() * (wSingle + wDouble + wTriple + wRoll);
     if ((r -= wSingle) < 0) {
@@ -866,13 +866,22 @@ class Game {
       lanes[ln] = 'roll';
       if (ln === safe) safe = (ln + 1 + Math.floor(rnd(0, 2))) % 3;
     }
+    let longest = 0;
     for (let i = 0; i < 3; i++) {
       const k = lanes[i];
       if (!k) continue;
-      this.spawnObstacle(pick(set[k]), i, wz + (k === 'roll' ? 30 : 0));
+      const type = pick(set[k]);
+      this.spawnObstacle(type, i, wz + (k === 'roll' ? 30 : 0));
+      // Long obstacles: tall ones often come as a line of 2-4 in the same lane, like train cars.
+      if (k === 'tall' && Math.random() < 0.55) {
+        const b = OBSTACLES[type].boxes[0], step = b[5] - b[4] + 0.15;
+        const n = 1 + Math.floor(Math.random() * 3);
+        for (let c = 1; c <= n; c++) this.spawnObstacle(type, i, wz + c * step);
+        longest = Math.max(longest, n * step);
+      }
     }
     this.lastSafe = safe;
-    return { lanes, safe, wz };
+    return { lanes, safe, wz, extra: longest };
   }
 
   fillGap(a, b, row) {
