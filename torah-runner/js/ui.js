@@ -9,7 +9,7 @@ export class UI {
   constructor(h) {
     this.h = h;
     this.last = {};
-    this.screens = ['screen-loading', 'screen-start', 'screen-pause', 'screen-over', 'screen-scroll', 'screen-error', 'screen-word'];
+    this.screens = ['screen-loading', 'screen-start', 'screen-pause', 'screen-over', 'screen-scroll', 'screen-error', 'screen-word', 'screen-shop'];
     this.wordArmed = false;
     const on = (id, fn) => { const el = $(id); if (el) el.addEventListener('click', (e) => { e.stopPropagation(); fn(); }); };
     on('btn-play', () => h.play());
@@ -24,6 +24,10 @@ export class UI {
     on('btn-scroll', () => h.openScroll());
     on('btn-scroll-2', () => h.openScroll());
     on('btn-scroll-close', () => h.closeScroll());
+    on('btn-shop', () => h.openShop());
+    on('btn-shop-close', () => h.closeShop());
+    const list = $('shop-list');
+    if (list) list.addEventListener('click', (e) => { const b = e.target.closest('button[data-buy]'); if (b) { e.stopPropagation(); h.buy(b.dataset.buy); } });
     on('btn-word-continue', () => h.continueWord());
     on('btn-skip', () => h.skipRide());
     this.icons = {};
@@ -142,6 +146,17 @@ export class UI {
       btn.disabled = false;
       btn.focus({ preventScroll: true });
     }, 750);
+  }
+
+  renderShop(wallet, inv) {
+    $('shop-wallet').textContent = Math.floor(wallet).toLocaleString('en-US');
+    $('shop-list').innerHTML = this.shopItems.map((it) => `
+      <li>
+        ${this.icons[it.type] ? `<img src="${this.icons[it.type]}" alt="">` : ''}
+        <span class="shop-name"><b>${it.name}</b><small>${it.about}${inv[it.type] ? ` · ready: ${inv[it.type]}` : ''}</small></span>
+        <button class="btn ${wallet >= it.price ? 'btn-primary' : 'btn-ghost'}" type="button" data-buy="${it.type}" ${wallet >= it.price ? '' : 'disabled'}>
+          <span class="manna-dot"></span>${it.price}</button>
+      </li>`).join('');
   }
 
   countdown(n) {

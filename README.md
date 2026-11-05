@@ -14,6 +14,7 @@ A 3D lane runner. Run from Egypt, through the parted Red Sea, the Oasis of Elim,
 - **Power-ups:** Star of David shield, jet pack (fly above everything), jump sneakers (blue-and-white, super-high jumps), magnet, double manna, shofar blast, extra heart.
 - **Word pause:** finishing a word freezes the run and shows the word card. Tap "Keep running" for a 1-second 3-2-1 countdown; a golden wave clears the road just ahead. Resuming from pause also counts down.
 - **Music:** a synthesized klezmer band (clarinet, accordion, bass, drum) plays the traditional Hava Nagila theme and a freylekh dance tune; it speeds up as you run faster.
+- **Shop:** manna you collect is saved; spend it in the main-menu shop on power-ups that switch on at the start of your next run.
 - **Train back:** after a lost run, "Run again" sends a steam train that carries you back through every region to Egypt (tap "Skip ride" to jump straight there).
 
 ### Code

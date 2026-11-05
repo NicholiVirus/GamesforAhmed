@@ -307,6 +307,14 @@ kbd {
 .words li.empty { display: block; font-size: 0.9rem; color: var(--ink-soft); border: 0; }
 .scroll-list { list-style: none; margin: 12px 0 0; padding: 0; max-height: min(52vh, 460px); overflow-y: auto; }
 .scroll-list li.locked { opacity: 0.55; }
+.shop-wallet { display: inline-flex; align-items: center; gap: 4px; color: var(--ink); }
+.shop-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+.shop-list li { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 8px; background: rgba(255, 252, 240, 0.45); }
+.shop-list img { width: 34px; height: 34px; }
+.shop-name { display: grid; min-width: 0; }
+.shop-name small { color: var(--ink-soft); font-size: 0.78rem; }
+.shop-list .btn { padding: 8px 12px; font-size: 0.9rem; gap: 6px; font-variant-numeric: tabular-nums; }
+.shop-list .btn:disabled { opacity: 0.5; cursor: default; }
 .sl-tr { font-weight: 700; }
 .panel-small { width: min(360px, calc(100% - 48px)); text-align: center; }
 .panel-small .actions { justify-content: center; }
@@ -393,6 +401,7 @@ kbd {
         <button id="btn-play" class="btn btn-primary" type="button" data-autofocus>
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>Start running
         </button>
+        <button id="btn-shop" class="btn btn-ghost" type="button"><span class="manna-dot"></span>Shop</button>
         <button id="btn-scroll" class="btn btn-ghost" type="button"><span>My scroll · 0/29</span></button>
         <button id="btn-sound" class="btn btn-ghost" type="button" aria-pressed="true"><span>Sound on</span></button>
       </div>
@@ -478,6 +487,18 @@ kbd {
         </button>
         <button id="btn-scroll-2" class="btn btn-ghost" type="button"><span>My scroll</span></button>
         <button id="btn-home-2" class="btn btn-ghost" type="button">Main menu</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-shop" class="screen center" hidden aria-labelledby="shop-title">
+    <div class="scroll">
+      <span class="roller l" aria-hidden="true"></span><span class="roller r" aria-hidden="true"></span>
+      <h2 id="shop-title">Manna shop</h2>
+      <p class="lede">You have <b class="shop-wallet"><span class="manna-dot"></span> <span id="shop-wallet">0</span></b> manna. What you buy switches on at the start of your next run.</p>
+      <ul class="shop-list" id="shop-list"></ul>
+      <div class="actions">
+        <button id="btn-shop-close" class="btn btn-primary" type="button" data-autofocus>Done</button>
       </div>
     </div>
   </section>

@@ -11,6 +11,14 @@ import {
 import { TrainRide } from './train.js';
 
 const LANES = [-2, 0, 2];
+// What the main-menu shop sells, priced in manna saved from your runs.
+export const SHOP = [
+  { type: 'shield', name: 'Star shield', price: 150, about: 'Blocks one crash' },
+  { type: 'magnet', name: 'Magnet', price: 150, about: 'Pulls manna to you' },
+  { type: 'double', name: '2× manna', price: 200, about: 'Double manna for 10 s' },
+  { type: 'sneakers', name: 'Jump sneakers', price: 200, about: 'Super-high jumps' },
+  { type: 'jetpack', name: 'Jet pack', price: 300, about: 'Fly over everything' },
+];
 const GRAV = 30;
 const JUMP_V = 10.2;
 const SLIDE_TIME = 0.72;
@@ -68,6 +76,7 @@ class Game {
     this.ui = new UI({
       play: () => this.start(), pause: () => this.pause(), resume: () => this.resume(), home: () => this.home(),
       sound: () => this.toggleSound(), openScroll: () => this.openScroll(), closeScroll: () => this.closeScroll(),
+      openShop: () => this.openShop(), buy: (t) => this.buy(t), closeShop: () => this.ui.show('screen-start'),
       continueWord: () => this.continueWord(), skipRide: () => this.skipRide(),
     });
 
@@ -109,6 +118,7 @@ class Game {
     const icons = {};
     for (const t of ['shield', 'magnet', 'double', 'shofar', 'heart', 'jetpack', 'sneakers']) icons[t] = powerTexture(t).image.toDataURL();
     this.ui.setIcons(icons);
+    this.ui.shopItems = SHOP;
 
     this.time = 0;
     this.runPh = 0;
@@ -217,7 +227,7 @@ class Game {
         if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', 'Spacebar'].includes(k)) e.preventDefault();
       } else if (this.state === 'menu' || this.state === 'over') {
         const onButton = e.target && e.target.closest && e.target.closest('button, summary, a');
-        if ((k === 'Enter' || k === ' ') && !onButton && document.getElementById('screen-scroll').hidden) {
+        if ((k === 'Enter' || k === ' ') && !onButton && document.getElementById('screen-scroll').hidden && document.getElementById('screen-shop').hidden) {
           e.preventDefault();
           this.start();
         }
@@ -303,6 +313,43 @@ class Game {
     this.store.played = true;
     this.store.runs = (this.store.runs || 0) + 1;
     saveStore(this.store);
+    this.applyBoosts();
+  }
+
+  // ------------------------------------------------------------ shop
+  openShop() {
+    this.ui.renderShop(this.store.wallet || 0, this.store.inv || {});
+    this.ui.show('screen-shop');
+  }
+
+  buy(type) {
+    const item = SHOP.find((i) => i.type === type);
+    const wallet = this.store.wallet || 0;
+    if (!item || wallet < item.price) { this.sound.play('bump'); return; }
+    this.store.wallet = wallet - item.price;
+    this.store.inv = this.store.inv || {};
+    this.store.inv[type] = (this.store.inv[type] || 0) + 1;
+    saveStore(this.store);
+    this.sound.init();
+    this.sound.play('power');
+    this.ui.renderShop(this.store.wallet, this.store.inv);
+  }
+
+  // Power-ups bought in the shop switch on at the start of the next run (one of each).
+  applyBoosts() {
+    const inv = this.store.inv || {};
+    const used = [];
+    for (const it of SHOP) {
+      if (!(inv[it.type] > 0)) continue;
+      inv[it.type]--;
+      used.push(it.name);
+      if (it.type === 'jetpack') this.startJetpack();
+      else this.powers[it.type] = POWERS[it.type].time;
+    }
+    if (used.length) {
+      saveStore(this.store);
+      this.ui.popup('Shop boost: ' + used.join(', '));
+    }
   }
 
   pause() {
@@ -417,6 +464,7 @@ class Game {
     this.updateObstacles(0);
     this.store.runs = (this.store.runs || 0) + 1;
     saveStore(this.store);
+    this.applyBoosts();
     this.startCountdown(null);
   }
 
@@ -466,6 +514,7 @@ class Game {
     this.store.bestScore = this.best.score;
     this.store.bestDist = this.best.dist;
     this.store.learned = [...this.learned];
+    this.store.wallet = (this.store.wallet || 0) + this.mannaCount;
     saveStore(this.store);
     const bi = biomeIndexAt(this.dist);
     const lap = Math.floor(this.dist / LAP) + 1;
