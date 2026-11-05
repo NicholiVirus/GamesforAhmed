@@ -6,7 +6,7 @@ import { World, PointPool, biomeIndexAt } from './world.js';
 import { UI } from './ui.js';
 import {
   buildPlayer, buildShield, OBSTACLES, BIOME_OBSTACLES, obstacleGeo, flatMat,
-  letterTexture, powerTexture, mannaTex, shadowTex,
+  letterTexture, powerTexture, mannaTex, shadowTex, shekelTexture, COIN_ERA,
 } from './models.js';
 import { TrainRide } from './train.js';
 import { Chaser } from './chaser.js';
@@ -25,7 +25,7 @@ export const SHOP = [
 export const UPGRADES = [
   { id: 'speed', name: 'Swift feet', about: '+5% running speed per level', price: 1000, max: 5, icon: 'sneakers' },
   { id: 'passive', name: 'Manna blessing', about: '+1 manna every 2 s per level', price: 800, max: 5, icon: 'double' },
-  { id: 'jet', name: 'Bigger jet tanks', about: '+2 s of jet pack per level', price: 900, max: 5, icon: 'jetpack' },
+  { id: 'jet', name: 'Bigger jet tanks', about: '+1 s of jet pack per level', price: 900, max: 5, icon: 'jetpack' },
 ];
 const ACHIEVEMENTS = [
   { words: 5, manna: 100 }, { words: 10, manna: 200 }, { words: 25, manna: 400 }, { words: 50, manna: 750 },
@@ -106,7 +106,7 @@ class Game {
     this.shadowPool = [];
 
     // Manna is drawn as one Points cloud.
-    this.mannaPool = new PointPool(this.scene, 180, 0.8, mannaTex());
+    this.mannaPool = new PointPool(this.scene, 180, 0.95, shekelTexture('ancient'));
     this.mannaFree = Array.from({ length: 180 }, (_, i) => 179 - i);
     this.manna = [];
     this.obs = [];
@@ -213,6 +213,7 @@ class Game {
     this.p.body.position.set(0, 0, 0);
     this.p.root.visible = true;
     if (this.p.wear) { this.p.wear('egypt'); this.outfit = 'egypt'; }
+    if (this.mannaPool) { this.mannaPool.mat.map = shekelTexture('ancient'); this.mannaPool.mat.needsUpdate = true; }
     if (this.chaser) { this.chaser.reset(); this.chaser.setEra('egypt'); }
   }
 
@@ -351,7 +352,7 @@ class Game {
 
   upLevel(id) { return ((this.store.up || {})[id]) || 0; }
 
-  jetTime() { return POWERS.jetpack.time + 2 * this.upLevel('jet'); }
+  jetTime() { return POWERS.jetpack.time + this.upLevel('jet'); }
 
   bankManna() {
     if (this.banked) return;
@@ -604,6 +605,8 @@ class Game {
     if (this.outfit === id) return;
     this.outfit = id;
     this.p.wear(id);
+    this.mannaPool.mat.map = shekelTexture(COIN_ERA[id] || 'modern');
+    this.mannaPool.mat.needsUpdate = true;
     this.chaser.setEra(id);
     if (this.state === 'playing') this.world.burst(this.x, 1.0, 0, 14, { color: [1, 0.95, 0.8], speed: 2.5, up: 2, life: 0.5 });
   }
@@ -843,7 +846,7 @@ class Game {
         const side = [0, 1, 2].filter((i) => i !== ln);
         if (Math.random() < 0.6) this.spawnObstacle(pick(talls), pick(side), wz + len * 0.5);
       }
-      for (let z = wz + 3.2 * sy; z < wz + len - 1; z += 1.8) this.addManna(z, ln, 1.25 * sy + 0.75);
+      for (let z = wz + 3.2 * sy; z < wz + len - 1; z += 3.6) this.addManna(z, ln, 1.25 * sy + 0.75);
       this.lastSafe = ln;
       return { lanes: [null, null, null], safe: ln, wz, extra: len + sp * 0.45 };
     }
@@ -906,11 +909,11 @@ class Game {
     }
     if (row) {
       const ln = row.safe;
-      if (!used[ln]) for (let z = a + 4; z < b - 5; z += 1.8) this.addManna(z, ln, 0.75);
+      if (!used[ln]) for (let z = a + 4; z < b - 5; z += 3.6) this.addManna(z, ln, 0.75);
       // Extra lines of manna in other open lanes.
       for (let i = 0; i < 3; i++) {
         if (i === ln || used[i] || Math.random() > 0.45) continue;
-        for (let z = a + 5; z < b - 7; z += 1.8) this.addManna(z, i, 0.75);
+        for (let z = a + 5; z < b - 7; z += 3.6) this.addManna(z, i, 0.75);
       }
       if (row.lanes[ln] === 'low') {
         for (let k = -3; k <= 3; k++) this.addManna(b + k * 1.7, ln, 0.75 + Math.sin(((k + 3) / 6) * Math.PI) * 1.55);
@@ -918,7 +921,7 @@ class Game {
         for (let k = -2; k <= 2; k++) this.addManna(b + k * 1.5, ln, 0.4);
       }
     } else if (!row) {
-      for (let z = a + 10; z < b - 2; z += 1.8) this.addManna(z, 1, 0.75);
+      for (let z = a + 10; z < b - 2; z += 3.6) this.addManna(z, 1, 0.75);
     }
   }
 

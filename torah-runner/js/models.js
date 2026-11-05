@@ -663,6 +663,45 @@ function medallion(g, s, rim, face) {
   g.lineWidth = s * 0.012; g.strokeStyle = 'rgba(120,80,20,0.6)'; g.stroke();
 }
 
+// Coins are shekels that change with the era: a silver shekel with a pomegranate in ancient times,
+// a bronze Temple half-shekel with a chalice in Jerusalem, and a modern gold 10-shekel coin after that.
+export const COIN_ERA = {
+  egypt: 'ancient', sea: 'ancient', elim: 'ancient', wild: 'ancient', night: 'ancient', sinai: 'ancient',
+  jerusalem: 'temple', telaviv: 'modern', airport: 'modern', newyork: 'modern', donut: 'modern',
+};
+const coinCache = {};
+export function shekelTexture(era) {
+  if (coinCache[era]) return coinCache[era];
+  const look = {
+    ancient: { rim: '#8e9298', face: '#d8dce2', ink: '#5a5e66', label: '' },
+    temple: { rim: '#8a5a24', face: '#c98a4a', ink: '#5e3a14', label: '' },
+    modern: { rim: '#b8bcc2', face: '#f0c040', ink: '#8a5a0b', label: '10' },
+  }[era];
+  coinCache[era] = canvasTex(128, (g, s) => {
+    const c = s / 2;
+    const glow = g.createRadialGradient(c, c, s * 0.3, c, c, c);
+    glow.addColorStop(0, 'rgba(255,230,150,0.55)'); glow.addColorStop(1, 'rgba(255,230,150,0)');
+    g.fillStyle = glow; g.fillRect(0, 0, s, s);
+    g.beginPath(); g.arc(c, c, s * 0.36, 0, Math.PI * 2); g.fillStyle = look.rim; g.fill();
+    g.beginPath(); g.arc(c, c, s * (era === 'modern' ? 0.24 : 0.3), 0, Math.PI * 2); g.fillStyle = look.face; g.fill();
+    g.strokeStyle = look.ink; g.fillStyle = look.ink; g.lineWidth = s * 0.025;
+    if (era === 'ancient') {
+      // pomegranate
+      g.beginPath(); g.arc(c, c + s * 0.03, s * 0.11, 0, Math.PI * 2); g.stroke();
+      g.beginPath(); g.moveTo(c - s * 0.06, c - s * 0.08); g.lineTo(c, c - s * 0.16); g.lineTo(c + s * 0.06, c - s * 0.08); g.stroke();
+    } else if (era === 'temple') {
+      // chalice
+      g.beginPath(); g.moveTo(c - s * 0.1, c - s * 0.12); g.quadraticCurveTo(c, c + s * 0.06, c + s * 0.1, c - s * 0.12); g.stroke();
+      g.beginPath(); g.moveTo(c, c - s * 0.02); g.lineTo(c, c + s * 0.1); g.moveTo(c - s * 0.07, c + s * 0.12); g.lineTo(c + s * 0.07, c + s * 0.12); g.stroke();
+    } else {
+      g.font = `bold ${Math.round(s * 0.2)}px Rubik, Arial, sans-serif`;
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText(look.label, c, c + s * 0.01);
+    }
+  });
+  return coinCache[era];
+}
+
 const letterCache = new Map();
 export function letterTexture(ch) {
   if (letterCache.has(ch)) return letterCache.get(ch);
