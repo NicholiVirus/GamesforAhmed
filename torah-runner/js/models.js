@@ -80,58 +80,75 @@ export function jagged(radius, detail = 1, amp = 0.18, salt = 0) {
 }
 
 // ---------------------------------------------------------------- player
+// The runner's clothes for each region. wrap: head-wrap colour (null = cap or bare hair).
+export const OUTFITS = {
+  egypt: { top: 0x2f6fd6, hem: 0x2559b5, belt: 0x7a4a22, pants: 0xeadbb8, shoe: 0x6b3e1e, wrap: 0xf4efe4, band: 0x2c4ea3 },
+  sea: { top: 0xf2f2ee, hem: 0x2c6fd6, belt: 0x2c4ea3, pants: 0xdcd2bc, shoe: 0x6b3e1e, wrap: 0x7fd3ff, band: 0xffffff },
+  elim: { top: 0x3f8f4a, hem: 0x2f6f38, belt: 0x8b5a2b, pants: 0xeadbb8, shoe: 0x6b3e1e, wrap: 0xf0e2c0, band: 0x3f8f4a },
+  wild: { top: 0xc9a066, hem: 0xa8814e, belt: 0x6b3e1e, pants: 0xe6d6b4, shoe: 0x5a3a1c, wrap: 0xf4efe4, band: 0xb83a2a },
+  night: { top: 0x3a2f6a, hem: 0x2a2250, belt: 0xf0b93a, pants: 0x4a4060, shoe: 0x2a1e14, wrap: 0x2a2250, band: 0xf0b93a },
+  sinai: { top: 0xf6f3ec, hem: 0x2c4ea3, belt: 0xf0b93a, pants: 0xeee6d6, shoe: 0x6b3e1e, wrap: 0xf6f3ec, band: 0x2c4ea3 },
+  jerusalem: { top: 0xffffff, hem: 0xe8e8e8, belt: 0x2c4ea3, pants: 0x2a2a30, shoe: 0x1a1a1a, wrap: null, cap: 0x2c4ea3 },
+  telaviv: { top: 0xff8a3d, hem: 0xff8a3d, belt: 0xff8a3d, pants: 0x3a8fc8, shoe: 0xffffff, wrap: null, cap: 0xffd24a, short: true },
+  airport: { top: 0x8a9098, hem: 0x7a8088, belt: 0x7a8088, pants: 0x2f4a7a, shoe: 0xffffff, wrap: null, cap: 0x2a2a30 },
+  newyork: { top: 0xd8402f, hem: 0xb8302a, belt: 0x222222, pants: 0x2f4a7a, shoe: 0x1a1a1a, wrap: null, cap: 0x1a1a1a },
+  donut: { top: 0xf38bb8, hem: 0xffffff, belt: 0xffffff, pants: 0x3a3a44, shoe: 0xffffff, wrap: null, cap: 0xffffff },
+};
+
+export function outfitGeos(o) {
+  const skin = 0xc68a5e, ink = 0x1b1830;
+  const torso = merge([
+    box(o.top, [0, 0, 0], [0.52, 0.6, 0.32]),
+    box(o.hem, [0, -0.33, 0], [0.56, 0.12, 0.35]),
+    box(o.belt, [0, -0.2, 0], [0.56, 0.08, 0.35]),
+    box(0xf0b93a, [0, -0.2, -0.18], [0.1, 0.08, 0.02]),
+    box(0x8b5a2b, [0, 0.02, 0.17], [0.66, 0.07, 0.04], [0, 0, 0.75]),
+    box(0x8b5a2b, [0.25, -0.27, 0.12], [0.2, 0.24, 0.14]),
+    box(0xf0b93a, [0.25, -0.22, 0.2], [0.08, 0.05, 0.02]),
+    box(0xf3e3c3, [0, 0.28, -0.12], [0.3, 0.07, 0.1]),
+  ]);
+  const headParts = [
+    box(skin, [0, 0, 0], [0.42, 0.42, 0.42]),
+    box(0x3a2618, [0, 0.12, 0.06], [0.44, 0.2, 0.36]),
+    box(ink, [-0.09, 0.02, -0.215], [0.07, 0.08, 0.02]),
+    box(ink, [0.09, 0.02, -0.215], [0.07, 0.08, 0.02]),
+    box(0xd99a6c, [0, -0.03, -0.225], [0.06, 0.07, 0.04]),
+    box(0x8a4a3a, [0, -0.12, -0.215], [0.12, 0.03, 0.02]),
+  ];
+  if (o.wrap) headParts.push(box(o.wrap, [0, 0.19, 0], [0.47, 0.11, 0.47]), box(o.band, [0, 0.135, 0], [0.48, 0.035, 0.48]));
+  else headParts.push(box(o.cap, [0, 0.22, 0.01], [0.46, 0.1, 0.46]), box(o.cap, [0, 0.18, -0.28], [0.36, 0.04, 0.18]));
+  const tail = merge([box(o.wrap || 0xffffff, [0, -0.2, 0], [0.18, 0.4, 0.04]), box(o.band || 0xffffff, [0, -0.1, 0], [0.19, 0.035, 0.05])]);
+  const arm = merge([box(o.top, [0, -0.15, 0], [0.16, 0.32, 0.17]), box(skin, [0, -0.39, 0], [0.13, 0.17, 0.14])]);
+  const leg = merge(o.short
+    ? [box(o.pants, [0, -0.14, 0], [0.19, 0.28, 0.2]), box(skin, [0, -0.42, 0], [0.16, 0.28, 0.17]), box(o.shoe, [0, -0.6, -0.03], [0.21, 0.12, 0.28])]
+    : [box(o.pants, [0, -0.28, 0], [0.19, 0.56, 0.2]), box(o.shoe, [0, -0.6, -0.03], [0.21, 0.12, 0.28])]);
+  return { torso, head: merge(headParts), tail, arm, leg };
+}
+
 export function buildPlayer() {
   const mat = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true });
   const mk = (geo) => new THREE.Mesh(geo, mat);
   const root = new THREE.Group();
   const body = new THREE.Group();
   root.add(body);
-  const tunic = 0x2f6fd6, skin = 0xc68a5e, ink = 0x1b1830;
-
-  const torso = mk(merge([
-    box(tunic, [0, 0, 0], [0.52, 0.6, 0.32]),
-    box(0x2559b5, [0, -0.33, 0], [0.56, 0.12, 0.35]),
-    box(0x7a4a22, [0, -0.2, 0], [0.56, 0.08, 0.35]),
-    box(0xf0b93a, [0, -0.2, -0.18], [0.1, 0.08, 0.02]),
-    box(0x8b5a2b, [0, 0.02, 0.17], [0.66, 0.07, 0.04], [0, 0, 0.75]),
-    box(0x8b5a2b, [0.25, -0.27, 0.12], [0.2, 0.24, 0.14]),
-    box(0xf0b93a, [0.25, -0.22, 0.2], [0.08, 0.05, 0.02]),
-    box(0xf3e3c3, [0, 0.28, -0.12], [0.3, 0.07, 0.1]),
-  ]));
+  const g = outfitGeos(OUTFITS.egypt);
+  const torso = mk(g.torso);
   torso.position.y = 1.0;
   body.add(torso);
 
   const head = new THREE.Group();
   head.position.y = 1.5;
   body.add(head);
-  head.add(mk(merge([
-    box(skin, [0, 0, 0], [0.42, 0.42, 0.42]),
-    box(0x3a2618, [0, 0.12, 0.06], [0.44, 0.2, 0.36]),
-    box(0xf4efe4, [0, 0.19, 0], [0.47, 0.11, 0.47]),
-    box(0x2c4ea3, [0, 0.135, 0], [0.48, 0.035, 0.48]),
-    box(ink, [-0.09, 0.02, -0.215], [0.07, 0.08, 0.02]),
-    box(ink, [0.09, 0.02, -0.215], [0.07, 0.08, 0.02]),
-    box(0xd99a6c, [0, -0.03, -0.225], [0.06, 0.07, 0.04]),
-    box(0x8a4a3a, [0, -0.12, -0.215], [0.12, 0.03, 0.02]),
-  ])));
-  const tail = mk(merge([
-    box(0xf4efe4, [0, -0.2, 0], [0.18, 0.4, 0.04]),
-    box(0x2c4ea3, [0, -0.1, 0], [0.19, 0.035, 0.05]),
-  ]));
+  const headMesh = mk(g.head);
+  head.add(headMesh);
+  const tail = mk(g.tail);
   tail.position.set(0, 0.18, 0.24);
   head.add(tail);
 
-  const armGeo = merge([
-    box(tunic, [0, -0.15, 0], [0.16, 0.32, 0.17]),
-    box(skin, [0, -0.39, 0], [0.13, 0.17, 0.14]),
-  ]);
-  const armL = mk(armGeo); armL.position.set(-0.35, 1.25, 0); body.add(armL);
-  const armR = mk(armGeo); armR.position.set(0.35, 1.25, 0); body.add(armR);
+  const armL = mk(g.arm); armL.position.set(-0.35, 1.25, 0); body.add(armL);
+  const armR = mk(g.arm); armR.position.set(0.35, 1.25, 0); body.add(armR);
 
-  const legGeo = merge([
-    box(0xeadbb8, [0, -0.28, 0], [0.19, 0.56, 0.2]),
-    box(0x6b3e1e, [0, -0.6, -0.03], [0.21, 0.12, 0.28]),
-  ]);
+  const legGeo = g.leg;
   const legL = mk(legGeo); legL.position.set(-0.13, 0.66, 0); body.add(legL);
   const legR = mk(legGeo); legR.position.set(0.13, 0.66, 0); body.add(legR);
 
@@ -156,7 +173,16 @@ export function buildPlayer() {
   torso.add(jet);
   jet.userData.flames = flames;
 
-  return { root, body, torso, head, tail, armL, armR, legL, legR, mat, jet };
+  // Swap the runner's clothes for a region's outfit.
+  const outfitCache = {};
+  const wear = (id) => {
+    const o = OUTFITS[id] || OUTFITS.egypt;
+    const gg = outfitCache[id] || (outfitCache[id] = outfitGeos(o));
+    torso.geometry = gg.torso; headMesh.geometry = gg.head; tail.geometry = gg.tail;
+    armL.geometry = armR.geometry = gg.arm; legL.geometry = legR.geometry = gg.leg;
+    tail.visible = !!o.wrap;
+  };
+  return { root, body, torso, head, tail, armL, armR, legL, legR, mat, jet, wear };
 }
 
 // Star shield: a soft bubble with a glowing Star of David (Magen David) turning around the runner.

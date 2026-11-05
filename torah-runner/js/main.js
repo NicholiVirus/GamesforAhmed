@@ -210,6 +210,7 @@ class Game {
     this.p.body.rotation.set(0, 0, 0);
     this.p.body.position.set(0, 0, 0);
     this.p.root.visible = true;
+    if (this.p.wear) { this.p.wear('egypt'); this.outfit = 'egypt'; }
   }
 
   get word() { return this.wordOrder[this.wordPos % this.wordOrder.length]; }
@@ -594,7 +595,16 @@ class Game {
     }, 900);
   }
 
-  starCount() { return ((this.store.inv || {}).shield) || 0; }
+  // New region, new clothes: a puff of sparkles hides the quick change.
+  dressFor(bi) {
+    const id = BIOMES[bi].id;
+    if (this.outfit === id) return;
+    this.outfit = id;
+    this.p.wear(id);
+    if (this.state === 'playing') this.world.burst(this.x, 1.0, 0, 14, { color: [1, 0.95, 0.8], speed: 2.5, up: 2, life: 0.5 });
+  }
+
+    starCount() { return ((this.store.inv || {}).shield) || 0; }
 
   // Spend one Star shield from the stash, any time during a run.
   useStar() {
@@ -927,6 +937,7 @@ class Game {
     this.generate();
 
     const bi = biomeIndexAt(this.dist);
+    if (bi !== this.biomeShown) this.dressFor(bi);
     if (bi !== this.biomeShown) {
       if (this.biomeShown !== -1 || this.dist > 1) {
         this.ui.banner(BIOMES[bi], this.dist >= JLM_START ? 1 : Math.floor(this.dist / LAP) + 1);
