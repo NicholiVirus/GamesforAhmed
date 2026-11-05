@@ -2,7 +2,7 @@
 
 ## Torah Runner
 
-A 3D lane runner. Run from Egypt, through the parted Red Sea, the Oasis of Elim, the wilderness and the night camp under the pillar of fire, to Mount Sinai. Ramps launch you over walls. Catch the golden Hebrew letters in order to write words of the Torah on your scroll.
+A 3D lane runner. Run from Egypt, through the parted Red Sea, the Oasis of Elim, the wilderness and the night camp under the pillar of fire, to Mount Sinai. Ramps lead up onto raised walkways you run along before dropping back down. Some letters float high: jump to grab them. Catch the golden Hebrew letters in order to write words of the Torah on your scroll.
 
 - **Play:** open `torah-runner/index.html` through any static web server (ES modules don't load from `file://`).
   ```sh
@@ -11,7 +11,7 @@ A 3D lane runner. Run from Egypt, through the parted Red Sea, the Oasis of Elim,
   ```
 - **Controls:** ← → change lane · ↑ / Space jump · ↓ slide · P pause · M sound. On touch screens: swipe, or tap to jump.
 - **Words:** 280 words (animals, food, colors, numbers, family, holidays, Torah names and values) covering all 22 letters of the Alef-Bet, each with its transliteration and meaning. Words you finish are saved in "My scroll".
-- **Power-ups:** Star of David shield, jet pack, magnet, double manna, shofar blast, extra heart.
+- **Power-ups:** Star of David shield, jet pack (fly above everything), jump sneakers (blue-and-white, super-high jumps), magnet, double manna, shofar blast, extra heart.
 - **Word pause:** finishing a word freezes the run and shows the word card. Tap "Keep running" for a 1-second 3-2-1 countdown; a golden wave clears the road just ahead. Resuming from pause also counts down.
 - **Music:** a synthesized klezmer band (clarinet, accordion, bass, drum) plays the traditional Hava Nagila theme and a freylekh dance tune; it speeds up as you run faster.
 - **Train back:** after a lost run, "Run again" sends a steam train that carries you back through every region to Egypt (tap "Skip ride" to jump straight there).

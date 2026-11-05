@@ -39,9 +39,24 @@ export class Sound {
     this.timer = null;
   }
 
+  // Called from every tap/click/key: phones only allow sound that starts inside a user gesture.
+  unlock() {
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* not supported */ }
+    this.init();
+    const c = this.ctx;
+    if (!c) return;
+    if (c.state !== 'running') c.resume().catch(() => {});
+    if (!this.unlocked) {
+      this.unlocked = true;
+      const b = c.createBuffer(1, 1, 22050);
+      const src = c.createBufferSource(); src.buffer = b; src.connect(c.destination); src.start(0);
+    }
+    if (this.wantMusic && !this.timer) this.startMusic();
+  }
+
   init() {
     if (this.ctx) {
-      if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+      if (this.ctx.state !== 'running') this.ctx.resume().catch(() => {});
       return;
     }
     const AC = window.AudioContext || window.webkitAudioContext;
@@ -170,6 +185,7 @@ export class Sound {
   startMusic() {
     this.wantMusic = true;
     if (!this.ctx || this.timer) return;
+    if (this.ctx.state !== 'running') this.ctx.resume().catch(() => {});
     this.nextTime = this.ctx.currentTime + 0.08;
     this.timer = setInterval(() => this.schedule(), 30);
   }

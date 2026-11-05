@@ -103,7 +103,7 @@ class Game {
     this.ringT = 0;
 
     const icons = {};
-    for (const t of ['shield', 'magnet', 'double', 'shofar', 'heart', 'jetpack']) icons[t] = powerTexture(t).image.toDataURL();
+    for (const t of ['shield', 'magnet', 'double', 'shofar', 'heart', 'jetpack', 'sneakers']) icons[t] = powerTexture(t).image.toDataURL();
     this.ui.setIcons(icons);
 
     this.time = 0;
@@ -156,7 +156,7 @@ class Game {
     this.grounded = true;
     this.slideT = 0; this.invuln = 0; this.hurtT = 0;
     this.jumpBuf = 0; this.slideBuf = 0;
-    this.powers = { shield: 0, magnet: 0, double: 0, jetpack: 0 };
+    this.powers = { shield: 0, magnet: 0, double: 0, jetpack: 0, sneakers: 0 };
     this.speedFactor = 1;
     this.spawnCursor = 0;
     this.lastSafe = 1;
@@ -185,6 +185,10 @@ class Game {
 
   // ------------------------------------------------------------ input
   bindInput() {
+    // Phones only allow sound that starts inside a tap, so unlock audio on every touch, click or key.
+    const unlock = () => { if (!this.muted) this.sound.unlock(); };
+    for (const ev of ['pointerdown', 'touchend', 'click', 'keydown']) window.addEventListener(ev, unlock, { capture: true, passive: true });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && this.sound.ctx) this.sound.ctx.resume().catch(() => {}); });
     window.addEventListener('keydown', (e) => {
       const k = e.key;
       const typing = e.target && /input|textarea|select/i.test(e.target.tagName);
@@ -258,7 +262,7 @@ class Game {
   }
 
   doJump() {
-    this.vy = JUMP_V;
+    this.vy = this.powers.sneakers > 0 ? JUMP_V * 1.55 : JUMP_V;
     this.grounded = false;
     this.slideT = 0;
     this.sound.play('jump');
@@ -376,7 +380,7 @@ class Game {
     this.speed = 0;
     this.lane = 1;
     this.vy = 0; this.grounded = true; this.slideT = 0; this.hurtT = 0; this.invuln = 0;
-    this.powers = { shield: 0, magnet: 0, double: 0, jetpack: 0 };
+    this.powers = { shield: 0, magnet: 0, double: 0, jetpack: 0, sneakers: 0 };
     this.p.root.visible = true;
     this.ride.start();
     if (!this.muted) this.sound.startMusic();
@@ -577,22 +581,24 @@ class Game {
     let safe = clamp(this.lastSafe + Math.floor(rnd(-1, 2)), 0, 2);
     const kind = () => { const r = Math.random(); return r < 0.4 ? 'low' : r < 0.7 ? 'high' : 'tall'; };
     const prevFree = [0, 1, 2].filter((i) => !this.prevRow || !this.prevRow.lanes[i]);
-    // Ramp: launches you over a tall obstacle in the same lane. Other lanes stay passable.
-    if (d > 0.04 && Math.random() < 0.13) {
+    // Ramp up onto an elevated walkway: run along the top, then drop off the end.
+    if (d > 0.03 && Math.random() < 0.16) {
       const sp = speedAt(wz);
       const ln = safe;
+      const n = 2 + Math.floor(Math.random() * 2);
       this.spawnObstacle('ramp', ln, wz);
-      this.spawnObstacle(pick(set.tall.filter((t) => !OBSTACLES[t].roll && OBSTACLES[t].boxes[0][3] <= 3.1)), ln, wz + sp * 0.42);
-      if (d > 0.3) {
-        for (let i = 0; i < 3; i++) if (i !== ln) this.spawnObstacle(pick(set[Math.random() < 0.5 ? 'low' : 'high']), i, wz + sp * 0.42);
+      for (let k = 0; k < n; k++) this.spawnObstacle('deck', ln, wz + 1.6 + 8 + k * 16);
+      const len = 3.2 + n * 16;
+      // Once the run gets harder, a tall obstacle can sit beside the walkway.
+      if (d > 0.2) {
+        const talls = set.tall.filter((t) => !OBSTACLES[t].roll);
+        // Block at most one side lane, so there is always a way through on the ground too.
+        const side = [0, 1, 2].filter((i) => i !== ln);
+        if (Math.random() < 0.6) this.spawnObstacle(pick(talls), pick(side), wz + len * 0.5);
       }
-      // Manna along the flight path.
-      for (let k = 1; k <= 9; k++) {
-        const t = k * 0.11;
-        this.addManna(wz + sp * t, ln, 1.0 + RAMP_V * t - 0.5 * GRAV * t * t);
-      }
+      for (let z = wz + 1; z < wz + len - 1; z += 1.8) this.addManna(z, ln, 2.0);
       this.lastSafe = ln;
-      return { lanes: [null, null, null], safe: ln, wz, extra: sp * 0.95 };
+      return { lanes: [null, null, null], safe: ln, wz, extra: len + sp * 0.45 };
     }
     const wSingle = 0.5 - 0.3 * d, wDouble = 0.32 + 0.2 * d, wTriple = d > 0.2 ? 0.08 + 0.22 * d : 0;
     const wRoll = set.roll.length && prevFree.length ? 0.16 : 0;
@@ -630,32 +636,38 @@ class Game {
     };
     if (this.nextLetterWz < b - 4) {
       const wz = clamp(this.nextLetterWz, a + 4, b - 4);
-      const high = diffAt(wz) > 0.1 && Math.random() < 0.25;
-      this.addPickup('letter', null, wz, place(wz), high ? 2.4 : 1.05);
+      // Some letters float out of reach from the ground: jump to grab them.
+      const high = wz > 120 && Math.random() < 0.45;
+      this.addPickup('letter', null, wz, place(wz), high ? 2.7 : 1.05);
       this.nextLetterWz = wz + speedAt(wz) * rnd(3.4, 4.8);
     }
     if (this.nextPowerWz < b - 4 && a > 60) {
       const wz = clamp(this.nextPowerWz, a + 4, b - 4);
       const r = Math.random();
-      const type = r < 0.24 ? 'shield' : r < 0.46 ? 'magnet' : r < 0.62 ? 'double' : r < 0.78 ? 'shofar' : 'jetpack';
+      const type = r < 0.17 ? 'shield' : r < 0.33 ? 'magnet' : r < 0.45 ? 'double' : r < 0.56 ? 'shofar' : r < 0.78 ? 'jetpack' : 'sneakers';
       this.addPickup('power', type, wz, place(wz), 1.05);
-      this.nextPowerWz = wz + rnd(380, 560);
+      this.nextPowerWz = wz + rnd(260, 400);
     }
     if (this.hearts < MAX_HEARTS && this.nextHeartWz < b - 4) {
       const wz = clamp(this.nextHeartWz, a + 4, b - 4);
       this.addPickup('power', 'heart', wz, place(wz), 1.05);
       this.nextHeartWz = wz + rnd(450, 700);
     }
-    if (row && Math.random() < 0.75) {
+    if (row) {
       const ln = row.safe;
-      if (!used[ln]) for (let z = a + 4; z < b - 5; z += 2.3) this.addManna(z, ln, 0.75);
+      if (!used[ln]) for (let z = a + 4; z < b - 5; z += 1.8) this.addManna(z, ln, 0.75);
+      // Extra lines of manna in other open lanes.
+      for (let i = 0; i < 3; i++) {
+        if (i === ln || used[i] || Math.random() > 0.45) continue;
+        for (let z = a + 5; z < b - 7; z += 1.8) this.addManna(z, i, 0.75);
+      }
       if (row.lanes[ln] === 'low') {
         for (let k = -3; k <= 3; k++) this.addManna(b + k * 1.7, ln, 0.75 + Math.sin(((k + 3) / 6) * Math.PI) * 1.55);
       } else if (row.lanes[ln] === 'high') {
         for (let k = -2; k <= 2; k++) this.addManna(b + k * 1.5, ln, 0.4);
       }
     } else if (!row) {
-      for (let z = a + 10; z < b - 2; z += 2.3) this.addManna(z, 1, 0.75);
+      for (let z = a + 10; z < b - 2; z += 1.8) this.addManna(z, 1, 0.75);
     }
   }
 
@@ -690,7 +702,7 @@ class Game {
     this.ui.setManna(this.mannaCount);
     this.ui.setHearts(this.hearts, MAX_HEARTS);
     const list = [];
-    for (const k of ['jetpack', 'shield', 'magnet', 'double']) if (this.powers[k] > 0) list.push({ type: k, frac: this.powers[k] / POWERS[k].time });
+    for (const k of ['jetpack', 'sneakers', 'shield', 'magnet', 'double']) if (this.powers[k] > 0) list.push({ type: k, frac: this.powers[k] / POWERS[k].time });
     this.ui.setPowers(list);
   }
 
@@ -703,11 +715,18 @@ class Game {
       this.y += (JET_Y - this.y) * (1 - Math.exp(-dt * 3));
       if (this.powers.jetpack <= dt) { this.invuln = Math.max(this.invuln, 1.2); this.ui.popup('Landing'); }
       if (Math.random() < 0.6) this.world.burst(this.x, this.y + 0.4, 0.35, 1, { color: [1, 0.6 + Math.random() * 0.3, 0.2], speed: 0.6, up: -3, life: 0.35, grav: 4 });
-    } else if (!this.grounded) {
-      this.vy -= GRAV * dt;
+    } else if (this.grounded) {
+      const gh = this.groundHeight();
+      if (gh >= this.y - 0.35) this.y = gh;
+      else { this.grounded = false; this.vy = 0; }
+    }
+    if (this.powers.jetpack <= 0 && !this.grounded) {
+      const grav = this.powers.sneakers > 0 ? GRAV * 1.35 : GRAV;
+      this.vy -= grav * dt;
       this.y += this.vy * dt;
-      if (this.y <= 0) {
-        this.y = 0; this.vy = 0; this.grounded = true;
+      const gh = this.groundHeight();
+      if (this.y <= gh && this.vy <= 0) {
+        this.y = gh; this.vy = 0; this.grounded = true;
         const c = this.world.cur.ground;
         this.world.burst(this.x, 0.1, 0.1, 6, { dust: true, color: [c.r, c.g, c.b], speed: 2, up: 0.6, life: 0.45, grav: 0.5 });
         if (this.jumpBuf > 0) { this.jumpBuf = 0; this.doJump(); }
@@ -766,10 +785,21 @@ class Game {
       if (o.def.roll) o.mesh.rotation.x = o.spin;
       o.shadow.position.set(o.x, 0.025, z);
       if (this.state === 'playing' && this.hits(o, zp, z, pb)) {
-        if (o.kind === 'ramp') this.launch(o);
-        else this.onHit(o);
+        if (o.kind === 'ramp') { /* walkable */ } else if (o.kind === 'deck') { if (this.y < 1.1) this.onHit(o); } else this.onHit(o);
       }
     }
+  }
+
+  // Height of whatever the runner stands on: the road, a ramp slope or an elevated deck.
+  groundHeight() {
+    let h = 0;
+    for (const o of this.obs) {
+      if (!o.alive || (o.kind !== 'ramp' && o.kind !== 'deck') || Math.abs(this.x - o.x) > 0.7) continue;
+      const lz = -(this.dist - o.wz);
+      if (o.kind === 'deck') { if (lz >= -8.05 && lz <= 8.05) h = Math.max(h, 1.25); }
+      else if (lz >= -1.6 && lz <= 1.6) h = Math.max(h, ((1.6 - lz) / 3.2) * 1.25);
+    }
+    return h;
   }
 
   launch(o) {
@@ -965,6 +995,10 @@ class Game {
       this.hearts = Math.min(MAX_HEARTS, this.hearts + 1);
       this.sound.play('heart');
       this.ui.popup('+1 life', 'heart');
+    } else if (p.type === 'sneakers') {
+      this.powers.sneakers = POWERS.sneakers.time;
+      this.sound.play('power');
+      this.ui.popup('Jump sneakers!');
     } else if (p.type === 'jetpack') {
       this.ui.popup('Jet pack!');
       this.startJetpack();

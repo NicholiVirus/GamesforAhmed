@@ -429,6 +429,21 @@ function buildRamp() {
   return merge(P);
 }
 
+// Elevated walkway reached from a ramp: run along the top, drop off the end.
+function buildDeck() {
+  const P = [
+    box(0x8a6a48, [0, 1.1, 0], [1.9, 0.3, 16]),
+    box(0xb08a5a, [0, 1.27, 0], [1.86, 0.04, 15.9]),
+    box(0xf0b93a, [-0.93, 1.3, 0], [0.08, 0.08, 16]),
+    box(0xf0b93a, [0.93, 1.3, 0], [0.08, 0.08, 16]),
+  ];
+  for (let z = -7.5; z <= 7.5; z += 3) {
+    P.push(box(0x6d3e1c, [-0.8, 0.48, z], [0.2, 0.96, 0.2]), box(0x6d3e1c, [0.8, 0.48, z], [0.2, 0.96, 0.2]));
+    P.push(box(0x9a7a56, [0, 1.285, z], [1.8, 0.02, 0.08]));
+  }
+  return merge(P);
+}
+
 function buildWell() {
   const P = [
     part(new THREE.CylinderGeometry(0.85, 0.9, 0.9, 10), 0xc8b18a, [0, 0.45, 0]),
@@ -461,6 +476,7 @@ export const OBSTACLES = {
   stonearch: { kind: 'high', build: buildStoneArch, boxes: [[-1, 1, 1.08, 2.0, -0.33, 0.33]] },
   boulder: { kind: 'tall', build: buildBoulder, boxes: [[-1.0, 1.0, 0, 2.4, -1.0, 1.0]] },
   ramp: { kind: 'ramp', build: buildRamp, boxes: [[-0.9, 0.9, 0, 1.25, -1.6, 1.6]] },
+  deck: { kind: 'deck', build: buildDeck, boxes: [[-0.95, 0.95, 0, 1.25, -8, 8]] },
   well: { kind: 'tall', build: buildWell, boxes: [[-0.9, 0.9, 0, 3, -0.9, 0.9]] },
   rollstone: { kind: 'tall', roll: 7, build: buildRollStone, boxes: [[-0.8, 0.8, -0.95, 0.95, -0.8, 0.8]] },
 };
@@ -565,6 +581,20 @@ export function powerTexture(type) {
         }
         g.closePath(); g.stroke();
       }
+    } else if (type === 'sneakers') {
+      // A blue-and-white sneaker with a small Star of David.
+      g.fillStyle = '#2c6fd6';
+      g.beginPath(); g.moveTo(c - s * 0.2, c + s * 0.08); g.lineTo(c - s * 0.2, c - s * 0.1); g.lineTo(c - s * 0.05, c - s * 0.12);
+      g.lineTo(c + s * 0.02, c - s * 0.02); g.lineTo(c + s * 0.2, c + s * 0.02); g.lineTo(c + s * 0.21, c + s * 0.08); g.closePath(); g.fill();
+      g.fillStyle = '#ffffff'; g.fillRect(c - s * 0.21, c + s * 0.08, s * 0.43, s * 0.06);
+      g.strokeStyle = '#ffffff'; g.lineWidth = s * 0.012;
+      for (const st of [-Math.PI / 2, Math.PI / 2]) {
+        g.beginPath();
+        for (let k = 0; k < 3; k++) { const a = st + (k * Math.PI * 2) / 3; const x = c - s * 0.1 + Math.cos(a) * s * 0.045, y = c - s * 0.03 + Math.sin(a) * s * 0.045; if (k) g.lineTo(x, y); else g.moveTo(x, y); }
+        g.closePath(); g.stroke();
+      }
+      g.strokeStyle = '#ffd24a'; g.lineWidth = s * 0.02;
+      for (const dy of [-0.16, -0.21]) { g.beginPath(); g.moveTo(c - s * 0.05, c + dy * s); g.lineTo(c + s * 0.12, c + dy * s - s * 0.02); g.stroke(); }
     } else if (type === 'jetpack') {
       g.fillStyle = '#ffb347';
       for (const x of [-0.07, 0.07]) { g.beginPath(); g.moveTo(c + x * s - s * 0.04, c + s * 0.1); g.lineTo(c + x * s, c + s * 0.24); g.lineTo(c + x * s + s * 0.04, c + s * 0.1); g.fill(); }

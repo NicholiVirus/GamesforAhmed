@@ -341,7 +341,8 @@ export const BIOMES = [
 
 export const POWERS = {
   shield: { label: 'Star shield', color: '#7fd3ff', time: 12 },
-  jetpack: { label: 'Jet pack', color: '#ff9a3c', time: 7 },
+  jetpack: { label: 'Jet pack', color: '#ff9a3c', time: 9 },
+  sneakers: { label: 'Jump sneakers', color: '#4aa8ff', time: 10 },
   magnet: { label: 'Magnet', color: '#ff6b5a', time: 10 },
   double: { label: '2× manna', color: '#ffd24a', time: 10 },
   shofar: { label: 'Shofar blast', color: '#f3e3c3', time: 0 },
