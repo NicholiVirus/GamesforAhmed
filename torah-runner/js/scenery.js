@@ -153,6 +153,28 @@ function buildScrub() {
   return merge(P);
 }
 
+function buildPool() {
+  const P = [part(new THREE.CylinderGeometry(1.6, 1.7, 0.06, 12), 0x3fb0d0, [0, 0.03, 0], [0, 0, 0], [1, 1, 0.75], 0.02)];
+  for (let k = 0; k < 12; k++) {
+    const a = (k / 12) * Math.PI * 2;
+    P.push(part(ICO, k % 2 ? 0xbfae8e : 0xa8967a, [Math.cos(a) * 1.75, 0.1, Math.sin(a) * 1.3], [k, k, 0], [0.25, 0.16, 0.22]));
+  }
+  for (let k = 0; k < 6; k++) P.push(box(0x5c8a30, [rnd(-1.4, 1.4), 0.4, rnd(-1.2, 1.2) > 0 ? 1.4 : -1.4], [0.05, 0.8, 0.05]));
+  return merge(P);
+}
+
+function buildCampfire() {
+  const P = [];
+  for (let k = 0; k < 4; k++) P.push(box(0x5a3a22, [0, 0.12, 0], [1.1, 0.14, 0.14], [0, (k * Math.PI) / 4, 0]));
+  P.push(part(new THREE.ConeGeometry(0.35, 0.9, 6), 0xffa23c, [0, 0.55, 0]));
+  P.push(part(new THREE.ConeGeometry(0.2, 0.6, 6), 0xffe08a, [0.05, 0.5, 0.05]));
+  for (let k = 0; k < 8; k++) {
+    const a = (k / 8) * Math.PI * 2;
+    P.push(part(ICO, 0x6f6a66, [Math.cos(a) * 0.7, 0.08, Math.sin(a) * 0.7], [k, k, 0], [0.16, 0.1, 0.16]));
+  }
+  return merge(P);
+}
+
 // side: 'edge' props sit just off the road; 'near' and 'far' are further out. face = turn toward the road.
 export const SCENERY = {
   egypt: [
@@ -175,6 +197,20 @@ export const SCENERY = {
     { type: 'btent', build: buildBedouinTent, variants: 1, x: [13, 22], w: 1, face: true },
     { type: 'camelS', build: buildCamel, variants: 1, x: [7, 15], w: 1, face: false },
     { type: 'scrub', build: buildScrub, variants: 3, x: [3.6, 7], w: 3, face: false },
+  ],
+  elim: [
+    { type: 'palm', build: buildPalm, variants: 4, x: [4.4, 12], w: 8, face: false },
+    { type: 'pool', build: buildPool, variants: 2, x: [6, 12], w: 2, face: false },
+    { type: 'reeds', build: buildReeds, variants: 3, x: [3.7, 5.5], w: 3, face: false },
+    { type: 'wellS', build: () => obstacleGeo('well'), variants: 1, x: [7, 12], w: 1, face: false },
+    { type: 'btent', build: buildBedouinTent, variants: 1, x: [13, 22], w: 1, face: true },
+  ],
+  night: [
+    { type: 'btent', build: buildBedouinTent, variants: 1, x: [8, 20], w: 4, face: true },
+    { type: 'fire', build: buildCampfire, variants: 2, x: [5, 12], w: 3, face: false },
+    { type: 'camelS', build: buildCamel, variants: 1, x: [7, 15], w: 2, face: false },
+    { type: 'rock', build: buildRock, variants: 4, x: [4.2, 12], w: 2, face: false },
+    { type: 'scrub', build: buildScrub, variants: 3, x: [3.6, 7], w: 2, face: false },
   ],
   sinai: [
     { type: 'cliff', build: buildCliff, variants: 4, x: [7, 18], w: 5, face: false },

@@ -135,28 +135,63 @@ export function buildPlayer() {
   const legL = mk(legGeo); legL.position.set(-0.13, 0.66, 0); body.add(legL);
   const legR = mk(legGeo); legR.position.set(0.13, 0.66, 0); body.add(legR);
 
-  return { root, body, torso, head, tail, armL, armR, legL, legR, mat };
+  const jet = new THREE.Group();
+  jet.add(new THREE.Mesh(merge([
+    part(new THREE.CylinderGeometry(0.11, 0.11, 0.5, 10), 0xc9ced6, [-0.13, 0, 0], [0, 0, 0]),
+    part(new THREE.CylinderGeometry(0.11, 0.11, 0.5, 10), 0xc9ced6, [0.13, 0, 0], [0, 0, 0]),
+    part(new THREE.ConeGeometry(0.11, 0.14, 10), 0xd8402f, [-0.13, 0.32, 0]),
+    part(new THREE.ConeGeometry(0.11, 0.14, 10), 0xd8402f, [0.13, 0.32, 0]),
+    box(0x2c4ea3, [0, 0.05, -0.06], [0.42, 0.3, 0.06]),
+    box(0xf0b93a, [0, 0.12, -0.03], [0.44, 0.05, 0.08]),
+  ]), mat));
+  const flameMat = new THREE.MeshBasicMaterial({ color: 0xffa23c, transparent: true, opacity: 0.9 });
+  const flames = [-0.13, 0.13].map((x) => {
+    const f = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.45, 8).rotateX(Math.PI), flameMat);
+    f.position.set(x, -0.45, 0);
+    jet.add(f);
+    return f;
+  });
+  jet.position.set(0, 0.02, 0.3);
+  jet.visible = false;
+  torso.add(jet);
+  jet.userData.flames = flames;
+
+  return { root, body, torso, head, tail, armL, armR, legL, legR, mat, jet };
 }
 
-// A cloud shield: a soft bubble with puffs circling it.
+// Star shield: a soft bubble with a glowing Star of David (Magen David) turning around the runner.
+export function hexagramGeo(R, t, color) {
+  const parts = [];
+  for (const start of [Math.PI / 2, -Math.PI / 2]) {
+    const pts = [0, 1, 2].map((k) => {
+      const a = start + (k * Math.PI * 2) / 3;
+      return [Math.cos(a) * R, Math.sin(a) * R];
+    });
+    for (let k = 0; k < 3; k++) {
+      const [x1, y1] = pts[k], [x2, y2] = pts[(k + 1) % 3];
+      const len = Math.hypot(x2 - x1, y2 - y1) + t;
+      parts.push(box(color, [(x1 + x2) / 2, (y1 + y2) / 2, 0], [len, t, t], [0, 0, Math.atan2(y2 - y1, x2 - x1)], 0));
+    }
+  }
+  return merge(parts);
+}
+
 export function buildShield() {
   const g = new THREE.Group();
   const bubble = new THREE.Mesh(
-    new THREE.SphereGeometry(1.05, 20, 14),
-    new THREE.MeshBasicMaterial({ color: 0xbfeaff, transparent: true, opacity: 0.22, depthWrite: false }),
+    new THREE.SphereGeometry(1.1, 20, 14),
+    new THREE.MeshBasicMaterial({ color: 0xbfe2ff, transparent: true, opacity: 0.2, depthWrite: false }),
   );
   bubble.position.y = 0.9;
   g.add(bubble);
-  const puffMat = new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0x9fb8d6, flatShading: true });
+  const starMat = new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9 });
   const ring = new THREE.Group();
-  ring.position.y = 0.9;
-  for (let i = 0; i < 7; i++) {
-    const a = (i / 7) * Math.PI * 2;
-    const puff = new THREE.Mesh(ICO, puffMat);
-    const s = 0.16 + (i % 3) * 0.05;
-    puff.scale.setScalar(s);
-    puff.position.set(Math.cos(a) * 1.05, Math.sin(a * 2) * 0.35, Math.sin(a) * 1.05);
-    ring.add(puff);
+  ring.position.y = 0.95;
+  const star = hexagramGeo(1.05, 0.07, 0x4aa8ff);
+  for (const ry of [0, Math.PI / 2]) {
+    const m = new THREE.Mesh(star, starMat);
+    m.rotation.y = ry;
+    ring.add(m);
   }
   g.add(ring);
   g.userData = { bubble, ring };
@@ -378,6 +413,35 @@ function buildRollStone() {
   return merge([part(jagged(0.95, 1, 0.14, 2), 0x8a7466, [0, 0, 0], [0, 0, 0], [1, 1, 1], 0.1)]);
 }
 
+// A launch ramp: wood planks rising away from the runner, with gold rails.
+function buildRamp() {
+  const wedge = new THREE.BoxGeometry(1.8, 1.25, 3.2);
+  const pos = wedge.attributes.position;
+  for (let i = 0; i < pos.count; i++) if (pos.getY(i) > 0 && pos.getZ(i) > 0) pos.setY(i, -0.625);
+  wedge.computeVertexNormals();
+  const P = [part(wedge, 0x9a6a3a, [0, 0.625, 0], [0, 0, 0], [1, 1, 1], 0.08)];
+  const slope = Math.atan2(1.25, 3.2);
+  for (const x of [-0.92, 0.92]) P.push(box(EGY.gold, [x, 0.66, 0], [0.1, 0.1, 3.42], [slope, 0, 0]));
+  for (let k = 0; k < 4; k++) {
+    const z = 1.2 - k * 0.8;
+    P.push(box(0xf0b93a, [0, 0.625 - z * (1.25 / 3.2) + 0.03, z], [1.5, 0.03, 0.14], [slope, 0, 0]));
+  }
+  return merge(P);
+}
+
+function buildWell() {
+  const P = [
+    part(new THREE.CylinderGeometry(0.85, 0.9, 0.9, 10), 0xc8b18a, [0, 0.45, 0]),
+    part(new THREE.CylinderGeometry(0.66, 0.66, 0.05, 10), 0x2f8fb3, [0, 0.85, 0]),
+    box(0x6d3e1c, [-0.75, 1.5, 0], [0.12, 1.6, 0.12]),
+    box(0x6d3e1c, [0.75, 1.5, 0], [0.12, 1.6, 0.12]),
+    box(0x6d3e1c, [0, 2.2, 0], [1.7, 0.1, 0.1]),
+    part(new THREE.ConeGeometry(1.25, 0.7, 4), 0xb83a2a, [0, 2.65, 0], [0, Math.PI / 4, 0]),
+    part(new THREE.CylinderGeometry(0.14, 0.12, 0.25, 8), 0x8b5a2b, [0.1, 1.7, 0]),
+  ];
+  return merge(P);
+}
+
 // kind: low = jump, high = slide, tall = change lane. Boxes: [x0, x1, y0, y1, z0, z1] around the lane centre.
 export const OBSTACLES = {
   bricks: { kind: 'low', build: buildBricks, boxes: [[-0.9, 0.9, 0, 0.82, -0.33, 0.33]] },
@@ -396,6 +460,8 @@ export const OBSTACLES = {
   ledge: { kind: 'low', build: buildLedge, boxes: [[-0.92, 0.92, 0, 0.78, -0.38, 0.38]] },
   stonearch: { kind: 'high', build: buildStoneArch, boxes: [[-1, 1, 1.08, 2.0, -0.33, 0.33]] },
   boulder: { kind: 'tall', build: buildBoulder, boxes: [[-1.0, 1.0, 0, 2.4, -1.0, 1.0]] },
+  ramp: { kind: 'ramp', build: buildRamp, boxes: [[-0.9, 0.9, 0, 1.25, -1.6, 1.6]] },
+  well: { kind: 'tall', build: buildWell, boxes: [[-0.9, 0.9, 0, 3, -0.9, 0.9]] },
   rollstone: { kind: 'tall', roll: 7, build: buildRollStone, boxes: [[-0.8, 0.8, -0.95, 0.95, -0.8, 0.8]] },
 };
 
@@ -403,6 +469,8 @@ export const BIOME_OBSTACLES = {
   egypt: { low: ['bricks', 'jars'], high: ['banner'], tall: ['obelisk', 'block'], roll: [] },
   sea: { low: ['coral'], high: ['arch'], tall: ['rockstack'], roll: [] },
   wild: { low: ['rocks', 'bush'], high: ['tent'], tall: ['camel'], roll: ['tumble'] },
+  elim: { low: ['jars', 'rocks'], high: ['banner'], tall: ['well', 'camel'], roll: [] },
+  night: { low: ['rocks', 'bush'], high: ['tent'], tall: ['camel', 'boulder'], roll: ['tumble'] },
   sinai: { low: ['ledge'], high: ['stonearch'], tall: ['boulder'], roll: ['rollstone'] },
 };
 
@@ -487,12 +555,23 @@ export function powerTexture(type) {
     medallion(g, s, type === 'heart' ? '#f06d5f' : '#f0b93a', '#fbf1d6');
     g.lineCap = 'round'; g.lineJoin = 'round';
     if (type === 'shield') {
-      g.fillStyle = '#7fc8f0';
-      g.beginPath(); g.arc(c, c, s * 0.2, 0, Math.PI * 2); g.fill();
-      g.fillStyle = '#ffffff';
-      [[-0.1, 0.04, 0.09], [0.0, -0.03, 0.11], [0.11, 0.03, 0.09], [0.02, 0.07, 0.08]].forEach(([x, y, r]) => {
-        g.beginPath(); g.arc(c + x * s, c + y * s, r * s, 0, Math.PI * 2); g.fill();
-      });
+      g.strokeStyle = '#2c6fd6'; g.lineWidth = s * 0.035;
+      for (const start of [-Math.PI / 2, Math.PI / 2]) {
+        g.beginPath();
+        for (let k = 0; k < 3; k++) {
+          const a = start + (k * Math.PI * 2) / 3;
+          const x = c + Math.cos(a) * s * 0.21, y = c + Math.sin(a) * s * 0.21;
+          if (k === 0) g.moveTo(x, y); else g.lineTo(x, y);
+        }
+        g.closePath(); g.stroke();
+      }
+    } else if (type === 'jetpack') {
+      g.fillStyle = '#ffb347';
+      for (const x of [-0.07, 0.07]) { g.beginPath(); g.moveTo(c + x * s - s * 0.04, c + s * 0.1); g.lineTo(c + x * s, c + s * 0.24); g.lineTo(c + x * s + s * 0.04, c + s * 0.1); g.fill(); }
+      g.fillStyle = '#9aa3ad';
+      for (const x of [-0.07, 0.07]) g.fillRect(c + x * s - s * 0.045, c - s * 0.14, s * 0.09, s * 0.25);
+      g.fillStyle = '#d8402f';
+      for (const x of [-0.07, 0.07]) { g.beginPath(); g.moveTo(c + x * s - s * 0.045, c - s * 0.14); g.lineTo(c + x * s, c - s * 0.21); g.lineTo(c + x * s + s * 0.045, c - s * 0.14); g.fill(); }
     } else if (type === 'magnet') {
       g.lineWidth = s * 0.085; g.strokeStyle = '#d8402f';
       g.beginPath(); g.arc(c, c + s * 0.0, s * 0.12, Math.PI, 0, true); g.stroke();

@@ -14,6 +14,8 @@ const LANES = [-2, 0, 2];
 const GRAV = 30;
 const JUMP_V = 10.2;
 const SLIDE_TIME = 0.72;
+const RAMP_V = 16.5;
+const JET_Y = 5.4;
 const MAX_HEARTS = 3;
 const SPAWN_AHEAD = 150;
 const LAP = BIOME_LEN * BIOMES.length;
@@ -101,7 +103,7 @@ class Game {
     this.ringT = 0;
 
     const icons = {};
-    for (const t of ['shield', 'magnet', 'double', 'shofar', 'heart']) icons[t] = powerTexture(t).image.toDataURL();
+    for (const t of ['shield', 'magnet', 'double', 'shofar', 'heart', 'jetpack']) icons[t] = powerTexture(t).image.toDataURL();
     this.ui.setIcons(icons);
 
     this.time = 0;
@@ -154,7 +156,7 @@ class Game {
     this.grounded = true;
     this.slideT = 0; this.invuln = 0; this.hurtT = 0;
     this.jumpBuf = 0; this.slideBuf = 0;
-    this.powers = { shield: 0, magnet: 0, double: 0 };
+    this.powers = { shield: 0, magnet: 0, double: 0, jetpack: 0 };
     this.speedFactor = 1;
     this.spawnCursor = 0;
     this.lastSafe = 1;
@@ -250,6 +252,7 @@ class Game {
   }
 
   jump() {
+    if (this.powers.jetpack > 0) return;
     if (this.grounded) this.doJump();
     else this.jumpBuf = 0.15;
   }
@@ -264,6 +267,7 @@ class Game {
   }
 
   slide() {
+    if (this.powers.jetpack > 0) return;
     if (!this.grounded) { this.vy = Math.min(this.vy, -18); this.slideBuf = 0.35; return; }
     if (this.slideT <= 0) this.sound.play('slide');
     this.slideT = SLIDE_TIME;
@@ -372,7 +376,7 @@ class Game {
     this.speed = 0;
     this.lane = 1;
     this.vy = 0; this.grounded = true; this.slideT = 0; this.hurtT = 0; this.invuln = 0;
-    this.powers = { shield: 0, magnet: 0, double: 0 };
+    this.powers = { shield: 0, magnet: 0, double: 0, jetpack: 0 };
     this.p.root.visible = true;
     this.ride.start();
     if (!this.muted) this.sound.startMusic();
@@ -563,7 +567,7 @@ class Game {
       const row = this.makeRow(b, d, BIOMES[biomeIndexAt(b)].id);
       this.fillGap(a, b, row);
       this.prevRow = row;
-      this.spawnCursor = b;
+      this.spawnCursor = b + (row.extra || 0);
     }
   }
 
@@ -573,6 +577,23 @@ class Game {
     let safe = clamp(this.lastSafe + Math.floor(rnd(-1, 2)), 0, 2);
     const kind = () => { const r = Math.random(); return r < 0.4 ? 'low' : r < 0.7 ? 'high' : 'tall'; };
     const prevFree = [0, 1, 2].filter((i) => !this.prevRow || !this.prevRow.lanes[i]);
+    // Ramp: launches you over a tall obstacle in the same lane. Other lanes stay passable.
+    if (d > 0.04 && Math.random() < 0.13) {
+      const sp = speedAt(wz);
+      const ln = safe;
+      this.spawnObstacle('ramp', ln, wz);
+      this.spawnObstacle(pick(set.tall.filter((t) => !OBSTACLES[t].roll && OBSTACLES[t].boxes[0][3] <= 3.1)), ln, wz + sp * 0.42);
+      if (d > 0.3) {
+        for (let i = 0; i < 3; i++) if (i !== ln) this.spawnObstacle(pick(set[Math.random() < 0.5 ? 'low' : 'high']), i, wz + sp * 0.42);
+      }
+      // Manna along the flight path.
+      for (let k = 1; k <= 9; k++) {
+        const t = k * 0.11;
+        this.addManna(wz + sp * t, ln, 1.0 + RAMP_V * t - 0.5 * GRAV * t * t);
+      }
+      this.lastSafe = ln;
+      return { lanes: [null, null, null], safe: ln, wz, extra: sp * 0.95 };
+    }
     const wSingle = 0.5 - 0.3 * d, wDouble = 0.32 + 0.2 * d, wTriple = d > 0.2 ? 0.08 + 0.22 * d : 0;
     const wRoll = set.roll.length && prevFree.length ? 0.16 : 0;
     let r = Math.random() * (wSingle + wDouble + wTriple + wRoll);
@@ -616,7 +637,7 @@ class Game {
     if (this.nextPowerWz < b - 4 && a > 60) {
       const wz = clamp(this.nextPowerWz, a + 4, b - 4);
       const r = Math.random();
-      const type = r < 0.3 ? 'shield' : r < 0.6 ? 'magnet' : r < 0.8 ? 'double' : 'shofar';
+      const type = r < 0.24 ? 'shield' : r < 0.46 ? 'magnet' : r < 0.62 ? 'double' : r < 0.78 ? 'shofar' : 'jetpack';
       this.addPickup('power', type, wz, place(wz), 1.05);
       this.nextPowerWz = wz + rnd(380, 560);
     }
@@ -669,14 +690,20 @@ class Game {
     this.ui.setManna(this.mannaCount);
     this.ui.setHearts(this.hearts, MAX_HEARTS);
     const list = [];
-    for (const k of ['shield', 'magnet', 'double']) if (this.powers[k] > 0) list.push({ type: k, frac: this.powers[k] / POWERS[k].time });
+    for (const k of ['jetpack', 'shield', 'magnet', 'double']) if (this.powers[k] > 0) list.push({ type: k, frac: this.powers[k] / POWERS[k].time });
     this.ui.setPowers(list);
   }
 
   updatePlayer(dt) {
     const tx = LANES[this.lane];
     this.x += (tx - this.x) * (1 - Math.exp(-dt * 16));
-    if (!this.grounded) {
+    if (this.powers.jetpack > 0) {
+      this.grounded = false;
+      this.vy = 0;
+      this.y += (JET_Y - this.y) * (1 - Math.exp(-dt * 3));
+      if (this.powers.jetpack <= dt) { this.invuln = Math.max(this.invuln, 1.2); this.ui.popup('Landing'); }
+      if (Math.random() < 0.6) this.world.burst(this.x, this.y + 0.4, 0.35, 1, { color: [1, 0.6 + Math.random() * 0.3, 0.2], speed: 0.6, up: -3, life: 0.35, grav: 4 });
+    } else if (!this.grounded) {
       this.vy -= GRAV * dt;
       this.y += this.vy * dt;
       if (this.y <= 0) {
@@ -738,7 +765,35 @@ class Game {
       o.mesh.position.set(o.x, o.y + o.by, z);
       if (o.def.roll) o.mesh.rotation.x = o.spin;
       o.shadow.position.set(o.x, 0.025, z);
-      if (this.state === 'playing' && this.hits(o, zp, z, pb)) this.onHit(o);
+      if (this.state === 'playing' && this.hits(o, zp, z, pb)) {
+        if (o.kind === 'ramp') this.launch(o);
+        else this.onHit(o);
+      }
+    }
+  }
+
+  launch(o) {
+    if (o.used || this.powers.jetpack > 0 || this.vy > 4) return;
+    o.used = true;
+    this.vy = RAMP_V;
+    this.grounded = false;
+    this.slideT = 0;
+    this.sound.play('whoosh');
+    this.ui.popup('Launch!');
+    this.world.burst(this.x, 0.8, 0, 10, { color: [1, 0.85, 0.5], speed: 3, up: 3, life: 0.5 });
+  }
+
+  startJetpack() {
+    this.powers.jetpack = POWERS.jetpack.time;
+    this.grounded = false;
+    this.slideT = 0;
+    this.sound.play('whoosh');
+    // A weaving trail of manna up in the air.
+    const sp = Math.max(this.speed, speedAt(this.dist));
+    let ln = this.lane;
+    for (let z = this.dist + 12; z < this.dist + sp * (POWERS.jetpack.time - 0.8); z += 2.4) {
+      if (Math.random() < 0.06) ln = clamp(ln + (Math.random() < 0.5 ? -1 : 1), 0, 2);
+      this.addManna(z, ln, JET_Y + 0.6);
     }
   }
 
@@ -910,6 +965,9 @@ class Game {
       this.hearts = Math.min(MAX_HEARTS, this.hearts + 1);
       this.sound.play('heart');
       this.ui.popup('+1 life', 'heart');
+    } else if (p.type === 'jetpack') {
+      this.ui.popup('Jet pack!');
+      this.startJetpack();
     } else if (p.type === 'shofar') {
       this.ui.popup('Shofar blast!');
       this.shofarBlast();
@@ -940,6 +998,8 @@ class Game {
       else tgt = { body: 0, by: 0, bz: 0, lL: 0, lR: 0, aL: 0.15, aR: 0.15 };
     } else if (sliding) {
       tgt = { body: 1.1, by: -0.2, bz: -0.55, lL: 0.5, lR: 0.4, aL: -0.4, aR: -0.6 };
+    } else if (this.powers.jetpack > 0) {
+      tgt = { body: -0.35, by: 0, bz: 0, lL: -0.3, lR: -0.2, aL: 0.6 + s * 0.1, aR: 0.6 - s * 0.1 };
     } else if (!this.grounded) {
       tgt = { body: -0.08, by: 0, bz: 0, lL: 0.9, lR: -0.45, aL: 2.5, aR: 2.3 };
     } else {
@@ -959,6 +1019,8 @@ class Game {
     this.flashT = Math.max(0, this.flashT - dt);
     P.mat.emissive.setRGB(this.flashT * 2, this.flashT * 0.3, 0);
 
+    P.jet.visible = this.powers.jetpack > 0;
+    if (P.jet.visible) for (const f of P.jet.userData.flames) f.scale.y = 0.8 + Math.random() * 0.6;
     this.shield.visible = this.powers.shield > 0;
     if (this.shield.visible) {
       this.shield.userData.ring.rotation.y += dt * 2.5;
@@ -976,8 +1038,8 @@ class Game {
     const b = ease(this.camBlend);
     const W = window.innerWidth, H = window.innerHeight;
     const portrait = H > W;
-    const gx = this.x * 0.55, gy = 2.75 + D * 0.12 + this.y * 0.3, gz = D;
-    const lx = this.x * 0.35, ly = 1.1 + this.y * 0.25, lz = portrait ? -9 : -12;
+    const gx = this.x * 0.55, gy = 2.75 + D * 0.12 + this.y * 0.75, gz = D;
+    const lx = this.x * 0.35, ly = 1.1 + this.y * 0.7, lz = portrait ? -9 : -12;
     // Menu shot: in front of the runner, framed into the space the menu panel leaves free.
     const mx = portrait ? 1.0 : 2.2, my = portrait ? 1.5 : 1.6, mz = portrait ? -5.4 : -4.4;
     if (b < 1 && (!this.menuFrameT || this.time - this.menuFrameT > 0.5)) {
@@ -1018,8 +1080,8 @@ class Game {
     const D = this.world.camDist;
     const portrait = window.innerHeight > window.innerWidth;
     return {
-      pos: new THREE.Vector3(this.x * 0.55, 2.75 + D * 0.12 + this.y * 0.3, D),
-      look: new THREE.Vector3(this.x * 0.35, 1.1 + this.y * 0.25, portrait ? -9 : -12),
+      pos: new THREE.Vector3(this.x * 0.55, 2.75 + D * 0.12 + this.y * 0.75, D),
+      look: new THREE.Vector3(this.x * 0.35, 1.1 + this.y * 0.7, portrait ? -9 : -12),
     };
   }
 

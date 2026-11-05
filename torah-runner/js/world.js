@@ -155,7 +155,8 @@ export class World {
     this.scrollPos = 0;
     this.lastDist = 0;
     this.scrollCap = Infinity;
-    this.weights = [1, 0, 0, 0];
+    this.weights = BIOMES.map((_, i) => (i === 0 ? 1 : 0));
+    this.sinaiIdx = BIOMES.findIndex((b) => b.id === 'sinai');
   }
 
   buildSky() {
@@ -263,6 +264,25 @@ export class World {
     this.backdrops.push({ group: egypt, mats: [pm] });
     // Sea: nothing far away, the walls fill the view.
     this.backdrops.push({ group: new THREE.Group(), mats: [] });
+    // Elim: green hills and a grove of tall palms on the horizon.
+    const elim = new THREE.Group();
+    const em = mk();
+    const hill = merge([part(new THREE.SphereGeometry(1, 10, 6), 0x9fb86a, [0, 0, 0], [0, 0, 0], [40, 16, 30], 0.04)]);
+    [[-110, -340, 1], [-40, -420, 1.3], [120, -360, 1.1], [190, -300, 0.8]].forEach(([x, z, k]) => {
+      const m = new THREE.Mesh(hill, em); m.position.set(x, 0, z); m.scale.setScalar(k); elim.add(m);
+    });
+    const grovePalm = merge([
+      part(new THREE.CylinderGeometry(0.6, 0.9, 20, 6), 0x7a5a3a, [0, 10, 0]),
+      ...Array.from({ length: 8 }, (_, k) => part(new THREE.BoxGeometry(9, 0.3, 1.6), 0x4f8f3a,
+        [Math.cos((k / 8) * Math.PI * 2) * 4, 19.5, Math.sin((k / 8) * Math.PI * 2) * 4], [0, -(k / 8) * Math.PI * 2, -0.45])),
+    ]);
+    for (let k = 0; k < 9; k++) {
+      const m = new THREE.Mesh(grovePalm, em);
+      m.position.set(-90 + k * 22 + rnd(-6, 6), 0, -300 - rnd(0, 60));
+      m.scale.setScalar(rnd(0.8, 1.2));
+      elim.add(m);
+    }
+    this.backdrops.push({ group: elim, mats: [em] });
     // Wilderness: mesas and the pillar of cloud.
     const wild = new THREE.Group();
     const mm = mk();
@@ -284,6 +304,28 @@ export class World {
     wild.add(pillar);
     this.pillar = pillar;
     this.backdrops.push({ group: wild, mats: [mm, cm] });
+    // Night camp: dark mesas and the pillar of fire.
+    const night = new THREE.Group();
+    const nm = mk();
+    [[-130, -330, 1], [-50, -410, 0.8], [120, -350, 1.1]].forEach(([x, z, k]) => {
+      const m = new THREE.Mesh(mesa, nm); m.position.set(x, 0, z); m.scale.setScalar(k); night.add(m);
+    });
+    const fm = new THREE.MeshLambertMaterial({ color: 0xffa040, emissive: 0xff6a10, flatShading: true, fog: false, transparent: true, opacity: 0 });
+    const fire = new THREE.Group();
+    for (let i = 0; i < 24; i++) {
+      const m = new THREE.Mesh(puff, fm);
+      m.position.set(Math.cos(i * 1.7) * 3, i * 5.4, Math.sin(i * 1.7) * 3);
+      m.scale.setScalar(8 + Math.sin(i * 0.9) * 2.2);
+      fire.add(m);
+    }
+    fire.position.set(60, 0, -390);
+    night.add(fire);
+    this.firePillar = fire;
+    this.fireGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: softDot(), color: 0xff8a3a, transparent: true, opacity: 0, fog: false, blending: THREE.AdditiveBlending, depthWrite: false }));
+    this.fireGlow.scale.set(120, 220, 1);
+    this.fireGlow.position.set(60, 70, -395);
+    night.add(this.fireGlow);
+    this.backdrops.push({ group: night, mats: [nm, fm] });
     // Sinai: the mountain wrapped in cloud, with fire at the summit.
     const sinai = new THREE.Group();
     const mtn = new THREE.ConeGeometry(120, 130, 9, 4);
@@ -429,9 +471,12 @@ export class World {
       for (const m of b.mats) m.opacity = Math.min(1, w * 1.15);
     });
     this.pillar.rotation.y += dt * 0.15;
-    const sinaiW = this.weights[3];
+    this.firePillar.rotation.y -= dt * 0.4;
+    this.firePillar.children.forEach((m, i) => { m.position.x = Math.cos(i * 1.7 + this.time * 2) * 3; });
+    this.fireGlow.material.opacity = this.weights[4] * (0.5 + Math.sin(this.time * 6) * 0.08);
+    const sinaiW = this.weights[this.sinaiIdx];
     this.glowMat.opacity = sinaiW * (0.55 + Math.sin(this.time * 3) * 0.12 + Math.sin(this.time * 7.3) * 0.06);
-    const p = ((dist % LAP) + LAP) % LAP - BIOME_LEN * 3;
+    const p = ((dist % LAP) + LAP) % LAP - BIOME_LEN * this.sinaiIdx;
     this.mountain.scale.setScalar(0.85 + Math.max(0, Math.min(1, p / BIOME_LEN)) * 0.35);
     this.bolt.material.opacity = Math.max(0, this.bolt.material.opacity - dt * 6);
     if (sinaiW > 0.5) {
