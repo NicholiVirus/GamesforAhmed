@@ -115,6 +115,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .power img { width: 26px; height: 26px; grid-row: span 2; }
 .power .bar { background: rgba(255,255,255,0.18); border-radius: 2px; overflow: hidden; height: 4px; min-width: 70px; }
+/* Phones: power-ups shrink to a single row of small icons with a timer bar, no labels, so they never cover the road. */
+@media (max-width: 760px), (max-height: 520px) {
+  #powers { display: flex; flex-wrap: wrap; gap: 4px; max-width: 46vw; margin-top: 6px; }
+  .power { grid-template-columns: 22px; grid-template-rows: 22px 3px; row-gap: 3px; padding: 3px; border-radius: 8px; }
+  .power img { width: 22px; height: 22px; grid-row: auto; }
+  .power-label { display: none; }
+  .power .bar { min-width: 22px; height: 3px; }
+  .popup { font-size: 1rem; top: 30%; max-width: 90vw; white-space: normal; text-align: center; }
+}
 .power .bar i { display: block; height: 100%; background: var(--c); }
 
 @media (max-width: 560px) {
