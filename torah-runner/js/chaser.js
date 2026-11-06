@@ -68,13 +68,6 @@ function buildGuard() {
   ]);
 }
 
-function buildWave() { // a rolling wall of flood water
-  const P = [box(0x3a8fc8, [0, 0.9, 0], [2.0, 1.8, 1.2])];
-  P.push(part(new THREE.TorusGeometry(0.9, 0.45, 6, 12, Math.PI), 0x4aa8d8, [0, 1.6, 0.3], [0, Math.PI / 2, 0]));
-  for (let k = 0; k < 7; k++) P.push(part(ICO, 0xffffff, [-0.9 + k * 0.3, 2.3 + (k % 2) * 0.2, 0.6], [k, k, 0], [0.22, 0.16, 0.22]));
-  return merge(P);
-}
-
 function buildSoldier() { // an ancient soldier with a bronze helmet, round shield and spear
   return merge([
     ...rider(0x9a7a56, [box(0xb07a3a, [0, 1.12, 0], [0.42, 0.18, 0.42]), box(0xb07a3a, [0, 1.25, 0], [0.12, 0.14, 0.36])]),
@@ -85,19 +78,19 @@ function buildSoldier() { // an ancient soldier with a bronze helmet, round shie
 }
 
 const WHO = {
-  ararat: 'wave', babel: 'soldier', jacob: 'raider', rephidim: 'raider', jordan: 'wave', jericho: 'soldier', elah: 'giant',
+  ararat: 'giant', babel: 'soldier', jacob: 'raider', rephidim: 'raider', jordan: 'soldier', jericho: 'soldier', elah: 'giant',
   egypt: 'chariot', sea: 'chariot', elim: 'raider', wild: 'raider', night: 'raider', sinai: 'raider',
   jerusalem: 'legion', telaviv: 'guard', airport: 'guard', newyork: 'guard', donut: 'guard',
 };
-const NAMES = { chariot: "Pharaoh's chariot", raider: 'An Amalekite raider', legion: 'A Roman legionary', guard: 'The airport guard', wave: 'The flood waters', soldier: 'A soldier', giant: 'Goliath the giant' };
+const NAMES = { chariot: "Pharaoh's chariot", raider: 'An Amalekite raider', legion: 'A Roman legionary', guard: 'The airport guard', soldier: 'A soldier', giant: 'Goliath the giant' };
 // Who is chasing you in each place, when it is not the default for their kind.
 const PLACE_NAMES = {
-  ararat: 'The flood waters', babel: 'A tower guard', jacob: "Esau's 400 riders", jordan: "The Jordan's waters", jericho: 'A soldier of Jericho', elah: 'Goliath the giant',
+  ararat: 'A giant of the Nephilim', babel: 'A tower guard', jacob: "Esau's 400 riders", jordan: "The king of Jericho's men", jericho: 'A soldier of Jericho', elah: 'Goliath the giant',
 };
 
 export class Chaser {
   constructor(scene) {
-    const geos = { chariot: buildChariot(), raider: buildRaider(), legion: buildLegionary(), guard: buildGuard(), wave: buildWave(), soldier: buildSoldier(), giant: buildSoldier() };
+    const geos = { chariot: buildChariot(), raider: buildRaider(), legion: buildLegionary(), guard: buildGuard(), soldier: buildSoldier(), giant: buildSoldier() };
     this.meshes = {};
     for (const k in geos) {
       const m = new THREE.Mesh(geos[k], flatMat);

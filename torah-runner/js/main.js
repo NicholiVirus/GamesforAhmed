@@ -1240,11 +1240,20 @@ class Game {
       let z = this.dist - m.wz;
       if (magnet && !m.pulled && z > -18 && z < 1) m.pulled = true;
       if (m.pulled) {
-        const k = 1 - Math.exp(-dt * 11);
+        // Fly toward the runner in the runner's own frame, so coins never trail behind at speed.
+        const k = 1 - Math.exp(-dt * 12);
+        z *= 1 - k;
+        m.wz = this.dist - z;
         m.x += (this.x - m.x) * k;
         m.y += (this.y + 0.9 - m.y) * k;
-        m.wz += (this.dist - m.wz) * k;
-        z = this.dist - m.wz;
+        m.pullT = (m.pullT || 0) + dt;
+        // A pulled coin is caught once it reaches you (or after half a second), even if the magnet has run out.
+        if (this.state === 'playing' && (m.pullT > 0.5 || (Math.abs(z) < 1 && Math.abs(m.x - this.x) < 1))) {
+          this.collectManna(m, m.y, z);
+          this.freeManna(m);
+          this.manna.splice(i, 1);
+          continue;
+        }
       }
       const y = m.y + Math.sin(this.time * 4 + m.ph) * 0.08;
       if (z > 6) { this.freeManna(m); this.manna.splice(i, 1); continue; }
