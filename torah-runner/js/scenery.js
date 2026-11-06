@@ -6,23 +6,25 @@ import { part, box, merge, jagged, BOX, CYL6, ICO, buildCamel, OBSTACLES, obstac
 const rnd = (a, b) => a + Math.random() * (b - a);
 
 function buildPalm() {
-  // One gently leaning trunk with ring bands, and a full crown of drooping fronds on top.
+  // One gently leaning trunk and a solid crown: an umbrella of 10 drooping fronds plus a leafy cap.
   const P = [];
   const h = rnd(5, 7.5), lean = rnd(-0.08, 0.08);
   P.push(part(new THREE.CylinderGeometry(0.17, 0.28, h, 7), 0x7a5530, [Math.sin(lean) * h / 2, h / 2, 0], [0, 0, -lean]));
   for (let y = 0.6; y < h - 0.3; y += 0.55) P.push(part(new THREE.CylinderGeometry(0.29 - y * 0.017, 0.3 - y * 0.017, 0.12, 7), 0x5e3f22, [Math.sin(lean) * y, y, 0], [0, 0, -lean]));
   const tx = Math.sin(lean) * h, ty = h;
+  P.push(part(new THREE.ConeGeometry(2.3, 1.0, 10, 1, true), 0x2f7a33, [tx, ty - 0.45, 0], [0, rnd(0, 1), 0]));
+  P.push(part(new THREE.ConeGeometry(2.3, 1.0, 10, 1, true), 0x2f7a33, [tx, ty - 0.45, 0], [Math.PI, rnd(0, 1), 0], [1, -1, 1]));
   for (let k = 0; k < 10; k++) {
-    const a = (k / 10) * Math.PI * 2, len = rnd(2.2, 2.8), droop = rnd(0.35, 0.6);
+    const a = (k / 10) * Math.PI * 2 + 0.3, len = rnd(2.4, 3.0), droop = rnd(0.45, 0.7);
     P.push(part(BOX, k % 2 ? 0x3f8f3a : 0x2c7431,
-      [tx + Math.cos(a) * len * 0.46, ty - Math.sin(droop) * len * 0.45, Math.sin(a) * len * 0.46],
-      [0, -a, -droop], [len, 0.06, 0.45]));
+      [tx + Math.cos(a) * len * 0.45, ty - Math.sin(droop) * len * 0.45 + 0.05, Math.sin(a) * len * 0.45],
+      [0, -a, -droop], [len, 0.08, 0.5]));
   }
+  P.push(part(ICO, 0x3a7a2e, [tx, ty + 0.05, 0], [0, 0, 0], [0.45, 0.3, 0.45]));
   for (let k = 0; k < 6; k++) {
     const a = (k / 6) * Math.PI * 2;
-    P.push(part(ICO, k % 2 ? 0xc0682a : 0x9a4e1e, [tx + Math.cos(a) * 0.22, ty - 0.25, Math.sin(a) * 0.22], [k, k, 0], [0.13, 0.15, 0.13]));
+    P.push(part(ICO, k % 2 ? 0xc0682a : 0x9a4e1e, [tx + Math.cos(a) * 0.3, ty - 0.3, Math.sin(a) * 0.3], [k, k, 0], [0.13, 0.15, 0.13]));
   }
-  P.push(part(ICO, 0x3a7a2e, [tx, ty + 0.05, 0], [0, 0, 0], [0.35, 0.25, 0.35]));
   return merge(P);
 }
 
@@ -43,11 +45,13 @@ function buildHouse() {
 }
 
 function buildReeds() {
+  // Straight stalks with the brown cattail head sitting exactly on top of each one.
   const P = [];
   for (let i = 0; i < 14; i++) {
     const x = rnd(-0.7, 0.7), z = rnd(-0.7, 0.7), h = rnd(1.0, 1.9);
-    P.push(box(i % 2 ? 0x6f8f3a : 0x587a2e, [x, h / 2, z], [0.05, h, 0.05], [rnd(-0.12, 0.12), 0, rnd(-0.12, 0.12)]));
-    if (i % 3 === 0) P.push(box(0x6b4423, [x, h + 0.08, z], [0.09, 0.24, 0.09]));
+    P.push(box(i % 2 ? 0x6f8f3a : 0x587a2e, [x, h / 2, z], [0.05, h, 0.05]));
+    if (i % 3 === 0) P.push(box(0x6b4423, [x, h - 0.12, z], [0.1, 0.26, 0.1]));
+    if (i % 2 === 0) P.push(box(0x7f9f44, [x + 0.08, h * 0.4, z], [0.18, 0.03, 0.05], [0, rnd(0, 3), 0.6]));
   }
   return merge(P);
 }
@@ -71,15 +75,11 @@ function buildCoralBig() {
 }
 
 function buildSeaweed() {
+  // Each strand is one continuous ribbon of leaves stacked straight up.
   const P = [];
-  for (let s = 0; s < 4; s++) {
-    let x = rnd(-0.35, 0.35), y = 0;
-    const z = rnd(-0.35, 0.35), n = 5 + Math.floor(rnd(0, 4));
-    for (let i = 0; i < n; i++) {
-      P.push(box(s % 2 ? 0x2f8f5b : 0x47a86a, [x, y + 0.2, z], [0.12, 0.42, 0.05], [0, 0, (i % 2 ? 0.25 : -0.25)]));
-      x += i % 2 ? 0.07 : -0.07;
-      y += 0.38;
-    }
+  for (let st = 0; st < 4; st++) {
+    const x = rnd(-0.35, 0.35), z = rnd(-0.35, 0.35), n = 5 + Math.floor(rnd(0, 4));
+    for (let i = 0; i < n; i++) P.push(box(st % 2 ? 0x2f8f5b : 0x47a86a, [x + Math.sin(i * 1.3) * 0.05, i * 0.36 + 0.18, z], [0.13, 0.4, 0.05], [0, i * 0.4, 0]));
   }
   return merge(P);
 }

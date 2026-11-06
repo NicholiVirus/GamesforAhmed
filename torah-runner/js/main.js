@@ -24,7 +24,7 @@ export const SHOP = [
 // Permanent upgrades: each level costs more.
 export const UPGRADES = [
   { id: 'speed', name: 'Swift feet', about: '+5% running speed per level', price: 1000, max: 5, icon: 'sneakers' },
-  { id: 'passive', name: 'Manna blessing', about: '+1 manna every 2 s per level', price: 800, max: 5, icon: 'double' },
+  { id: 'mult', name: 'Manna blessing', about: '+0.25× manna per level (up to 3×)', price: 800, max: 8, icon: 'double' },
   { id: 'jet', name: 'Bigger jet tanks', about: '+1 s of jet pack per level', price: 900, max: 5, icon: 'jetpack' },
   { id: 'magnet', name: 'Strong magnet', about: '+2 s of magnet per level', price: 700, max: 5, icon: 'magnet' },
   { id: 'shieldUp', name: 'Lasting star', about: '+3 s of Star shield per level', price: 700, max: 5, icon: 'shield' },
@@ -87,6 +87,8 @@ class Game {
     this.scene = this.world.scene;
     this.sound = new Sound();
     this.store = loadStore();
+    // The old passive-manna upgrade becomes the new manna multiplier, level for level.
+    if (this.store.up && this.store.up.passive) { this.store.up.mult = Math.max(this.store.up.mult || 0, this.store.up.passive); delete this.store.up.passive; saveStore(this.store); }
     this.learned = new Set(this.store.learned || []);
     this.best = { score: this.store.bestScore || 0, dist: this.store.bestDist || 0 };
     this.muted = boot.muted !== undefined ? !!boot.muted : !!this.store.muted;
@@ -957,12 +959,6 @@ class Game {
     // Shabbat calm slows the world down for a few seconds.
     const calm = this.powers.shabbat > 0 ? 0.55 : 1;
     const target = speedAt(this.dist) * this.speedFactor * calm * (1 + 0.05 * this.upLevel('speed'));
-    // Passive manna upgrade: a trickle of manna while you run.
-    const pl = this.upLevel('passive');
-    if (pl > 0) {
-      this.passiveT += dt;
-      if (this.passiveT >= 2) { this.passiveT -= 2; this.mannaCount += pl; }
-    }
     this.speed += (target - this.speed) * Math.min(1, dt * 3);
     this.sound.setTempo(this.speed);
     this.dist += this.speed * dt;
@@ -1223,7 +1219,10 @@ class Game {
   }
 
   collectManna(m, y, z) {
-    this.mannaCount += (this.powers.double > 0 ? 2 : 1) + this.upLevel('coin');
+    // Manna blessing multiplies every coin: 1× plus 0.25× per level, up to 3×.
+    const gain = ((this.powers.double > 0 ? 2 : 1) + this.upLevel('coin')) * (1 + 0.25 * this.upLevel('mult')) + (this.mannaFrac || 0);
+    this.mannaCount += Math.floor(gain);
+    this.mannaFrac = gain - Math.floor(gain);
     // Coin streak: every 25 coins without crashing raises the score multiplier (up to ×5).
     this.streak = (this.streak || 0) + 1;
     const mult = Math.min(5, 1 + Math.floor(this.streak / 25));
