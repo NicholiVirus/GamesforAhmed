@@ -6,25 +6,23 @@ import { part, box, merge, jagged, BOX, CYL6, ICO, buildCamel, OBSTACLES, obstac
 const rnd = (a, b) => a + Math.random() * (b - a);
 
 function buildPalm() {
+  // One gently leaning trunk with ring bands, and a full crown of drooping fronds on top.
   const P = [];
-  const h = rnd(5, 7.5), segs = 7, lean = rnd(-0.12, 0.12);
-  let x = 0, y = 0;
-  for (let i = 0; i < segs; i++) {
-    const sh = h / segs, r0 = 0.26 - i * 0.016;
-    P.push(part(new THREE.CylinderGeometry(r0 - 0.02, r0, sh + 0.02, 6), i % 2 ? 0x8a6238 : 0x75502c, [x, y + sh / 2, 0], [0, i, lean * i * 0.4]));
-    x -= lean * sh * (0.4 + i * 0.25);
-    y += sh;
-  }
-  for (let k = 0; k < 9; k++) {
-    const a = (k / 9) * Math.PI * 2 + rnd(0, 0.3), len = rnd(2.0, 2.8), droop = rnd(0.3, 0.6);
+  const h = rnd(5, 7.5), lean = rnd(-0.08, 0.08);
+  P.push(part(new THREE.CylinderGeometry(0.17, 0.28, h, 7), 0x7a5530, [Math.sin(lean) * h / 2, h / 2, 0], [0, 0, -lean]));
+  for (let y = 0.6; y < h - 0.3; y += 0.55) P.push(part(new THREE.CylinderGeometry(0.29 - y * 0.017, 0.3 - y * 0.017, 0.12, 7), 0x5e3f22, [Math.sin(lean) * y, y, 0], [0, 0, -lean]));
+  const tx = Math.sin(lean) * h, ty = h;
+  for (let k = 0; k < 10; k++) {
+    const a = (k / 10) * Math.PI * 2, len = rnd(2.2, 2.8), droop = rnd(0.35, 0.6);
     P.push(part(BOX, k % 2 ? 0x3f8f3a : 0x2c7431,
-      [x + Math.cos(a) * len * 0.45, y - Math.sin(droop) * len * 0.5 + 0.1, Math.sin(a) * len * 0.45],
-      [0, -a, -droop], [len, 0.06, 0.42]));
+      [tx + Math.cos(a) * len * 0.46, ty - Math.sin(droop) * len * 0.45, Math.sin(a) * len * 0.46],
+      [0, -a, -droop], [len, 0.06, 0.45]));
   }
   for (let k = 0; k < 6; k++) {
     const a = (k / 6) * Math.PI * 2;
-    P.push(part(ICO, k % 2 ? 0xc0682a : 0x9a4e1e, [x + Math.cos(a) * 0.25, y - 0.3, Math.sin(a) * 0.25], [k, k, 0], [0.13, 0.15, 0.13]));
+    P.push(part(ICO, k % 2 ? 0xc0682a : 0x9a4e1e, [tx + Math.cos(a) * 0.22, ty - 0.25, Math.sin(a) * 0.22], [k, k, 0], [0.13, 0.15, 0.13]));
   }
+  P.push(part(ICO, 0x3a7a2e, [tx, ty + 0.05, 0], [0, 0, 0], [0.35, 0.25, 0.35]));
   return merge(P);
 }
 
@@ -103,13 +101,14 @@ function buildDune() {
 }
 
 function buildAcacia() {
+  // Trunk forks into two branches that reach up into a flat umbrella canopy.
   const trunk = 0x6b4a2a;
   return merge([
-    part(CYL6, trunk, [0, 0.9, 0], [0, 0, 0.12], [0.14, 1.8, 0.14]),
-    part(CYL6, trunk, [0.32, 2.0, 0], [0, 0, -0.55], [0.1, 1.0, 0.1]),
-    part(CYL6, trunk, [-0.28, 2.0, 0.1], [0.3, 0, 0.55], [0.09, 0.9, 0.09]),
-    part(new THREE.CylinderGeometry(1.7, 2.0, 0.42, 7), 0x6f8a3a, [0.1, 2.62, 0], [0, rnd(0, 3), 0]),
-    part(new THREE.CylinderGeometry(1.05, 1.35, 0.36, 7), 0x82a046, [0.35, 2.95, 0.15], [0, rnd(0, 3), 0]),
+    part(CYL6, trunk, [0, 0.9, 0], [0, 0, 0], [0.15, 1.8, 0.15]),
+    part(CYL6, trunk, [0.35, 2.15, 0], [0, 0, -0.55], [0.1, 1.0, 0.1]),
+    part(CYL6, trunk, [-0.3, 2.15, 0], [0, 0, 0.55], [0.1, 1.0, 0.1]),
+    part(new THREE.CylinderGeometry(1.7, 2.0, 0.42, 7), 0x6f8a3a, [0, 2.75, 0], [0, rnd(0, 3), 0]),
+    part(new THREE.CylinderGeometry(1.05, 1.35, 0.36, 7), 0x82a046, [0.2, 3.08, 0.1], [0, rnd(0, 3), 0]),
   ]);
 }
 
@@ -177,11 +176,17 @@ function buildCampfire() {
 }
 
 function buildOlive() {
+  // Short twisted trunk with the silvery canopy sitting right on top of it.
   const P = [
-    part(CYL6, 0x6b5a44, [0, 0.8, 0], [0, 0, 0.18], [0.22, 1.6, 0.22]),
-    part(CYL6, 0x6b5a44, [0.3, 1.6, 0], [0, 0, -0.6], [0.14, 0.9, 0.14]),
+    part(CYL6, 0x6b5a44, [0, 0.9, 0], [0, 0, 0.08], [0.24, 1.8, 0.24]),
+    part(CYL6, 0x6b5a44, [0.3, 1.8, 0], [0, 0, -0.5], [0.13, 0.8, 0.13]),
+    part(CYL6, 0x6b5a44, [-0.25, 1.8, 0.1], [0.3, 0, 0.5], [0.12, 0.7, 0.12]),
   ];
-  for (let k = 0; k < 6; k++) P.push(part(ICO, k % 2 ? 0x7d8f5a : 0x93a36e, [rnd(-0.9, 0.9), rnd(2.0, 2.7), rnd(-0.9, 0.9)], [k, k, 0], [rnd(0.6, 0.9), rnd(0.45, 0.6), rnd(0.6, 0.9)]));
+  for (let k = 0; k < 7; k++) {
+    const a = (k / 7) * Math.PI * 2;
+    P.push(part(ICO, k % 2 ? 0x7d8f5a : 0x93a36e, [Math.cos(a) * 0.6, 2.25 + (k % 3) * 0.2, Math.sin(a) * 0.6], [k, k, 0], [0.7, 0.5, 0.7]));
+  }
+  P.push(part(ICO, 0x86985e, [0, 2.55, 0], [0, 0, 0], [0.8, 0.55, 0.8]));
   return merge(P);
 }
 
