@@ -38,10 +38,10 @@ export class UI {
     on('btn-shop-close', () => h.closeShop());
     const list = $('shop-list');
     if (list) list.addEventListener('click', (e) => {
-      const b = e.target.closest('button[data-buy], button[data-up]');
+      const b = e.target.closest('button[data-buy], button[data-up], button[data-look]');
       if (!b) return;
       e.stopPropagation();
-      if (b.dataset.up) h.buyUpgrade(b.dataset.up); else h.buy(b.dataset.buy);
+      if (b.dataset.look) { const [k, id] = b.dataset.look.split(':'); h.buyLook(k, id); } else if (b.dataset.up) h.buyUpgrade(b.dataset.up); else h.buy(b.dataset.buy);
     });
     on('btn-word-continue', () => h.continueWord());
     on('btn-skip', () => h.skipRide());
@@ -181,7 +181,18 @@ export class UI {
         <span class="shop-name"><b>${it.name}</b><small>${it.about}${inv[it.type] ? ` · ready: ${inv[it.type]}` : ''}</small></span>
         ${btn(`data-buy="${it.type}"`, it.price, wallet >= it.price)}
       </li>`).join('');
-    $('shop-list').innerHTML = `<li class="shop-head">Upgrades · keep forever</li>${ups}<li class="shop-head">Power-ups · used on your next run</li>${items}`;
+    const L = this.looks, owned = L.store.owned || [];
+    const hex = (c) => '#' + c.toString(16).padStart(6, '0');
+    const look = (kind, it, swatch) => {
+      const key = kind + ':' + it.id, has = owned.includes(key), on = L.store[kind] === it.id;
+      const action = on ? `<button class="btn btn-ghost" type="button" data-look="${key}">Wearing · take off</button>`
+        : has ? `<button class="btn btn-primary" type="button" data-look="${key}">Wear</button>`
+          : btn(`data-look="${key}"`, it.price, wallet >= it.price);
+      return `<li><span class="swatch" style="background:${swatch}"></span><span class="shop-name"><b>${it.name}</b><small>${kind === 'skin' ? 'Outfit colour in every place' : 'Worn instead of a hat or head wrap'}</small></span>${action}</li>`;
+    };
+    const skins = L.SKINS.map((it) => look('skin', it, `linear-gradient(${hex(it.top)} 60%, ${hex(it.hem)} 60%)`)).join('');
+    const kips = L.KIPPAHS.map((it) => look('kippah', it, it.stripes ? `conic-gradient(${it.stripes.map(hex).join(',')})` : `radial-gradient(${hex(it.color)} 62%, ${hex(it.rim)} 64%)`)).join('');
+    $('shop-list').innerHTML = `<li class="shop-head">Upgrades · keep forever</li>${ups}<li class="shop-head">Power-ups · used on your next run</li>${items}<li class="shop-head">Outfit colours · keep forever</li>${skins}<li class="shop-head">Kippahs · keep forever</li>${kips}`;
   }
 
   quiz(word, options, i, total, right, need, onPick) {

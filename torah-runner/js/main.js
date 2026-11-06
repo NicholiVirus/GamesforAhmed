@@ -6,7 +6,7 @@ import { World, PointPool, biomeIndexAt } from './world.js';
 import { UI } from './ui.js';
 import {
   buildPlayer, buildShield, OBSTACLES, BIOME_OBSTACLES, obstacleGeo, flatMat,
-  letterTexture, powerTexture, mannaTex, shadowTex, shekelTexture, COIN_ERA,
+  letterTexture, powerTexture, mannaTex, shadowTex, shekelTexture, COIN_ERA, SKINS, KIPPAHS,
 } from './models.js';
 import { TrainRide } from './train.js';
 import { Chaser } from './chaser.js';
@@ -100,7 +100,7 @@ class Game {
     this.ui = new UI({
       play: () => this.start(), pause: () => this.pause(), resume: () => this.resume(), home: () => this.home(),
       sound: () => this.toggleSound(), openScroll: () => this.openScroll(), closeScroll: () => this.closeScroll(),
-      openShop: () => this.openShop(), openMap: () => this.openMap(), pickStart: (id) => this.pickStart(id), unlockPlace: (id) => this.unlockPlace(id), buy: (t) => this.buy(t), buyUpgrade: (id) => this.buyUpgrade(id), useStar: () => this.useStar(), closeShop: () => this.ui.show('screen-start'),
+      openShop: () => this.openShop(), openMap: () => this.openMap(), pickStart: (id) => this.pickStart(id), unlockPlace: (id) => this.unlockPlace(id), buy: (t) => this.buy(t), buyUpgrade: (id) => this.buyUpgrade(id), buyLook: (kind, id) => this.buyLook(kind, id), useStar: () => this.useStar(), closeShop: () => this.ui.show('screen-start'),
       continueWord: () => this.continueWord(), skipRide: () => this.skipRide(),
     });
 
@@ -144,6 +144,7 @@ class Game {
     this.ui.setIcons(icons);
     this.ui.shopItems = SHOP;
     this.ui.upgrades = UPGRADES;
+    this.ui.looks = { SKINS, KIPPAHS, store: this.store };
 
     this.time = 0;
     this.runPh = 0;
@@ -228,7 +229,7 @@ class Game {
     this.p.root.visible = true;
     // Dress, coins and chaser all match the place the run starts in.
     const sid = BIOMES[biomeIndexAt(this.startDist)].id;
-    if (this.p.wear) { this.p.wear(sid); this.outfit = sid; }
+    if (this.p.wear) { this.p.wear(sid, this.look()); this.outfit = sid; }
     if (this.mannaPool) { this.mannaPool.mat.map = shekelTexture(COIN_ERA[sid] || 'modern'); this.mannaPool.mat.needsUpdate = true; }
     if (this.chaser) { this.chaser.reset(); this.chaser.setEra(sid); }
   }
@@ -441,6 +442,28 @@ class Game {
     this.sound.init();
     this.sound.play('word');
     this.ui.renderShop(this.store.wallet, this.store.inv || {}, this.store.up);
+  }
+
+  // Cosmetics: buy once, then wear any you own. Wearing the same one again takes it off.
+  look() { return { skin: this.store.skin, kippah: this.store.kippah }; }
+
+  buyLook(kind, id) {
+    const list = kind === 'skin' ? SKINS : KIPPAHS;
+    const item = list.find((x) => x.id === id);
+    if (!item) return;
+    this.store.owned = this.store.owned || [];
+    const key = kind + ':' + id;
+    if (!this.store.owned.includes(key)) {
+      const wallet = this.store.wallet || 0;
+      if (wallet < item.price) { this.sound.play('bump'); return; }
+      this.store.wallet = wallet - item.price;
+      this.store.owned.push(key);
+      this.sound.play('power');
+    } else this.sound.play('click');
+    this.store[kind] = this.store[kind] === id ? null : id;
+    saveStore(this.store);
+    this.p.wear(this.outfit || 'egypt', this.look());
+    this.ui.renderShop(this.store.wallet || 0, this.store.inv || {}, this.store.up || {});
   }
 
   buy(type) {
@@ -662,7 +685,7 @@ class Game {
     if (!this.store.reached.includes(id)) { this.store.reached.push(id); saveStore(this.store); }
     if (this.outfit === id) return;
     this.outfit = id;
-    this.p.wear(id);
+    this.p.wear(id, this.look());
     this.mannaPool.mat.map = shekelTexture(COIN_ERA[id] || 'modern');
     this.mannaPool.mat.needsUpdate = true;
     this.chaser.setEra(id);

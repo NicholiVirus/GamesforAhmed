@@ -104,6 +104,28 @@ export const OUTFITS = {
   donut: { top: 0xf38bb8, hem: 0xffffff, belt: 0xffffff, pants: 0x3a3a44, shoe: 0xffffff, wrap: null, cap: 0xffffff },
 };
 
+// Cosmetics bought in the shop: an outfit colour (replaces the place's top colour) and a kippah.
+export const SKINS = [
+  { id: 'royal', name: 'Royal blue', top: 0x2c4ea3, hem: 0xf0b93a, price: 300 },
+  { id: 'crimson', name: 'Crimson', top: 0xc8302a, hem: 0x7a1a14, price: 300 },
+  { id: 'emerald', name: 'Emerald', top: 0x1f8f5a, hem: 0x0f5a38, price: 300 },
+  { id: 'sunset', name: 'Sunset orange', top: 0xff8a3d, hem: 0xd8402f, price: 300 },
+  { id: 'purple', name: 'Royal purple', top: 0x7a3a9a, hem: 0xf0b93a, price: 400 },
+  { id: 'gold', name: 'Golden', top: 0xf0b93a, hem: 0xb8862a, price: 600 },
+  { id: 'midnight', name: 'Midnight', top: 0x1b1830, hem: 0x2c4ea3, price: 400 },
+  { id: 'snow', name: 'Snow white', top: 0xf6f6f2, hem: 0x2c6fd6, price: 300 },
+];
+export const KIPPAHS = [
+  { id: 'white', name: 'White kippah', color: 0xf6f6f2, rim: 0x2c6fd6, price: 150 },
+  { id: 'navy', name: 'Navy kippah', color: 0x1c2f6a, rim: 0xc0c4ca, price: 150 },
+  { id: 'black', name: 'Black velvet kippah', color: 0x151515, rim: 0x151515, price: 150 },
+  { id: 'sky', name: 'Sky blue kippah', color: 0x7fc8f0, rim: 0xffffff, price: 200 },
+  { id: 'red', name: 'Red kippah', color: 0xc8302a, rim: 0xf0b93a, price: 200 },
+  { id: 'green', name: 'Green kippah', color: 0x2f8f4a, rim: 0xf0b93a, price: 200 },
+  { id: 'gold', name: 'Gold kippah', color: 0xf0b93a, rim: 0x8a5a0b, price: 400 },
+  { id: 'rainbow', name: 'Rainbow kippah', color: 0xe2483d, rim: 0x3fae5a, price: 500, stripes: [0xe2483d, 0xffd24a, 0x3fae5a, 0x2c6fd6] },
+];
+
 export function outfitGeos(o) {
   const skin = 0xc68a5e, ink = 0x1b1830;
   const torso = merge([
@@ -124,7 +146,13 @@ export function outfitGeos(o) {
     box(0xd99a6c, [0, -0.03, -0.225], [0.06, 0.07, 0.04]),
     box(0x8a4a3a, [0, -0.12, -0.215], [0.12, 0.03, 0.02]),
   ];
-  if (o.wrap) headParts.push(box(o.wrap, [0, 0.19, 0], [0.47, 0.11, 0.47]), box(o.band, [0, 0.135, 0], [0.48, 0.035, 0.48]));
+  if (o.kippah) {
+    // A kippah sits on the top of the head, a little toward the back.
+    const k = o.kippah;
+    headParts.push(part(new THREE.SphereGeometry(0.2, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), k.color, [0, 0.21, 0.05], [0, 0, 0], [1, 0.45, 1]));
+    headParts.push(part(new THREE.CylinderGeometry(0.205, 0.205, 0.025, 12, 1, true), k.rim, [0, 0.215, 0.05]));
+    if (k.stripes) k.stripes.forEach((c, n) => headParts.push(part(new THREE.CylinderGeometry(0.16 - n * 0.03, 0.16 - n * 0.03, 0.02, 12, 1, true), c, [0, 0.24 + n * 0.012, 0.05])));
+  } else if (o.wrap) headParts.push(box(o.wrap, [0, 0.19, 0], [0.47, 0.11, 0.47]), box(o.band, [0, 0.135, 0], [0.48, 0.035, 0.48]));
   else headParts.push(box(o.cap, [0, 0.22, 0.01], [0.46, 0.1, 0.46]), box(o.cap, [0, 0.18, -0.28], [0.36, 0.04, 0.18]));
   const tail = merge([box(o.wrap || 0xffffff, [0, -0.2, 0], [0.18, 0.4, 0.04]), box(o.band || 0xffffff, [0, -0.1, 0], [0.19, 0.035, 0.05])]);
   const arm = merge([box(o.top, [0, -0.15, 0], [0.16, 0.32, 0.17]), box(skin, [0, -0.39, 0], [0.13, 0.17, 0.14])]);
@@ -184,9 +212,14 @@ export function buildPlayer() {
 
   // Swap the runner's clothes for a region's outfit.
   const outfitCache = {};
-  const wear = (id) => {
-    const o = OUTFITS[id] || OUTFITS.egypt;
-    const gg = outfitCache[id] || (outfitCache[id] = outfitGeos(o));
+  // style: { skin, kippah } from the shop; they apply on top of each place's outfit.
+  const wear = (id, style = {}) => {
+    const sk = SKINS.find((x) => x.id === style.skin), kp = KIPPAHS.find((x) => x.id === style.kippah);
+    const o = { ...(OUTFITS[id] || OUTFITS.egypt) };
+    if (sk) { o.top = sk.top; o.hem = sk.hem; }
+    if (kp) { o.kippah = kp; o.wrap = null; }
+    const key = id + '|' + (style.skin || '') + '|' + (style.kippah || '');
+    const gg = outfitCache[key] || (outfitCache[key] = outfitGeos(o));
     torso.geometry = gg.torso; headMesh.geometry = gg.head; tail.geometry = gg.tail;
     armL.geometry = armR.geometry = gg.arm; legL.geometry = legR.geometry = gg.leg;
     tail.visible = !!o.wrap;
