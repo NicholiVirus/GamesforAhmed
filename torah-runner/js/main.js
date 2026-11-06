@@ -24,7 +24,7 @@ export const SHOP = [
 // Permanent upgrades: each level costs more.
 export const UPGRADES = [
   { id: 'speed', name: 'Swift feet', about: '+5% running speed per level', price: 1000, max: 5, icon: 'sneakers' },
-  { id: 'mult', name: 'Manna blessing', about: '+0.25× manna per level (up to 3×)', price: 800, max: 8, icon: 'double' },
+  { id: 'mult', name: 'Manna blessing', about: '+0.25× manna per level (up to 3×)', price: 270, max: 8, icon: 'double' },
   { id: 'jet', name: 'Bigger jet tanks', about: '+1 s of jet pack per level', price: 900, max: 5, icon: 'jetpack' },
   { id: 'magnet', name: 'Strong magnet', about: '+2 s of magnet per level', price: 700, max: 5, icon: 'magnet' },
   { id: 'shieldUp', name: 'Lasting star', about: '+3 s of Star shield per level', price: 700, max: 5, icon: 'shield' },
