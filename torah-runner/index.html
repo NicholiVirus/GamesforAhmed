@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Torah Runner</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Run from Egypt to Mount Sinai and catch golden Hebrew letters to spell words of the Torah.">
+<meta name="description" content="Run through the stories of the Torah and catch golden Hebrew letters to spell words of the Torah.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&family=Suez+One&display=swap">
@@ -327,7 +327,11 @@ kbd {
 .quiz-opt.right { background: #3f9a5a; color: #fff; box-shadow: none; }
 .quiz-opt.wrong { background: #c9483d; color: #fff; box-shadow: none; }
 .maxed { font-weight: 800; color: var(--tekhelet); padding-inline: 12px; }
-#screen-shop .shop-list { max-height: min(56vh, 520px); overflow-y: auto; }
+#screen-shop .shop-list, #screen-map .shop-list { max-height: min(56vh, 520px); overflow-y: auto; }
+.map-num { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; background: var(--gold); color: var(--ink); }
+#map-list li.locked .map-num { background: rgba(77, 63, 44, 0.25); }
+#map-list li.current { box-shadow: inset 0 0 0 2px var(--tekhelet); }
+#map-list small { font-family: var(--font-display); font-size: 0.95rem; }
 .sl-tr { font-weight: 700; }
 .panel-small { width: min(360px, calc(100% - 48px)); text-align: center; }
 .panel-small .actions { justify-content: center; }
@@ -393,7 +397,7 @@ kbd {
   <div id="fly-layer" aria-hidden="true"></div>
   <div id="flash" aria-hidden="true"></div>
   <div id="countdown" hidden aria-live="assertive"></div>
-  <div id="ride-banner" hidden role="status"><b>All aboard!</b><span>Riding back to Egypt</span></div>
+  <div id="ride-banner" hidden role="status"><b>All aboard!</b><span>Riding back to the start</span></div>
   <button id="btn-skip" class="btn" type="button" hidden>Skip ride
     <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3v10l6-5zM8 3v10l6-5z"/></svg>
   </button>
@@ -412,16 +416,17 @@ kbd {
       <span class="roller l" aria-hidden="true"></span><span class="roller r" aria-hidden="true"></span>
       <p class="eyebrow-he" lang="he" dir="rtl">תּוֹרָה</p>
       <h1 id="title">Torah Runner</h1>
-      <p class="lede">Run from Egypt, through the Red Sea, the oasis and the night camp, to Mount Sinai. Catch the golden letters in order to write words of the Torah on your scroll.</p>
+      <p class="lede">Run through the stories of the Torah: Noah's ark, Egypt, the Red Sea, Mount Sinai, the walls of Jericho and Jerusalem, then on to New York. Catch the golden letters to write words of the Torah on your scroll.</p>
       <div class="actions">
         <button id="btn-play" class="btn btn-primary" type="button" data-autofocus>
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>Start running
         </button>
         <button id="btn-shop" class="btn btn-ghost" type="button"><span class="manna-dot"></span>Shop</button>
+        <button id="btn-map" class="btn btn-ghost" type="button">Journey map</button>
         <button id="btn-scroll" class="btn btn-ghost" type="button"><span>My scroll · 0/29</span></button>
         <button id="btn-sound" class="btn btn-ghost" type="button" aria-pressed="true"><span>Sound on</span></button>
       </div>
-      <p class="best" id="best-line">No runs yet. The road starts in Egypt.</p>
+      <p class="best" id="best-line">No runs yet. The road starts at Mount Ararat.</p>
       <p class="tip-rotate">Tip: turn your phone sideways for a wider view.</p>
       <details class="how">
         <summary>How to play</summary>
@@ -516,6 +521,18 @@ kbd {
       <p class="wc-count">What does it mean?</p>
       <div class="quiz-options" id="quiz-options"></div>
       <p class="wc-count" id="quiz-progress"></p>
+    </div>
+  </section>
+
+  <section id="screen-map" class="screen center" hidden aria-labelledby="map-title">
+    <div class="scroll">
+      <span class="roller l" aria-hidden="true"></span><span class="roller r" aria-hidden="true"></span>
+      <h2 id="map-title">Journey map</h2>
+      <p class="lede">Start a run from any place you have reached, or unlock a place ahead with manna. You have <b class="shop-wallet"><span class="manna-dot"></span> <span id="map-wallet">0</span></b>.</p>
+      <ul class="shop-list" id="map-list"></ul>
+      <div class="actions">
+        <button id="btn-map-close" class="btn btn-primary" type="button" data-autofocus>Done</button>
+      </div>
     </div>
   </section>
 

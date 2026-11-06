@@ -1,6 +1,7 @@
 // Roadside props for each region. A few random variants of each are built up front and reused.
 import * as THREE from './three.js';
 import { LANDMARKS } from './landmarks.js';
+import { LANDMARKS2 } from './landmarks3.js';
 import { part, box, merge, jagged, BOX, CYL6, ICO, buildCamel, OBSTACLES, obstacleGeo } from './models.js';
 
 const rnd = (a, b) => a + Math.random() * (b - a);
@@ -498,7 +499,17 @@ export const SCENERY = {
   ],
 };
 
+// Roadside props for the new Torah places reuse the builders above.
+const pick2 = (ids) => ids.map((t) => { for (const k in SCENERY) { const d = SCENERY[k].find((x) => x.type === t); if (d) return { ...d }; } return null; }).filter(Boolean);
+SCENERY.ararat = pick2(['ptree', 'rock', 'scrub', 'reeds', 'pond']);
+SCENERY.babel = pick2(['house', 'rock', 'scrub', 'reeds']);
+SCENERY.jacob = pick2(['acacia', 'rock', 'btent', 'camelS', 'scrub', 'olive']);
+SCENERY.rephidim = pick2(['rock', 'btent', 'camelS', 'scrub', 'acacia']);
+SCENERY.jordan = pick2(['reeds', 'palm', 'ptree', 'rock', 'pond']);
+SCENERY.jericho = pick2(['palm', 'house', 'rock', 'reeds']);
+SCENERY.elah = pick2(['ptree', 'olive', 'rock', 'scrub']);
 for (const id in LANDMARKS) if (SCENERY[id]) SCENERY[id].push(...LANDMARKS[id]);
+for (const id in LANDMARKS2) if (SCENERY[id]) SCENERY[id].push(...LANDMARKS2[id]);
 
 const variantCache = {};
 export function sceneryGeo(def) {

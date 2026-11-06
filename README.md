@@ -2,7 +2,7 @@
 
 ## Torah Runner
 
-A 3D lane runner. Run from Egypt, through the parted Red Sea, the Oasis of Elim, the wilderness and the night camp under the pillar of fire, to Mount Sinai, looping until 9,000 m, where you arrive in Jerusalem, the Holy City, then Tel Aviv and Ben Gurion Airport (pass a 5-question Hebrew test to fly), New York, the Underground Donut Shop, Central Park and Liberty Harbor. Ramps lead up onto raised walkways you run along before dropping back down. Some letters float high: jump to grab them. Catch the golden Hebrew letters in order to write words of the Torah on your scroll.
+A 3D lane runner through the stories of the Torah and Jewish history: Noah's Ark at Ararat, the Tower of Babel, Jacob's Journey, Egypt, the Red Sea, the Oasis of Elim, the Wilderness, the Battle of Rephidim, Mount Sinai, the Night Camp, Crossing the Jordan, the Walls of Jericho, the Valley of Elah (David and Goliath), Jerusalem, then Tel Aviv, Ben Gurion Airport (pass a Hebrew test to fly), New York, the Underground Donut Shop, Central Park and Liberty Harbor. Each place has its own scenes from the Torah along the road. The Journey map lets you start from any place you have reached, or unlock one with manna. Ramps lead up onto raised walkways. Catch the golden Hebrew letters in order to write words of the Torah on your scroll.
 
 - **Play:** open `torah-runner/index.html` through any static web server (ES modules don't load from `file://`).
   ```sh

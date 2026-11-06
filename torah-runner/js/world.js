@@ -1,17 +1,19 @@
 // The environment: renderer, sky, light, scrolling ground, the parted sea, distant landmarks,
 // roadside props and particle effects. Gameplay objects live in main.js.
 import * as THREE from './three.js';
-import { BIOMES, BIOME_LEN, JLM_START, CYCLE, STORY } from './data.js';
+import { BIOMES, BIOME_LEN, ROUTE, routeStart } from './data.js';
 import { part, merge, jagged, ICO, softDot } from './models.js';
 import { pickScenery, sceneryGeo } from './scenery.js';
 import { flatMat } from './models.js';
 
-const LAP = BIOME_LEN * CYCLE;
 const idOf = (id) => BIOMES.findIndex((b) => b.id === id);
-const storyAt = (wz) => { let k = 0; for (let i = 0; i < STORY.length; i++) if (wz >= STORY[i].at) k = i; return k; };
+const ROUTE_IDX = ROUTE.map(idOf);
+const routeAt = (wz) => Math.max(0, Math.min(ROUTE.length - 1, Math.floor(wz / BIOME_LEN)));
+// Places where the water stands up in walls on both sides, and how tall the walls are.
+const WALLS = { sea: { h: 13, x: 4.7 }, jordan: { h: 7, x: 13 } };
 const rnd = (a, b) => a + Math.random() * (b - a);
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
-export const biomeIndexAt = (wz) => (wz >= JLM_START ? idOf(STORY[storyAt(wz)].id) : Math.floor((((wz % LAP) + LAP) % LAP) / BIOME_LEN));
+export const biomeIndexAt = (wz) => ROUTE_IDX[routeAt(wz)];
 
 function tex(w, h, draw) {
   const c = document.createElement('canvas');
@@ -453,6 +455,99 @@ export class World {
       part(new THREE.ConeGeometry(3, 6, 6), 0xffc23a, [68, 95, -330]),
     ]), hbm));
     this.backdrops.push({ group: hb, mats: [hbm] });
+
+    // ---- Backdrops for the Torah places (same order as in BIOMES).
+    const cyl = (rt, rb, h, seg = 10) => new THREE.CylinderGeometry(rt, rb, h, seg);
+    const add = (group, parts, mat) => group.add(new THREE.Mesh(merge(parts), mat));
+    // Ararat: twin snowy peaks with the ark resting on top, a rainbow and the dove.
+    const ar = new THREE.Group(), arm = mk();
+    add(ar, [
+      part(new THREE.ConeGeometry(90, 120, 9), 0x8a8478, [-40, 60, -420]), part(new THREE.ConeGeometry(28, 30, 9), 0xf4f6f8, [-40, 106, -420]),
+      part(new THREE.ConeGeometry(55, 70, 9), 0x9a9488, [90, 35, -380]), part(new THREE.ConeGeometry(16, 18, 9), 0xf4f6f8, [90, 62, -380]),
+      part(cube, 0x6a4428, [-40, 124, -400], [0, 0.3, 0], [26, 8, 9]), part(cube, 0x7a5030, [-40, 130, -400], [0, 0.3, 0], [16, 5, 7]),
+    ], arm);
+    const arBow = new THREE.Mesh(merge([0xe2483d, 0xff9a3c, 0xffd24a, 0x3fae5a, 0x2c6fd6, 0x7a4a9a].map((c, k) =>
+      part(new THREE.TorusGeometry(160 - k * 6, 3, 4, 40, Math.PI), c, [0, 0, 0], [0, 0, 0], [1, 1, 1], 0))), bowMat.clone());
+    arBow.position.set(20, -10, -440);
+    ar.add(arBow);
+    this.dove = new THREE.Mesh(merge([part(new THREE.IcosahedronGeometry(1, 0), 0xffffff, [0, 0, 0], [0, 0, 0], [3, 2, 4]),
+      part(cube, 0xffffff, [-4, 0.5, 0], [0, 0, 0.3], [6, 0.4, 3]), part(cube, 0xffffff, [4, 0.5, 0], [0, 0, -0.3], [6, 0.4, 3]),
+      part(cube, 0x5a8a3a, [0, 0, 4], [0, 0, 0], [0.6, 0.6, 2.5])]), arm);
+    this.dove.position.set(0, 80, -300);
+    ar.add(this.dove);
+    this.backdrops.push({ group: ar, mats: [arm, arBow.material] });
+    // Babel: a stepped tower climbing into the clouds, with ramps and scaffolds.
+    const bb = new THREE.Group(), bbm = mk();
+    const tower = [];
+    for (let t = 0; t < 8; t++) {
+      const w = 110 - t * 12;
+      tower.push(part(cube, [0xc47a44, 0xb8683a, 0xa95c30][t % 3], [0, 9 + t * 18, -400], [0, 0, 0], [w, 18, w]));
+      tower.push(part(cube, 0x9a5a30, [w / 2 - 6, 9 + t * 18, -400 + w / 2 - 2], [0.5, 0, 0], [10, 2, 30]));
+    }
+    for (let k = 0; k < 6; k++) tower.push(part(cube, 0x7a4a24, [-30 + k * 12, 150, -360], [0, 0, 0], [1.2, 30, 1.2]));
+    for (let k = 0; k < 8; k++) tower.push(part(new THREE.IcosahedronGeometry(1, 1), 0xf4f4f4, [-40 + k * 12, 160 + (k % 3) * 6, -400], [0, 0, 0], [16, 8, 14]));
+    add(bb, [...tower, ...skyline(10, 6, 14, [0xd8a878, 0xc89868], 220, -330)], bbm);
+    this.backdrops.push({ group: bb, mats: [bbm] });
+    // Jacob: a ladder of light from the hills up into the sky.
+    const jc = new THREE.Group(), jcm = mk();
+    const lad = [];
+    for (const x of [-8, 8]) lad.push(part(cube, 0xfff2c8, [x, 110, -380], [0.15, 0, 0], [2, 240, 2]));
+    for (let k = 0; k < 26; k++) lad.push(part(cube, 0xfff2c8, [0, 6 + k * 9, -380 - k * 1.3], [0, 0, 0], [16, 1.2, 1.2]));
+    add(jc, [...lad, part(new THREE.SphereGeometry(1, 10, 6), 0xb8b070, [-100, -6, -360], [0, 0, 0], [140, 30, 50]),
+      part(new THREE.SphereGeometry(1, 10, 6), 0xa8a060, [120, -6, -380], [0, 0, 0], [150, 36, 60])], jcm);
+    this.ladderLights = [];
+    const lightMat = new THREE.MeshBasicMaterial({ color: 0xfff8dc, transparent: true, opacity: 0, fog: false });
+    for (let k = 0; k < 10; k++) {
+      const m = new THREE.Mesh(new THREE.IcosahedronGeometry(2.4, 1), lightMat);
+      m.userData.ph = k / 10;
+      jc.add(m);
+      this.ladderLights.push(m);
+    }
+    this.backdrops.push({ group: jc, mats: [jcm, lightMat] });
+    // Rephidim: the hill with a stone and a staff held high, banners and dust.
+    const rp = new THREE.Group(), rpm = mk();
+    add(rp, [
+      part(new THREE.SphereGeometry(1, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), 0xc8a878, [-30, 0, -380], [0, 0, 0], [110, 70, 80]),
+      part(new THREE.DodecahedronGeometry(1, 0), 0x9a8a78, [-30, 72, -380], [0, 0, 0], [8, 6, 8]),
+      part(cube, 0x6b4a2a, [-24, 92, -380], [0, 0, -0.15], [2, 40, 2]),
+      ...[[-160, 0x2c4ea3], [120, 0x6a2a2a], [170, 0x6a2a2a], [-110, 0x2c4ea3]].flatMap(([x, c]) => [part(cube, 0x6b4a2a, [x, 20, -360], [0, 0, 0], [1.5, 40, 1.5]), part(cube, c, [x + 7, 34, -360], [0, 0, 0], [14, 10, 1])]),
+      ...skyline(8, 10, 24, [0xd8b880, 0xc8a870], 240, -340),
+    ], rpm);
+    this.backdrops.push({ group: rp, mats: [rpm] });
+    // Jordan: the green hills of Gilead and Jericho's walls far across the river.
+    const jd = new THREE.Group(), jdm = mk();
+    add(jd, [
+      part(new THREE.SphereGeometry(1, 12, 6), 0x8aac68, [-120, -8, -380], [0, 0, 0], [140, 40, 60]),
+      part(new THREE.SphereGeometry(1, 12, 6), 0x7a9c58, [130, -8, -400], [0, 0, 0], [160, 46, 70]),
+      part(cube, 0xd8c098, [0, 10, -460], [0, 0, 0], [120, 20, 6]),
+      ...[-50, -20, 20, 50].map((x) => part(cube, 0xc8b088, [x, 16, -460], [0, 0, 0], [10, 32, 10])),
+    ], jdm);
+    this.backdrops.push({ group: jd, mats: [jdm] });
+    // Jericho: great city walls with towers, broken through in places, and its palm groves.
+    const je = new THREE.Group(), jem = mk();
+    const wall = [];
+    for (let x = -200; x <= 200; x += 25) {
+      const broken = Math.abs(x) < 30 || (x > 70 && x < 110);
+      if (broken) {
+        for (let k = 0; k < 5; k++) wall.push(part(cube, [0xd8c098, 0xc8b088][k % 2], [x + (k - 2) * 4, 3 + (k % 2) * 3, -380 + (k - 2) * 3], [k * 0.2, k * 0.5, 0], [8, 6, 8]));
+      } else {
+        wall.push(part(cube, 0xd8c098, [x, 14, -380], [0, 0, 0], [25.5, 28, 8]));
+        if (x % 50 === 0) wall.push(part(cube, 0xc8b088, [x, 22, -380], [0, 0, 0], [12, 44, 12]));
+      }
+    }
+    add(je, wall, jem);
+    this.backdrops.push({ group: je, mats: [jem] });
+    // Elah: two hills facing each other, a camp and banners on each (1 Samuel 17:3).
+    const el = new THREE.Group(), elm = mk();
+    const camp = (x, tent, flag) => {
+      const P = [part(new THREE.SphereGeometry(1, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), 0xa8a868, [x, 0, -380], [0, 0, 0], [140, 55, 80])];
+      for (let k = 0; k < 7; k++) P.push(part(new THREE.ConeGeometry(6, 8, 4), tent, [x - 45 + k * 15, 46 + Math.sin(k) * 4, -360], [0, Math.PI / 4, 0]));
+      P.push(part(cube, 0x6b4a2a, [x, 70, -370], [0, 0, 0], [1.5, 30, 1.5]), part(cube, flag, [x + 8, 80, -370], [0, 0, 0], [15, 9, 1]));
+      return P;
+    };
+    add(el, [...camp(-150, 0x8a2a2a, 0x8a2a2a), ...camp(150, 0xf4f1ea, 0x2c4ea3),
+      ...[-60, -20, 25, 70].map((x) => part(new THREE.IcosahedronGeometry(1, 0), 0x5a7a3a, [x, 10, -330], [0, 0, 0], [12, 10, 12]))], elm);
+    this.backdrops.push({ group: el, mats: [elm] });
     for (const b of this.backdrops) { b.group.visible = false; this.scene.add(b.group); }
   }
 
@@ -476,22 +571,13 @@ export class World {
 
   // Blend region colours by distance so the sky changes as the next region comes into view.
   blend(dist) {
-    const p = ((dist % LAP) + LAP) % LAP;
-    let i = Math.floor(p / BIOME_LEN);
-    const local = p - i * BIOME_LEN;
-    let t = smooth(BIOME_LEN - 110, BIOME_LEN - 10, local);
-    let j = (i + 1) % CYCLE;
-    // Arriving in Jerusalem: blend from wherever you are into the holy city, then stay.
-    if (dist >= JLM_START - 160) {
-      // Story route: blend into the next place over the last 150 m of each one.
-      if (dist < JLM_START) { j = idOf(STORY[0].id); t = smooth(JLM_START - 160, JLM_START - 10, dist); }
-      else {
-        const k = storyAt(dist);
-        i = idOf(STORY[k].id);
-        const nx = STORY[k + 1];
-        if (nx) { j = idOf(nx.id); t = smooth(nx.at - 160, nx.at - 10, dist); } else { j = i; t = 0; }
-      }
-    }
+    // Walk the route: blend into the next place over the last 150 m of each one.
+    const r = routeAt(dist);
+    const local = dist - r * BIOME_LEN;
+    const i = ROUTE_IDX[r];
+    const hasNext = r < ROUTE.length - 1;
+    const j = hasNext ? ROUTE_IDX[r + 1] : i;
+    const t = hasNext ? smooth(BIOME_LEN - 160, BIOME_LEN - 10, local) : 0;
     const A = this.pal[i], B = this.pal[j], c = this.cur;
     for (const k of ['skyTop', 'skyHorizon', 'skyBottom', 'fog', 'ground', 'road', 'sun', 'hemiSky', 'hemiGround', 'light']) c[k].copy(A[k]).lerp(B[k], t);
     c.sunDir.copy(A.sunDir).lerp(B.sunDir, t).normalize();
@@ -541,17 +627,22 @@ export class World {
   }
 
   updateSea(dist, dt) {
-    const lapStart = Math.floor(dist / LAP) * LAP;
-    let start = lapStart + BIOME_LEN, end = lapStart + BIOME_LEN * 2;
-    if (end < dist - 30) { start += LAP; end += LAP; }
-    if (start >= JLM_START) start = end = Infinity;
+    // Find the nearest stretch of the route with walls of water (the Red Sea, the Jordan).
+    let start = Infinity, end = Infinity, h = 13, wx = 4.7;
+    for (let r = 0; r < ROUTE.length; r++) {
+      const wh = WALLS[ROUTE[r]];
+      if (!wh) continue;
+      const s0 = r * BIOME_LEN, e0 = s0 + BIOME_LEN;
+      if (e0 >= dist - 30 && s0 <= dist + 400) { start = s0; end = e0; h = wh.h; wx = wh.x; break; }
+    }
     const z1 = Math.min(25, dist - start), z0 = Math.max(-330, dist - end);
-    if (!isFinite(start)) { z1; }
-    const show = z1 > z0 + 0.5;
+    const show = isFinite(start) && z1 > z0 + 0.5;
     for (const w of this.seaWalls) {
       w.inner.visible = w.back.visible = show;
       w.cap.visible = show && z1 < 25;
       if (!show) continue;
+      for (const m of [w.inner, w.cap, w.back]) { m.scale.y = h / 13; m.position.y = h / 2; }
+      w.inner.position.x = w.sx * wx; w.cap.position.x = w.sx * (wx + 3); w.back.position.x = w.sx * (wx + 6);
       const len = z1 - z0, mid = (z0 + z1) / 2;
       w.inner.scale.x = len; w.inner.position.z = mid;
       w.back.scale.x = len; w.back.position.z = mid;
@@ -565,7 +656,8 @@ export class World {
       f.off += f.v * dt;
       const zz = ((((dist - f.off) % 220) + 220) % 220) - 200;
       f.m.visible = zz > z0 && zz < z1;
-      f.m.position.set(f.side * f.x, f.y + Math.sin(this.time * 1.5 + f.ph) * 0.3, zz);
+      this.wallX = wx;
+      f.m.position.set(f.side * (f.x + (this.wallX || 4.7) - 4.7), f.y * (h / 13) + Math.sin(this.time * 1.5 + f.ph) * 0.3, zz);
       f.m.rotation.y = Math.sin(this.time * 6 + f.ph) * 0.15;
     }
   }
@@ -577,13 +669,15 @@ export class World {
       for (const m of b.mats) m.opacity = Math.min(1, w * 1.15);
     });
     this.pillar.rotation.y += dt * 0.15;
-    if (this.jetPlane) { this.jetPlane.position.x += dt * 14; this.jetPlane.position.y += dt * 3; if (this.jetPlane.position.x > 260) this.jetPlane.position.set(-260, 40, -300); }
+    if (this.dove) { const a = this.time * 0.25; this.dove.position.set(Math.cos(a) * 120, 90 + Math.sin(a * 2) * 10, -320 + Math.sin(a) * 40); this.dove.rotation.y = -a; }
+    if (this.ladderLights) this.ladderLights.forEach((m) => { const p = (m.userData.ph + this.time * 0.05) % 1; m.position.set((m.userData.ph > 0.5 ? 4 : -4), 6 + p * 230, -382 - p * 34); });
+        if (this.jetPlane) { this.jetPlane.position.x += dt * 14; this.jetPlane.position.y += dt * 3; if (this.jetPlane.position.x > 260) this.jetPlane.position.set(-260, 40, -300); }
     this.firePillar.rotation.y -= dt * 0.4;
     this.firePillar.children.forEach((m, i) => { m.position.x = Math.cos(i * 1.7 + this.time * 2) * 3; });
     this.fireGlow.material.opacity = this.weights[4] * (0.5 + Math.sin(this.time * 6) * 0.08);
     const sinaiW = this.weights[this.sinaiIdx];
     this.glowMat.opacity = sinaiW * (0.55 + Math.sin(this.time * 3) * 0.12 + Math.sin(this.time * 7.3) * 0.06);
-    const p = ((dist % LAP) + LAP) % LAP - BIOME_LEN * this.sinaiIdx;
+    const p = dist - routeStart('sinai');
     this.mountain.scale.setScalar(0.85 + Math.max(0, Math.min(1, p / BIOME_LEN)) * 0.35);
     this.bolt.material.opacity = Math.max(0, this.bolt.material.opacity - dt * 6);
     if (sinaiW > 0.5) {

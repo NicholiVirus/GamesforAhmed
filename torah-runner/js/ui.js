@@ -9,7 +9,7 @@ export class UI {
   constructor(h) {
     this.h = h;
     this.last = {};
-    this.screens = ['screen-loading', 'screen-start', 'screen-pause', 'screen-over', 'screen-scroll', 'screen-error', 'screen-word', 'screen-shop', 'screen-quiz'];
+    this.screens = ['screen-loading', 'screen-start', 'screen-pause', 'screen-over', 'screen-scroll', 'screen-error', 'screen-word', 'screen-shop', 'screen-quiz', 'screen-map'];
     this.wordArmed = false;
     const on = (id, fn) => { const el = $(id); if (el) el.addEventListener('click', (e) => { e.stopPropagation(); fn(); }); };
     on('btn-play', () => h.play());
@@ -25,6 +25,15 @@ export class UI {
     on('btn-scroll-2', () => h.openScroll());
     on('btn-scroll-close', () => h.closeScroll());
     on('btn-shop', () => h.openShop());
+    on('btn-map', () => h.openMap());
+    on('btn-map-close', () => this.show('screen-start'));
+    const mapList = $('map-list');
+    if (mapList) mapList.addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-start], button[data-unlock]');
+      if (!b) return;
+      e.stopPropagation();
+      if (b.dataset.start) h.pickStart(b.dataset.start); else h.unlockPlace(b.dataset.unlock);
+    });
     on('btn-star', () => h.useStar());
     on('btn-shop-close', () => h.closeShop());
     const list = $('shop-list');
@@ -210,6 +219,20 @@ export class UI {
     el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
   }
 
+  renderMap(places, wallet) {
+    $('map-wallet').textContent = Math.floor(wallet).toLocaleString('en-US');
+    $('map-list').innerHTML = places.map((p, i) => `
+      <li class="${p.current ? 'current' : ''} ${p.reached ? '' : 'locked'}">
+        <span class="map-num">${i + 1}</span>
+        <span class="shop-name"><b>${p.name}</b><small lang="he" dir="rtl">${p.he}</small></span>
+        ${p.current ? '<span class="maxed">Starting here</span>'
+    : p.reached ? `<button class="btn btn-primary" type="button" data-start="${p.id}">Start here</button>`
+      : `<button class="btn ${wallet >= p.price ? 'btn-primary' : 'btn-ghost'}" type="button" data-unlock="${p.id}" ${wallet >= p.price ? '' : 'disabled'}><span class="manna-dot"></span>${p.price.toLocaleString('en-US')}</button>`}
+      </li>`).join('');
+  }
+
+  rideTo(name) { $('ride-banner').querySelector('span').textContent = `Riding back to ${name}`; }
+
   ride(on) {
     $('ride-banner').hidden = !on;
     $('btn-skip').hidden = !on;
@@ -250,7 +273,7 @@ export class UI {
   setBest(best, learned, total) {
     $('best-line').innerHTML = best.score > 0
       ? `Best run <b>${fmt(best.score)}</b> points · <b>${fmt(best.dist)}</b> m`
-      : 'No runs yet. The road starts in Egypt.';
+      : 'No runs yet. The road starts at Mount Ararat.';
     for (const id of ['btn-scroll', 'btn-scroll-2']) {
       const el = $(id);
       if (el) el.querySelector('span').textContent = `My scroll · ${learned}/${total}`;

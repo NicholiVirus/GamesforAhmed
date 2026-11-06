@@ -92,6 +92,13 @@ export const OUTFITS = {
   telaviv: { top: 0xff8a3d, hem: 0xff8a3d, belt: 0xff8a3d, pants: 0x3a8fc8, shoe: 0xffffff, wrap: null, cap: 0xffd24a, short: true },
   airport: { top: 0x8a9098, hem: 0x7a8088, belt: 0x7a8088, pants: 0x2f4a7a, shoe: 0xffffff, wrap: null, cap: 0x2a2a30 },
   newyork: { top: 0xd8402f, hem: 0xb8302a, belt: 0x222222, pants: 0x2f4a7a, shoe: 0x1a1a1a, wrap: null, cap: 0x1a1a1a },
+  ararat: { top: 0x8a6a48, hem: 0x6a5038, belt: 0x4f8f3a, pants: 0xe6d6b4, shoe: 0x5a3a1c, wrap: 0xd8e8c8, band: 0x4f8f3a },
+  babel: { top: 0xc47a44, hem: 0xa95c30, belt: 0x5a3a20, pants: 0xe6d0b0, shoe: 0x5a3a1c, wrap: 0xf0e2c0, band: 0xb83a2a },
+  jacob: { top: 0xe2483d, hem: 0xffd24a, belt: 0x2c6fd6, pants: 0xe6d6b4, shoe: 0x5a3a1c, wrap: 0x3fae5a, band: 0x7a4a9a },
+  rephidim: { top: 0x9a7a56, hem: 0xb83a2a, belt: 0x5a3a1c, pants: 0xd8c8a8, shoe: 0x4a2e1c, wrap: 0xf4efe4, band: 0xb83a2a },
+  jordan: { top: 0xf2f2ee, hem: 0x2c6fd6, belt: 0x2c6fd6, pants: 0xe6dccc, shoe: 0x5a3a1c, wrap: 0xf2f2ee, band: 0x2c6fd6 },
+  jericho: { top: 0xb83a2a, hem: 0xf0b93a, belt: 0xf0b93a, pants: 0xe6d6b4, shoe: 0x5a3a1c, wrap: 0xf0e2c0, band: 0xf0b93a },
+  elah: { top: 0x8a6a48, hem: 0x6b4a2a, belt: 0x5a3a1c, pants: 0xe6d6b4, shoe: 0x5a3a1c, wrap: 0xf4efe4, band: 0x8a6a48 },
   park: { top: 0x3f9a5a, hem: 0x2f7a48, belt: 0x6b3e1e, pants: 0xd8c8a0, shoe: 0x6b3e1e, wrap: null, cap: 0x3f9a5a },
   harbor: { top: 0x2c4ea3, hem: 0xffffff, belt: 0xffffff, pants: 0xf2f2ee, shoe: 0x1a1a1a, wrap: null, cap: 0xffffff },
   donut: { top: 0xf38bb8, hem: 0xffffff, belt: 0xffffff, pants: 0x3a3a44, shoe: 0xffffff, wrap: null, cap: 0xffffff },
@@ -560,6 +567,55 @@ function buildJuiceKiosk() {
   ]);
 }
 
+// ---- obstacles for the Torah places
+function buildLog() { // a fallen log after the flood
+  return merge([
+    part(new THREE.CylinderGeometry(0.34, 0.38, 1.9, 8), 0x6b4a2a, [0, 0.36, 0], [0, 0, Math.PI / 2]),
+    part(new THREE.CylinderGeometry(0.3, 0.3, 0.04, 8), 0xc8a070, [0.96, 0.36, 0], [0, 0, Math.PI / 2]),
+    box(0x4f8f3a, [-0.3, 0.72, 0.1], [0.4, 0.08, 0.3]),
+  ]);
+}
+function buildElephants() { // two elephants leaving the ark, side by side
+  const P = [];
+  for (const x of [-0.42, 0.42]) {
+    P.push(box(0x8a8a90, [x, 1.3, 0], [0.75, 0.9, 1.5]), box(0x8a8a90, [x, 1.75, 0.85], [0.6, 0.6, 0.5]));
+    P.push(box(0x7a7a80, [x, 1.15, 1.2], [0.18, 0.9, 0.18], [0.3, 0, 0]));
+    P.push(box(0x9a9aa0, [x - 0.36, 1.85, 0.75], [0.08, 0.6, 0.5]), box(0x9a9aa0, [x + 0.36, 1.85, 0.75], [0.08, 0.6, 0.5]));
+    P.push(box(0xf4f1ea, [x - 0.16, 1.45, 1.15], [0.06, 0.06, 0.35]), box(0xf4f1ea, [x + 0.16, 1.45, 1.15], [0.06, 0.06, 0.35]));
+    for (const [dx, dz] of [[-0.22, -0.5], [0.22, -0.5], [-0.22, 0.5], [0.22, 0.5]]) P.push(box(0x8a8a90, [x + dx, 0.42, dz], [0.24, 0.85, 0.24]));
+  }
+  return merge(P);
+}
+function buildSheepFlock() { // a little flock of sheep to jump over
+  const P = [];
+  for (const [x, z] of [[-0.6, 0], [0.05, 0.1], [0.65, -0.05]]) {
+    P.push(part(ICO, 0xf2efe6, [x, 0.45, z], [0, 0, 0], [0.32, 0.28, 0.3]), box(0x2a2420, [x, 0.55, z + 0.34], [0.16, 0.18, 0.2]));
+    for (const [dx, dz] of [[-0.12, -0.12], [0.12, -0.12], [-0.12, 0.12], [0.12, 0.12]]) P.push(box(0x2a2420, [x + dx, 0.12, z + dz], [0.05, 0.26, 0.05]));
+  }
+  return merge(P);
+}
+function buildRubble() { // stones from the fallen walls of Jericho
+  const P = [];
+  for (let k = 0; k < 9; k++) P.push(box([0xd8c098, 0xc8b088, 0xb8a078][k % 3], [-0.75 + (k % 5) * 0.38, 0.2 + Math.floor(k / 5) * 0.32, (Math.random() - 0.5) * 0.3], [0.42, 0.34, 0.5], [0, Math.random(), Math.random() * 0.3]));
+  return merge(P);
+}
+function buildScaffold() { // a scaffold beam at Babel: slide under it
+  return merge([
+    box(0x7a4a24, [-1.0, 1.15, 0], [0.12, 2.3, 0.12]), box(0x7a4a24, [1.0, 1.15, 0], [0.12, 2.3, 0.12]),
+    box(0x9a7a56, [0, 1.25, 0], [2.2, 0.16, 0.5]), box(0x9a7a56, [0, 2.2, 0], [2.2, 0.12, 0.5]),
+    box(0xb8683a, [-0.5, 1.45, 0], [0.4, 0.24, 0.3]), box(0xc47a44, [0.3, 1.45, 0.05], [0.4, 0.24, 0.3]),
+    box(0x7a4a24, [0, 1.7, 0], [2.0, 0.05, 0.05], [0, 0, 0.45]),
+  ]);
+}
+function buildGiantSpear() { // Goliath's spear driven into the ground, and his great shield
+  return merge([
+    box(0x8a6a48, [0.3, 1.8, 0], [0.22, 3.6, 0.22], [0, 0, 0.08]),
+    part(new THREE.ConeGeometry(0.28, 0.9, 6), 0x9aa0a6, [0.45, 3.9, 0], [0, 0, 0.08]),
+    part(new THREE.CylinderGeometry(0.85, 0.85, 0.14, 14), 0xb07a3a, [-0.35, 0.95, 0.15], [Math.PI / 2 - 0.2, 0, 0]),
+    part(new THREE.CylinderGeometry(0.25, 0.25, 0.18, 10), 0xd8a050, [-0.35, 0.97, 0.25], [Math.PI / 2 - 0.2, 0, 0]),
+  ]);
+}
+
 // kind: low = jump, high = slide, tall = change lane. Boxes: [x0, x1, y0, y1, z0, z1] around the lane centre.
 export const OBSTACLES = {
   bricks: { kind: 'low', build: buildBricks, boxes: [[-0.9, 0.9, 0, 0.82, -0.33, 0.33]] },
@@ -586,6 +642,12 @@ export const OBSTACLES = {
   turnstiles: { kind: 'low', build: buildTurnstiles, boxes: [[-0.88, 0.88, 0, 0.85, -0.35, 0.35]] },
   bigdonut: { kind: 'tall', build: buildGiantDonut, boxes: [[-0.95, 0.95, 0, 3, -0.5, 0.5]] },
   kiosk: { kind: 'tall', build: buildJuiceKiosk, boxes: [[-0.8, 0.8, 0, 2.5, -0.7, 0.7]] },
+  log: { kind: 'low', build: buildLog, boxes: [[-0.9, 0.9, 0, 0.75, -0.38, 0.38]] },
+  elephants: { kind: 'tall', build: buildElephants, boxes: [[-0.9, 0.9, 0, 2.2, -0.9, 1.4]] },
+  sheep: { kind: 'low', build: buildSheepFlock, boxes: [[-0.85, 0.85, 0, 0.7, -0.35, 0.45]] },
+  rubble: { kind: 'low', build: buildRubble, boxes: [[-0.88, 0.88, 0, 0.75, -0.35, 0.35]] },
+  scaffold: { kind: 'high', build: buildScaffold, boxes: [[-1, 1, 1.05, 2.3, -0.25, 0.25]] },
+  giantspear: { kind: 'tall', build: buildGiantSpear, boxes: [[-0.9, 0.9, 0, 3.5, -0.4, 0.4]] },
   ramp: { kind: 'ramp', build: buildRamp, boxes: [[-0.9, 0.9, 0, 1.25, -1.6, 1.6]] },
   deck: { kind: 'deck', build: buildDeck, boxes: [[-0.95, 0.95, 0, 1.25, -8, 8]] },
   well: { kind: 'tall', build: buildWell, boxes: [[-0.9, 0.9, 0, 3, -0.9, 0.9]] },
@@ -605,6 +667,13 @@ export const BIOME_OBSTACLES = {
   donut: { low: ['turnstiles'], high: ['barrier'], tall: ['bigdonut'], roll: [] },
   park: { low: ['bush', 'hydrants'], high: ['barrier'], tall: ['taxi', 'kiosk'], roll: [] },
   harbor: { low: ['suitcases', 'hydrants'], high: ['barrier'], tall: ['cart', 'taxi'], roll: [] },
+  ararat: { low: ['log', 'rocks'], high: ['arch'], tall: ['elephants', 'boulder'], roll: [] },
+  babel: { low: ['bricks'], high: ['scaffold'], tall: ['block'], roll: [] },
+  jacob: { low: ['sheep', 'rocks'], high: ['tent'], tall: ['camel'], roll: [] },
+  rephidim: { low: ['rocks', 'bush'], high: ['tent'], tall: ['camel', 'boulder'], roll: ['tumble'] },
+  jordan: { low: ['rocks', 'log'], high: ['arch'], tall: ['rockstack'], roll: [] },
+  jericho: { low: ['rubble'], high: ['stonearch'], tall: ['block'], roll: ['rollstone'] },
+  elah: { low: ['sheep', 'rocks'], high: ['tent'], tall: ['giantspear', 'boulder'], roll: [] },
   sinai: { low: ['ledge'], high: ['stonearch'], tall: ['boulder'], roll: ['rollstone'] },
 };
 
@@ -671,6 +740,7 @@ function medallion(g, s, rim, face) {
 // a bronze Temple half-shekel with a chalice in Jerusalem, and a modern gold 10-shekel coin after that.
 export const COIN_ERA = {
   egypt: 'ancient', sea: 'ancient', elim: 'ancient', wild: 'ancient', night: 'ancient', sinai: 'ancient',
+  ararat: 'ancient', babel: 'ancient', jacob: 'ancient', rephidim: 'ancient', jordan: 'ancient', jericho: 'ancient', elah: 'ancient',
   jerusalem: 'temple', telaviv: 'modern', airport: 'modern', newyork: 'modern', donut: 'modern',
 };
 const coinCache = {};

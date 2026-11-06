@@ -68,21 +68,42 @@ function buildGuard() {
   ]);
 }
 
+function buildWave() { // a rolling wall of flood water
+  const P = [box(0x3a8fc8, [0, 0.9, 0], [2.0, 1.8, 1.2])];
+  P.push(part(new THREE.TorusGeometry(0.9, 0.45, 6, 12, Math.PI), 0x4aa8d8, [0, 1.6, 0.3], [0, Math.PI / 2, 0]));
+  for (let k = 0; k < 7; k++) P.push(part(ICO, 0xffffff, [-0.9 + k * 0.3, 2.3 + (k % 2) * 0.2, 0.6], [k, k, 0], [0.22, 0.16, 0.22]));
+  return merge(P);
+}
+
+function buildSoldier() { // an ancient soldier with a bronze helmet, round shield and spear
+  return merge([
+    ...rider(0x9a7a56, [box(0xb07a3a, [0, 1.12, 0], [0.42, 0.18, 0.42]), box(0xb07a3a, [0, 1.25, 0], [0.12, 0.14, 0.36])]),
+    part(new THREE.CylinderGeometry(0.42, 0.42, 0.08, 12), 0xb07a3a, [0.42, 0.55, 0.15], [0, 0, Math.PI / 2]),
+    box(0x8a6a48, [-0.35, 0.8, 0.2], [0.05, 1.7, 0.05]), part(new THREE.ConeGeometry(0.07, 0.2, 6), 0x9aa0a6, [-0.35, 1.72, 0.2]),
+    box(0x6b3e1e, [-0.12, -0.15, 0], [0.18, 0.55, 0.2]), box(0x6b3e1e, [0.12, -0.15, 0], [0.18, 0.55, 0.2]),
+  ]);
+}
+
 const WHO = {
+  ararat: 'wave', babel: 'soldier', jacob: 'raider', rephidim: 'raider', jordan: 'wave', jericho: 'soldier', elah: 'giant',
   egypt: 'chariot', sea: 'chariot', elim: 'raider', wild: 'raider', night: 'raider', sinai: 'raider',
   jerusalem: 'legion', telaviv: 'guard', airport: 'guard', newyork: 'guard', donut: 'guard',
 };
-const NAMES = { chariot: "Pharaoh's chariot", raider: 'An Amalekite raider', legion: 'A Roman legionary', guard: 'The airport guard' };
+const NAMES = { chariot: "Pharaoh's chariot", raider: 'An Amalekite raider', legion: 'A Roman legionary', guard: 'The airport guard', wave: 'The flood waters', soldier: 'A soldier', giant: 'Goliath the giant' };
+// Who is chasing you in each place, when it is not the default for their kind.
+const PLACE_NAMES = {
+  ararat: 'The flood waters', babel: 'A tower guard', jacob: "Esau's 400 riders", jordan: "The Jordan's waters", jericho: 'A soldier of Jericho', elah: 'Goliath the giant',
+};
 
 export class Chaser {
   constructor(scene) {
-    const geos = { chariot: buildChariot(), raider: buildRaider(), legion: buildLegionary(), guard: buildGuard() };
+    const geos = { chariot: buildChariot(), raider: buildRaider(), legion: buildLegionary(), guard: buildGuard(), wave: buildWave(), soldier: buildSoldier(), giant: buildSoldier() };
     this.meshes = {};
     for (const k in geos) {
       const m = new THREE.Mesh(geos[k], flatMat);
       m.visible = false;
       m.rotation.y = Math.PI; // face the runner (toward -z)
-      m.scale.setScalar(0.85);
+      m.scale.setScalar(k === 'giant' ? 1.6 : 0.85);
       scene.add(m);
       this.meshes[k] = m;
     }
@@ -92,9 +113,9 @@ export class Chaser {
     this.t = 0;
   }
 
-  setEra(biomeId) { this.kind = WHO[biomeId] || 'guard'; }
+  setEra(biomeId) { this.kind = WHO[biomeId] || 'guard'; this.placeName = PLACE_NAMES[biomeId]; }
 
-  name() { return NAMES[this.kind]; }
+  name() { return this.placeName || NAMES[this.kind]; }
 
   close() { return this.alert > 0 && this.z < 6; }
 
@@ -116,9 +137,9 @@ export class Chaser {
       const m = this.meshes[k];
       m.visible = k === this.kind && this.z < 20 && state !== 'ride';
       if (!m.visible) continue;
-      const bob = Math.abs(Math.sin(this.t * 9)) * (this.kind === 'legion' || this.kind === 'guard' ? 0.12 : 0.05);
+      const bob = Math.abs(Math.sin(this.t * 9)) * (['legion', 'guard', 'soldier', 'giant'].includes(this.kind) ? 0.12 : 0.05);
       const side = x <= 0 ? 2.1 : -2.1;
-      m.position.set(x + side + Math.sin(this.t * 1.3) * 0.2, (this.kind === 'legion' || this.kind === 'guard' ? 0.5 : 0) + bob, this.z + (this.kind === 'chariot' ? 1.0 : this.kind === 'raider' ? 0.6 : 0));
+      m.position.set(x + side + Math.sin(this.t * 1.3) * 0.2, (['legion', 'guard', 'soldier'].includes(this.kind) ? 0.5 : this.kind === 'giant' ? 0.95 : 0) + bob, this.z + (this.kind === 'chariot' ? 1.0 : this.kind === 'raider' ? 0.6 : 0));
     }
   }
 }

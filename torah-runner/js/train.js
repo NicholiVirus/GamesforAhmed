@@ -154,8 +154,8 @@ export class TrainRide {
   beginWarp() {
     const g = this.g, w = g.world;
     this.d0 = g.dist;
-    this.dEnd = (CRUISE * CRUISE) / (2 * DECEL);
-    this.W = Math.min(2.6, 1.0 + (g.dist / 2600) * 1.1);
+    this.dEnd = g.startDist + (CRUISE * CRUISE) / (2 * DECEL);
+    this.W = Math.min(2.8, 1.0 + ((g.dist - g.startDist) / 2600) * 1.1);
     w.propsOn = false;
     w.resetProps(g.dist);
     w.scrollCap = 70;
@@ -177,14 +177,14 @@ export class TrainRide {
     if (!['arrive', 'board', 'depart', 'warp', 'brake'].includes(this.phase)) return;
     const g = this.g, w = g.world;
     g.ui.flash();
-    g.dist = 0;
+    g.dist = g.startDist;
     this.v = 0;
     this.tz = 0;
     this.tx = 0;
     g.x = 0;
     g.y = FLOOR;
     this.face = Math.PI;
-    w.resetProps(0, 34);
+    w.resetProps(g.startDist, 34);
     w.propsOn = true;
     w.scrollCap = Infinity;
     this.lines.obj.visible = false;
@@ -216,8 +216,9 @@ export class TrainRide {
       case 'depart': {
         this.v = Math.min(CRUISE, this.v + ACCEL * dt);
         const brakeDist = (this.v * this.v) / (2 * DECEL);
-        if (g.dist <= brakeDist + 0.3) { this.brakeA = 0; this.next('brake'); break; }
-        if (this.v >= CRUISE && g.dist > brakeDist + 200) { this.beginWarp(); break; }
+        const left = g.dist - g.startDist;
+        if (left <= brakeDist + 0.3) { this.brakeA = 0; this.next('brake'); break; }
+        if (this.v >= CRUISE && left > brakeDist + 200) { this.beginWarp(); break; }
         g.dist -= this.v * dt;
         break;
       }
@@ -230,10 +231,10 @@ export class TrainRide {
         break;
       }
       case 'brake': {
-        if (!this.brakeA) this.brakeA = (this.v * this.v) / (2 * Math.max(0.5, g.dist));
+        if (!this.brakeA) this.brakeA = (this.v * this.v) / (2 * Math.max(0.5, g.dist - g.startDist));
         this.v = Math.max(0, this.v - this.brakeA * dt);
-        g.dist = Math.max(0, g.dist - this.v * dt);
-        if (this.v <= 0.3 || g.dist <= 0.02) { g.dist = 0; this.v = 0; this.next('hopoff'); }
+        g.dist = Math.max(g.startDist, g.dist - this.v * dt);
+        if (this.v <= 0.3 || g.dist <= g.startDist + 0.02) { g.dist = g.startDist; this.v = 0; this.next('hopoff'); }
         break;
       }
       case 'hopoff': {

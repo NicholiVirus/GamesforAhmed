@@ -265,3 +265,5 @@ export const LANDMARKS = {
   park: [L('sukkah', sukkah, [6, 11]), L('hanuk', hanukkiah, [6, 10]), L('shabbat', shabbatTable, [5, 9]), L('dreidel', dreidel, [5, 10], false), L('aron', torahArk, [8, 12]), L('mezuzah', mezuzahDoor, [8, 12])],
   harbor: [L('hanuk', hanukkiah, [6, 10]), L('dreidel', dreidel, [5, 10], false), L('shabbat', shabbatTable, [5, 9]), L('sukkah', sukkah, [7, 11]), L('aron', torahArk, [8, 12]), L('mezuzah', mezuzahDoor, [8, 12])],
 };
+
+export { shieldsSpears, rockSpring, arkOfCovenant, slingStones };

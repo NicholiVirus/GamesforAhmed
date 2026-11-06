@@ -1,6 +1,6 @@
 // Torah Runner: gameplay, input and the main loop.
 import * as THREE from './three.js';
-import { WORDS, BIOMES, BIOME_LEN, POWERS, CYCLE, JLM_START, GATE_AT } from './data.js';
+import { WORDS, BIOMES, BIOME_LEN, POWERS, ROUTE, routeStart, GATE_AT } from './data.js';
 import { Sound } from './audio.js';
 import { World, PointPool, biomeIndexAt } from './world.js';
 import { UI } from './ui.js';
@@ -43,7 +43,6 @@ const RAMP_V = 16.5;
 const JET_Y = 5.4;
 const MAX_HEARTS = 3;
 const SPAWN_AHEAD = 150;
-const LAP = BIOME_LEN * CYCLE;
 const STORE_KEY = 'torah-runner-v1';
 const MENU_SPEED = 8;
 
@@ -90,13 +89,18 @@ class Game {
     // The old passive-manna upgrade becomes the new manna multiplier, level for level.
     if (this.store.up && this.store.up.passive) { this.store.up.mult = Math.max(this.store.up.mult || 0, this.store.up.passive); delete this.store.up.passive; saveStore(this.store); }
     this.learned = new Set(this.store.learned || []);
+    // Places you have reached can be chosen as the start of a run on the journey map.
+    this.store.reached = this.store.reached || [ROUTE[0]];
+    if (!this.store.reached.includes(ROUTE[0])) this.store.reached.unshift(ROUTE[0]);
+    const startAt = this.store.reached.includes(this.store.startAt) ? this.store.startAt : ROUTE[0];
+    this.startDist = routeStart(startAt);
     this.best = { score: this.store.bestScore || 0, dist: this.store.bestDist || 0 };
     this.muted = boot.muted !== undefined ? !!boot.muted : !!this.store.muted;
     this.sound.setMuted(this.muted);
     this.ui = new UI({
       play: () => this.start(), pause: () => this.pause(), resume: () => this.resume(), home: () => this.home(),
       sound: () => this.toggleSound(), openScroll: () => this.openScroll(), closeScroll: () => this.closeScroll(),
-      openShop: () => this.openShop(), buy: (t) => this.buy(t), buyUpgrade: (id) => this.buyUpgrade(id), useStar: () => this.useStar(), closeShop: () => this.ui.show('screen-start'),
+      openShop: () => this.openShop(), openMap: () => this.openMap(), pickStart: (id) => this.pickStart(id), unlockPlace: (id) => this.unlockPlace(id), buy: (t) => this.buy(t), buyUpgrade: (id) => this.buyUpgrade(id), useStar: () => this.useStar(), closeShop: () => this.ui.show('screen-start'),
       continueWord: () => this.continueWord(), skipRide: () => this.skipRide(),
     });
 
@@ -182,7 +186,7 @@ class Game {
     for (const p of this.pickups) this.releasePickup(p);
     this.pickups.length = 0;
     this.world.clearParticles();
-    this.dist = 0;
+    this.dist = this.startDist;
     this.speed = this.state === 'menu' ? MENU_SPEED : speedAt(0);
     this.score = 0;
     this.mannaCount = 0;
@@ -193,7 +197,7 @@ class Game {
     this.revives = 0;
     this.streak = 0;
     this.mult = 1;
-    this.boarded = false;
+    this.boarded = this.startDist > GATE_AT;
     this.endTitle = null;
     this.lane = 1; this.prevLane = 1;
     this.x = 0; this.y = 0; this.vy = 0;
@@ -202,14 +206,14 @@ class Game {
     this.jumpBuf = 0; this.slideBuf = 0;
     this.powers = { shield: 0, magnet: 0, double: 0, jetpack: 0, sneakers: 0 };
     this.speedFactor = 1;
-    this.spawnCursor = 0;
+    this.spawnCursor = this.startDist;
     this.lastSafe = 1;
     this.prevRow = null;
     this.wordOrder = makeWordOrder();
     this.wordPos = 0;
     this.letterIdx = 0;
-    this.nextLetterWz = 42;
-    this.nextPowerWz = rnd(260, 360);
+    this.nextLetterWz = this.startDist + 42;
+    this.nextPowerWz = this.startDist + rnd(260, 360);
     this.nextHeartWz = Infinity; // hearts only come from the shop
     this.wordsDone = [];
     this.combo = 0; this.comboT = 0;
@@ -217,14 +221,16 @@ class Game {
     this.deadT = 0;
     this.dustT = 0;
     this.world.propMinX = this.state === 'menu' ? 9.5 : 0;
-    if (!keepProps) this.world.resetProps(0);
+    if (!keepProps) this.world.resetProps(this.startDist);
     this.ring.visible = false;
     this.p.body.rotation.set(0, 0, 0);
     this.p.body.position.set(0, 0, 0);
     this.p.root.visible = true;
-    if (this.p.wear) { this.p.wear('egypt'); this.outfit = 'egypt'; }
-    if (this.mannaPool) { this.mannaPool.mat.map = shekelTexture('ancient'); this.mannaPool.mat.needsUpdate = true; }
-    if (this.chaser) { this.chaser.reset(); this.chaser.setEra('egypt'); }
+    // Dress, coins and chaser all match the place the run starts in.
+    const sid = BIOMES[biomeIndexAt(this.startDist)].id;
+    if (this.p.wear) { this.p.wear(sid); this.outfit = sid; }
+    if (this.mannaPool) { this.mannaPool.mat.map = shekelTexture(COIN_ERA[sid] || 'modern'); this.mannaPool.mat.needsUpdate = true; }
+    if (this.chaser) { this.chaser.reset(); this.chaser.setEra(sid); }
   }
 
   get word() { return this.wordOrder[this.wordPos % this.wordOrder.length]; }
@@ -331,7 +337,7 @@ class Game {
 
   // ------------------------------------------------------------ screens
   start() {
-    if ((this.state === 'over' || this.state === 'paused') && this.dist > 25) { this.startRide(); return; }
+    if ((this.state === 'over' || this.state === 'paused') && this.dist - this.startDist > 25) { this.startRide(); return; }
     this.sound.init();
     this.sound.play('click');
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
@@ -352,6 +358,38 @@ class Game {
     this.store.runs = (this.store.runs || 0) + 1;
     saveStore(this.store);
     this.applyBoosts();
+  }
+
+  // ------------------------------------------------------------ journey map
+  placePrice(id) { return Math.round((ROUTE.indexOf(id) * 120) / 10) * 10; }
+
+  openMap() {
+    this.sound.init();
+    this.ui.renderMap(ROUTE.map((id) => {
+      const b = BIOMES.find((x) => x.id === id);
+      return { id, name: b.name, he: b.he, reached: this.store.reached.includes(id), price: this.placePrice(id), current: routeStart(id) === this.startDist };
+    }), this.store.wallet || 0);
+    this.ui.show('screen-map');
+  }
+
+  pickStart(id) {
+    if (!this.store.reached.includes(id)) return;
+    this.store.startAt = id;
+    saveStore(this.store);
+    this.startDist = routeStart(id);
+    this.sound.play('click');
+    this.resetRun();
+    this.openMap();
+  }
+
+  unlockPlace(id) {
+    const price = this.placePrice(id), wallet = this.store.wallet || 0;
+    if (this.store.reached.includes(id) || wallet < price) { this.sound.play('bump'); return; }
+    this.store.wallet = wallet - price;
+    this.store.reached.push(id);
+    saveStore(this.store);
+    this.sound.play('power');
+    this.pickStart(id);
   }
 
   // ------------------------------------------------------------ shop
@@ -522,6 +560,7 @@ class Game {
     this.powers = { shield: 0, magnet: 0, double: 0, jetpack: 0, sneakers: 0 };
     this.p.root.visible = true;
     this.ride.start();
+    this.ui.rideTo(BIOMES[biomeIndexAt(this.startDist)].name);
     if (!this.muted) this.sound.startMusic();
   }
 
@@ -620,6 +659,7 @@ class Game {
   // New region, new clothes: a puff of sparkles hides the quick change.
   dressFor(bi) {
     const id = BIOMES[bi].id;
+    if (!this.store.reached.includes(id)) { this.store.reached.push(id); saveStore(this.store); }
     if (this.outfit === id) return;
     this.outfit = id;
     this.p.wear(id);
@@ -726,7 +766,7 @@ class Game {
     this.bankManna();
     saveStore(this.store);
     const bi = biomeIndexAt(this.dist);
-    const lap = this.dist >= JLM_START ? 1 : Math.floor(this.dist / LAP) + 1;
+    const lap = 1;
     const place = BIOMES[bi].name.replace(/^The /, 'the ');
     const n = this.wordsDone.length;
     const partial = this.letterIdx > 0 ? `${[...this.word.he].slice(0, this.letterIdx).join('')} of ${this.word.he}` : '';
@@ -826,8 +866,9 @@ class Game {
     const limit = this.dist + SPAWN_AHEAD;
     while (this.spawnCursor < limit) {
       const a = this.spawnCursor;
-      if (a < 55) { this.fillGap(a, 55, null); this.spawnCursor = 55; continue; }
-      const sp = speedAt(a), d = diffAt(a);
+      const S = this.startDist;
+      if (a < S + 55) { this.fillGap(a, S + 55, null); this.spawnCursor = S + 55; continue; }
+      const sp = speedAt(a - S), d = diffAt(a - S);
       const gapT = 1.1 - 0.4 * d + rnd(0, 0.25);
       const b = a + Math.max(11, sp * gapT);
       const row = this.makeRow(b, d, BIOMES[biomeIndexAt(b)].id);
@@ -845,7 +886,7 @@ class Game {
     const prevFree = [0, 1, 2].filter((i) => !this.prevRow || !this.prevRow.lanes[i]);
     // Ramp up onto an elevated walkway: run along the top, then drop off the end.
     if (d > 0.01 && Math.random() < 0.45) {
-      const sp = speedAt(wz);
+      const sp = speedAt(wz - this.startDist);
       const ln = safe;
       const n = 2 + Math.floor(Math.random() * 2);
       // Sometimes a tall version: a ramp twice as long up to a walkway twice as high.
@@ -913,14 +954,14 @@ class Game {
     };
     if (this.nextLetterWz < b - 4) {
       // Keep letters clear of the barrier just behind them, so you have time to react.
-      const wz = clamp(Math.max(this.nextLetterWz, a + Math.max(4, speedAt(a) * 0.55)), a + 4, b - 4);
+      const wz = clamp(Math.max(this.nextLetterWz, a + Math.max(4, speedAt(a - this.startDist) * 0.55)), a + 4, b - 4);
       const ln = place(wz);
       // Some letters float out of reach from the ground: jump to grab them.
       // Never put a high letter right after or before a slide-under barrier in its lane.
       const slideNear = (this.prevRow && this.prevRow.lanes[ln] === 'high') || (row && row.lanes[ln] === 'high');
-      const high = wz > 120 && !slideNear && Math.random() < 0.45;
+      const high = wz - this.startDist > 120 && !slideNear && Math.random() < 0.45;
       this.addPickup('letter', null, wz, ln, high ? 2.7 : 1.05);
-      this.nextLetterWz = wz + speedAt(wz) * rnd(3.4, 4.8);
+      this.nextLetterWz = wz + speedAt(wz - this.startDist) * rnd(3.4, 4.8);
     }
     if (this.nextPowerWz < b - 4 && a > 60) {
       const wz = clamp(this.nextPowerWz, a + 4, b - 4);
@@ -958,7 +999,7 @@ class Game {
     this.speedFactor = Math.min(1, this.speedFactor + dt * 0.35);
     // Shabbat calm slows the world down for a few seconds.
     const calm = this.powers.shabbat > 0 ? 0.55 : 1;
-    const target = speedAt(this.dist) * this.speedFactor * calm * (1 + 0.05 * this.upLevel('speed'));
+    const target = speedAt(this.dist - this.startDist) * this.speedFactor * calm * (1 + 0.05 * this.upLevel('speed'));
     this.speed += (target - this.speed) * Math.min(1, dt * 3);
     this.sound.setTempo(this.speed);
     this.dist += this.speed * dt;
@@ -975,7 +1016,7 @@ class Game {
     }
     if (bi !== this.biomeShown) {
       if (this.biomeShown !== -1 || this.dist > 1) {
-        this.ui.banner(BIOMES[bi], this.dist >= JLM_START ? 1 : Math.floor(this.dist / LAP) + 1);
+        this.ui.banner(BIOMES[bi], 1);
         this.sound.play('banner');
       }
       this.biomeShown = bi;
@@ -1110,7 +1151,7 @@ class Game {
     this.slideT = 0;
     this.sound.play('whoosh');
     // A weaving trail of manna up in the air.
-    const sp = Math.max(this.speed, speedAt(this.dist));
+    const sp = Math.max(this.speed, speedAt(this.dist - this.startDist));
     let ln = this.lane;
     for (let z = this.dist + 12; z < this.dist + sp * (this.jetTime() - 0.8); z += 2.4) {
       if (Math.random() < 0.06) ln = clamp(ln + (Math.random() < 0.5 ? -1 : 1), 0, 2);

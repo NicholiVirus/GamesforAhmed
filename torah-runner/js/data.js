@@ -293,22 +293,15 @@ export const LETTER_NAMES = {
 
 // Metres per region. One lap = 4 regions.
 export const BIOME_LEN = 1950;
-// After this many metres the journey arrives in Jerusalem and stays there.
-export const JLM_START = 9000;
-// Regions before Jerusalem loop in order; Jerusalem is the last entry in BIOMES.
-export const CYCLE = 6;
-// The story route after the loop: where each place starts, in metres. The last one never ends.
-export const STORY = [
-  { id: 'jerusalem', at: JLM_START },
-  { id: 'telaviv', at: JLM_START + BIOME_LEN },
-  { id: 'airport', at: JLM_START + BIOME_LEN * 2 },
-  { id: 'newyork', at: JLM_START + BIOME_LEN * 3 },
-  { id: 'donut', at: JLM_START + BIOME_LEN * 4 },
-  { id: 'park', at: JLM_START + BIOME_LEN * 5 },
-  { id: 'harbor', at: JLM_START + BIOME_LEN * 6 },
+// The journey through the Torah and Jewish history, in order. Each place is BIOME_LEN metres long;
+// the last place never ends.
+export const ROUTE = [
+  'ararat', 'babel', 'jacob', 'egypt', 'sea', 'elim', 'wild', 'rephidim', 'sinai', 'night',
+  'jordan', 'jericho', 'elah', 'jerusalem', 'telaviv', 'airport', 'newyork', 'donut', 'park', 'harbor',
 ];
-// You must pass the Hebrew test at the gate, just before New York.
-export const GATE_AT = JLM_START + BIOME_LEN * 3 - 40;
+export const routeStart = (id) => ROUTE.indexOf(id) * BIOME_LEN;
+// You must pass the Hebrew test at the airport gate, just before New York.
+export const GATE_AT = routeStart('newyork') - 40;
 
 export const BIOMES = [
   {
@@ -401,6 +394,55 @@ export const BIOMES = [
     ground: 0x8a8a86, road: 0xb0aaa0, sun: 0xffd8a8,
     hemiSky: 0xfff0e0, hemiGround: 0x506070, light: 0xffe0c0, lightI: 2.1, hemiI: 1.35,
     sunDir: [0.4, 0.15, -1], stars: 0,
+  },
+  {
+    id: 'ararat', name: "Noah's Ark at Ararat", he: 'הרי אררט', line: 'The ark rests, the dove returns with an olive leaf (Genesis 8)',
+    skyTop: 0x4a90d8, skyHorizon: 0xdff0f0, skyBottom: 0xa8c8a0, fog: 0xd8ead8,
+    ground: 0x8ab868, road: 0xc8beb0, sun: 0xffffff,
+    hemiSky: 0xf0fff8, hemiGround: 0x5a7a48, light: 0xfffbf0, lightI: 2.2, hemiI: 1.3,
+    sunDir: [-0.3, 0.45, -1], stars: 0,
+  },
+  {
+    id: 'babel', name: 'The Tower of Babel', he: 'מגדל בבל', line: 'Bricks for stone and tar for mortar (Genesis 11)',
+    skyTop: 0x3a6ab8, skyHorizon: 0xf0c8a0, skyBottom: 0xd8b088, fog: 0xe8c8a8,
+    ground: 0xd8a878, road: 0xc89868, sun: 0xfff0d0,
+    hemiSky: 0xffe8d0, hemiGround: 0xa87048, light: 0xffe8c8, lightI: 2.2, hemiI: 1.3,
+    sunDir: [0.4, 0.3, -1], stars: 0,
+  },
+  {
+    id: 'jacob', name: "Jacob's Journey", he: 'מסע יעקב', line: 'A ladder to the sky, and peace between brothers (Genesis 28, 33)',
+    skyTop: 0x5a7ac8, skyHorizon: 0xf8d0b0, skyBottom: 0xc0b088, fog: 0xf0d8c0,
+    ground: 0xb8b070, road: 0xd0c0a0, sun: 0xffe8c0,
+    hemiSky: 0xfff0e0, hemiGround: 0x8a8050, light: 0xffecd0, lightI: 2.1, hemiI: 1.35,
+    sunDir: [-0.5, 0.2, -1], stars: 0,
+  },
+  {
+    id: 'rephidim', name: 'The Battle of Rephidim', he: 'רפידים', line: 'Israel holds firm against Amalek (Exodus 17)',
+    skyTop: 0x3a7ac0, skyHorizon: 0xf0dcb8, skyBottom: 0xd8c098, fog: 0xe8d8b8,
+    ground: 0xd8b880, road: 0xc8a878, sun: 0xffffff,
+    hemiSky: 0xfff4e0, hemiGround: 0xa88050, light: 0xffffff, lightI: 2.3, hemiI: 1.25,
+    sunDir: [0.2, 0.75, -0.6], stars: 0,
+  },
+  {
+    id: 'jordan', name: 'Crossing the Jordan', he: 'מעבר הירדן', line: 'The river stands still and the people cross (Joshua 3)',
+    skyTop: 0x4a8ad0, skyHorizon: 0xd8ecd8, skyBottom: 0x9ab890, fog: 0xd0e4d0,
+    ground: 0x9ab878, road: 0xb8a888, sun: 0xffffff,
+    hemiSky: 0xf0fff4, hemiGround: 0x6a8a58, light: 0xfffbf0, lightI: 2.2, hemiI: 1.3,
+    sunDir: [-0.2, 0.6, -1], stars: 0,
+  },
+  {
+    id: 'jericho', name: 'The Walls of Jericho', he: 'חומות יריחו', line: 'Seven days, seven shofars, and the walls fall down (Joshua 6)',
+    skyTop: 0x3a7ac8, skyHorizon: 0xf8d8a0, skyBottom: 0xd8b880, fog: 0xf0dcb0,
+    ground: 0xd8b880, road: 0xd8c098, sun: 0xfff0c8,
+    hemiSky: 0xfff0d8, hemiGround: 0xa88050, light: 0xfff0d8, lightI: 2.2, hemiI: 1.3,
+    sunDir: [0.35, 0.3, -1], stars: 0,
+  },
+  {
+    id: 'elah', name: 'The Valley of Elah', he: 'עמק האלה', line: 'Young David faces the giant Goliath (1 Samuel 17)',
+    skyTop: 0x4a86d0, skyHorizon: 0xe8e0c0, skyBottom: 0xb8b080, fog: 0xe0dcc0,
+    ground: 0xb8b070, road: 0xc8b890, sun: 0xffffff,
+    hemiSky: 0xfff8e8, hemiGround: 0x7a7848, light: 0xfffbf0, lightI: 2.2, hemiI: 1.3,
+    sunDir: [-0.35, 0.55, -1], stars: 0,
   },
 ];
 
