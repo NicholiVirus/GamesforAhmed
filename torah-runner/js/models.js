@@ -119,11 +119,11 @@ export const KIPPAHS = [
   { id: 'white', name: 'White kippah', color: 0xf6f6f2, rim: 0x2c6fd6, price: 150 },
   { id: 'navy', name: 'Navy kippah', color: 0x1c2f6a, rim: 0xc0c4ca, price: 150 },
   { id: 'black', name: 'Black velvet kippah', color: 0x151515, rim: 0x151515, price: 150 },
-  { id: 'sky', name: 'Sky blue kippah', color: 0x7fc8f0, rim: 0xffffff, price: 200 },
+  { id: 'sky', name: 'Sky blue kippah', color: 0x7fc8f0, rim: 0xffffff, star: 0xffffff, price: 200 },
   { id: 'red', name: 'Red kippah', color: 0xc8302a, rim: 0xf0b93a, price: 200 },
   { id: 'green', name: 'Green kippah', color: 0x2f8f4a, rim: 0xf0b93a, price: 200 },
   { id: 'gold', name: 'Gold kippah', color: 0xf0b93a, rim: 0x8a5a0b, price: 400 },
-  { id: 'rainbow', name: 'Rainbow kippah', color: 0xe2483d, rim: 0x3fae5a, price: 500, stripes: [0xe2483d, 0xffd24a, 0x3fae5a, 0x2c6fd6] },
+  { id: 'rainbow', name: 'Rainbow kippah', color: 0xe2483d, rim: 0x3fae5a, price: 500, star: 0xffffff, stripes: [0xe2483d, 0xffd24a, 0x3fae5a, 0x2c6fd6] },
 ];
 
 export function outfitGeos(o) {
@@ -146,14 +146,26 @@ export function outfitGeos(o) {
     box(0xd99a6c, [0, -0.03, -0.225], [0.06, 0.07, 0.04]),
     box(0x8a4a3a, [0, -0.12, -0.215], [0.12, 0.03, 0.02]),
   ];
+  // A Star of David lies flat on top of every hat: two thin triangles, one turned upside down.
+  const starOn = (y, z, under, r, color) => {
+    const c = new THREE.Color(under);
+    const col = color || (0.3 * c.r + 0.59 * c.g + 0.11 * c.b > 0.55 ? 0x2c6fd6 : 0xf0b93a);
+    for (const a of [0, Math.PI / 3]) headParts.push(part(new THREE.CylinderGeometry(r, r, 0.014, 3), col, [0, y, z], [0, a + Math.PI / 2, 0], [1, 1, 1], 0));
+  };
   if (o.kippah) {
     // A kippah sits on the top of the head, a little toward the back.
     const k = o.kippah;
     headParts.push(part(new THREE.SphereGeometry(0.2, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), k.color, [0, 0.21, 0.05], [0, 0, 0], [1, 0.45, 1]));
     headParts.push(part(new THREE.CylinderGeometry(0.205, 0.205, 0.025, 12, 1, true), k.rim, [0, 0.215, 0.05]));
     if (k.stripes) k.stripes.forEach((c, n) => headParts.push(part(new THREE.CylinderGeometry(0.16 - n * 0.03, 0.16 - n * 0.03, 0.02, 12, 1, true), c, [0, 0.24 + n * 0.012, 0.05])));
-  } else if (o.wrap) headParts.push(box(o.wrap, [0, 0.19, 0], [0.47, 0.11, 0.47]), box(o.band, [0, 0.135, 0], [0.48, 0.035, 0.48]));
-  else headParts.push(box(o.cap, [0, 0.22, 0.01], [0.46, 0.1, 0.46]), box(o.cap, [0, 0.18, -0.28], [0.36, 0.04, 0.18]));
+    starOn(0.302, 0.05, k.color, 0.085, k.star);
+  } else if (o.wrap) {
+    headParts.push(box(o.wrap, [0, 0.19, 0], [0.47, 0.11, 0.47]), box(o.band, [0, 0.135, 0], [0.48, 0.035, 0.48]));
+    starOn(0.251, 0.02, o.wrap, 0.11);
+  } else {
+    headParts.push(box(o.cap, [0, 0.22, 0.01], [0.46, 0.1, 0.46]), box(o.cap, [0, 0.18, -0.28], [0.36, 0.04, 0.18]));
+    starOn(0.276, 0.03, o.cap, 0.11);
+  }
   const tail = merge([box(o.wrap || 0xffffff, [0, -0.2, 0], [0.18, 0.4, 0.04]), box(o.band || 0xffffff, [0, -0.1, 0], [0.19, 0.035, 0.05])]);
   const arm = merge([box(o.top, [0, -0.15, 0], [0.16, 0.32, 0.17]), box(skin, [0, -0.39, 0], [0.13, 0.17, 0.14])]);
   const leg = merge(o.short
