@@ -73,6 +73,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @keyframes pulse { 50% { transform: scale(1.18); } }
 @keyframes shake { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
 #manna { display: flex; align-items: center; gap: 7px; font-size: 1.05rem; }
+.tablet-ico { display: inline-block; width: 11px; height: 14px; margin-right: 5px; background: #cfc7b8; border: 1.5px solid #7b7062; border-radius: 6px 6px 1px 1px; }
+#tablets { display: inline-flex; align-items: center; font-weight: 800; font-variant-numeric: tabular-nums; }
 .manna-dot {
   width: 15px; height: 15px; border-radius: 50%; display: inline-block;
   background: radial-gradient(circle, #fff 0 22%, #fff3c9 30%, var(--gold) 52%, rgba(240,185,58,0) 72%);
@@ -391,6 +393,7 @@ kbd {
         <div id="word-next" class="chip"></div>
       </div>
       <div class="hud-right">
+        <div id="tablets" class="chip" aria-label="0 of 10 commandments"><span class="tablet-ico" aria-hidden="true"></span><span id="tablet-count">0/10</span></div>
         <div id="manna" class="chip" aria-label="Manna collected"><span class="manna-dot"></span><span id="manna-count">0</span></div>
         <button id="btn-star" class="icon-btn star-btn" type="button" aria-label="Use a Star shield" hidden>
           <img data-icon="shield" alt=""><span id="star-count">0</span>
@@ -426,7 +429,7 @@ kbd {
       <span class="roller l" aria-hidden="true"></span><span class="roller r" aria-hidden="true"></span>
       <p class="eyebrow-he" lang="he" dir="rtl">תּוֹרָה</p>
       <h1 id="title">Torah Runner</h1>
-      <p class="lede">Run through the stories of the Torah: Noah's ark, Egypt, the Red Sea, Mount Sinai, the walls of Jericho and Jerusalem, then on to New York. Catch the golden letters to write words of the Torah on your scroll.</p>
+      <p class="lede">Run through the stories of the Torah: Noah's ark, Egypt, the Red Sea, Mount Sinai, the walls of Jericho and Jerusalem, then on to New York. Catch the golden letters to write words of the Torah on your scroll. Find all <b>Ten Commandments</b> on stone tablets and reach the end of the road to win.</p>
       <div class="actions">
         <button id="btn-play" class="btn btn-primary" type="button" data-autofocus>
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>Start running

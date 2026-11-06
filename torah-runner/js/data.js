@@ -302,6 +302,23 @@ export const ROUTE = [
 export const routeStart = (id) => ROUTE.indexOf(id) * BIOME_LEN;
 // You must pass the Hebrew test at the airport gate, just before New York.
 export const GATE_AT = routeStart('newyork') - 40;
+// The end of the road: reach it holding all Ten Commandments to win the game.
+export const FINISH_AT = ROUTE.length * BIOME_LEN;
+
+// The Ten Commandments (Exodus 20), one stone tablet hidden in each of these places.
+// The Hebrew letters alef to yud are the traditional numbers on the tablets.
+export const COMMANDMENTS = [
+  { place: 'babel', num: 'א', en: 'I am the Lord your God' },
+  { place: 'egypt', num: 'ב', en: 'Have no other gods before Me' },
+  { place: 'elim', num: 'ג', en: 'Do not use God\'s name in vain' },
+  { place: 'rephidim', num: 'ד', en: 'Remember Shabbat and keep it holy' },
+  { place: 'sinai', num: 'ה', en: 'Honour your father and mother' },
+  { place: 'jordan', num: 'ו', en: 'Do not murder' },
+  { place: 'elah', num: 'ז', en: 'Be faithful in marriage' },
+  { place: 'telaviv', num: 'ח', en: 'Do not steal' },
+  { place: 'newyork', num: 'ט', en: 'Do not lie about others' },
+  { place: 'park', num: 'י', en: 'Do not be jealous of what others have' },
+];
 
 export const BIOMES = [
   {

@@ -824,6 +824,28 @@ export function letterTexture(ch) {
   return t;
 }
 
+// A stone tablet with a commandment's Hebrew number, for the Ten Commandments pickups.
+const tabletCache = new Map();
+export function tabletTexture(num) {
+  if (tabletCache.has(num)) return tabletCache.get(num);
+  const t = canvasTex(256, (g, s) => {
+    const w = s * 0.62, h = s * 0.8, x = (s - w) / 2, y = s * 0.12, r = w / 2;
+    const shape = () => { g.beginPath(); g.moveTo(x, y + h); g.lineTo(x, y + r); g.arc(x + r, y + r, r, Math.PI, 0); g.lineTo(x + w, y + h); g.closePath(); };
+    g.shadowColor = 'rgba(255, 215, 120, 0.95)'; g.shadowBlur = s * 0.08;
+    shape(); g.fillStyle = '#c9c1b2'; g.fill();
+    g.shadowBlur = 0;
+    g.lineWidth = s * 0.03; g.strokeStyle = '#7b7062'; g.stroke();
+    g.strokeStyle = 'rgba(90, 80, 68, 0.35)'; g.lineWidth = s * 0.012;
+    for (let k = 0; k < 3; k++) { const ly = y + h * 0.72 + k * s * 0.05; g.beginPath(); g.moveTo(x + w * 0.18, ly); g.lineTo(x + w * 0.82, ly); g.stroke(); }
+    g.fillStyle = '#2a2236';
+    g.font = `${Math.round(s * 0.34)}px ${DISPLAY_FONT}`;
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.direction = 'rtl';
+    g.fillText(num, s / 2, y + h * 0.43);
+  });
+  tabletCache.set(num, t);
+  return t;
+}
+
 // Power-up icons, drawn as simple shapes on a gold medallion.
 export function powerTexture(type) {
   return canvasTex(256, (g, s) => {

@@ -10,6 +10,7 @@ A 3D lane runner through the stories of the Torah and Jewish history: Noah's Ark
   # then open http://localhost:8000/torah-runner/
   ```
 - **Controls:** ← → change lane · ↑ / Space jump · ↓ slide · P pause · M sound. On touch screens: swipe, or tap to jump.
+- **Ten Commandments (how to win):** ten stone tablets, numbered א to י, wait along the road, one each in Babel, Egypt, Elim, Rephidim, Sinai, the Jordan, Elah, Tel Aviv, New York and Central Park. A missed tablet comes back 250 m later, until its place ends. Each tablet gives +100 manna. Every new place you reach gives 50 manna plus 25 for each tablet you carry. Reach the end of the road (39,000 m) holding all ten to win the game, with a 1,000-manna victory bonus. Start from Mount Ararat to have a chance at all ten.
 - **Words:** 280 words (animals, food, colors, numbers, family, holidays, Torah names and values) covering all 22 letters of the Alef-Bet, each with its transliteration and meaning. Words you finish are saved in "My scroll".
 - **Power-ups:** Star of David shield, jet pack (fly above everything), jump sneakers (blue-and-white, super-high jumps), magnet, double manna, shofar blast, extra heart.
 - **Word pause:** finishing a word freezes the run and shows the word card. Tap "Keep running" for a 1-second 3-2-1 countdown; a golden wave clears the road just ahead. Resuming from pause also counts down.

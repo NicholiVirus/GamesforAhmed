@@ -81,6 +81,13 @@ export class UI {
 
   setScore(v, mult = 1) { const s = fmt(v) + (mult > 1 ? ` ×${mult}` : ''); if (this.last.score !== s) { this.last.score = s; $('score').textContent = s; } }
   setDist(m) { const s = fmt(m) + ' m'; if (this.last.dist !== s) { this.last.dist = s; $('dist').textContent = s; } }
+  setTablets(n) {
+    if (this.last.tablets === n) return;
+    this.last.tablets = n;
+    $('tablet-count').textContent = `${n}/10`;
+    $('tablets').setAttribute('aria-label', `${n} of 10 commandments`);
+  }
+
   setManna(n) {
     if (this.last.manna === n) return;
     this.last.manna = n; $('manna-count').textContent = fmt(n);

@@ -1,12 +1,12 @@
 // Torah Runner: gameplay, input and the main loop.
 import * as THREE from './three.js';
-import { WORDS, BIOMES, BIOME_LEN, POWERS, ROUTE, routeStart, GATE_AT } from './data.js';
+import { WORDS, BIOMES, BIOME_LEN, POWERS, ROUTE, routeStart, GATE_AT, FINISH_AT, COMMANDMENTS } from './data.js';
 import { Sound } from './audio.js';
 import { World, PointPool, biomeIndexAt } from './world.js';
 import { UI } from './ui.js';
 import {
   buildPlayer, buildShield, OBSTACLES, BIOME_OBSTACLES, obstacleGeo, flatMat,
-  letterTexture, powerTexture, mannaTex, shadowTex, shekelTexture, COIN_ERA, SKINS, KIPPAHS,
+  letterTexture, powerTexture, tabletTexture, mannaTex, shadowTex, shekelTexture, COIN_ERA, SKINS, KIPPAHS,
 } from './models.js';
 import { TrainRide } from './train.js';
 import { Chaser } from './chaser.js';
@@ -132,6 +132,10 @@ class Game {
       color: 0xffd36a, transparent: true, opacity: 0.16, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
     });
     this.beacons = [];
+    // Tablets get a pale blue beam so you can tell them from letters far away.
+    this.tabletBeamMat = this.beaconMat.clone();
+    this.tabletBeamMat.color.set(0x9fd8ff);
+    this.tabletBeamMat.opacity = 0.28;
 
     this.ringMat = new THREE.MeshBasicMaterial({ color: 0xffe2a0, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
     this.ring = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.09, 6, 40), this.ringMat);
@@ -200,6 +204,10 @@ class Game {
     this.mult = 1;
     this.boarded = this.startDist > GATE_AT;
     this.endTitle = null;
+    this.endSub = null;
+    this.finished = false;
+    this.tablets = []; // Ten Commandments collected this run (indexes into COMMANDMENTS)
+    this.planTablet(this.startDist);
     this.lane = 1; this.prevLane = 1;
     this.x = 0; this.y = 0; this.vy = 0;
     this.grounded = true;
@@ -716,6 +724,57 @@ class Game {
     this.ui.setScore(this.score, this.mult || 1);
     this.ui.setDist(this.dist);
     this.ui.setManna(this.mannaCount);
+    this.ui.setTablets(this.tablets.length);
+  }
+
+  // ------------------------------------------------------------ Ten Commandments
+  // The next tablet waits in its own place. Miss it and it comes back 250 m later, until that place ends.
+  planTablet(from) {
+    this.nextTablet = null;
+    for (let i = 0; i < COMMANDMENTS.length; i++) {
+      if (this.tablets.includes(i)) continue;
+      const a = routeStart(COMMANDMENTS[i].place), b = a + BIOME_LEN - 120;
+      if (b < from) continue; // its place is behind you: that one is lost for this run
+      this.nextTablet = { i, wz: Math.max(a + 700, from) };
+      return;
+    }
+  }
+
+  tabletMat(i) {
+    const k = 'tablet' + i;
+    if (!this.powerMats[k]) this.powerMats[k] = new THREE.SpriteMaterial({ map: tabletTexture(COMMANDMENTS[i].num), transparent: true, depthWrite: false });
+    return this.powerMats[k];
+  }
+
+  collectTablet(i) {
+    this.tablets.push(i);
+    const c = COMMANDMENTS[i], n = this.tablets.length;
+    this.mannaCount += 100;
+    this.score += 500;
+    this.sound.play('word');
+    this.ui.setTablets(n);
+    this.ui.banner({ he: `הַדִּבְּרָה ${c.num}`, name: `Commandment ${i + 1} · ${n} of 10 found`, line: `${c.en} · +100 manna` }, 1);
+    this.world.burst(this.x, 1.5, 0, 34, { color: [0.95, 0.92, 0.8], speed: 5, up: 5, life: 1 });
+    this.planTablet(this.dist);
+  }
+
+  // The end of the road. With all Ten Commandments you win the game.
+  reachFinish() {
+    this.finished = true;
+    const n = this.tablets.length;
+    if (n < COMMANDMENTS.length) {
+      this.ui.hint(`<b>The end of the road!</b> You carried ${n} of 10 commandments. Start from Mount Ararat and find all 10 to win.`, 6000);
+      return;
+    }
+    const bonus = 1000;
+    this.mannaCount += bonus;
+    this.store.wins = (this.store.wins || 0) + 1;
+    this.endTitle = 'You win! All Ten Commandments';
+    this.endSub = `You carried the Ten Commandments the whole way to the harbour. +${bonus} manna victory bonus. Wins so far: ${this.store.wins}.`;
+    this.sound.stopMusic();
+    this.sound.play('word');
+    this.world.burst(this.x, 1.5, 0, 60, { color: [1, 0.9, 0.5], speed: 7, up: 7, life: 1.4 });
+    this.finish();
   }
 
   skipRide() {
@@ -797,7 +856,7 @@ class Game {
     this.ui.hideHint();
     this.ui.gameOver({
       title: this.endTitle || `You reached ${place}`,
-      sub: (lap > 1 ? `Journey ${lap}. ` : '') + (n ? `You wrote ${n} word${n === 1 ? '' : 's'} of Torah on your scroll.` : 'Catch the golden letters in order to write a word on your scroll.'),
+      sub: this.endSub || (lap > 1 ? `Journey ${lap}. ` : '') + (n ? `You wrote ${n} word${n === 1 ? '' : 's'} of Torah on your scroll.` : 'Catch the golden letters in order to write a word on your scroll.'),
       score, dist: this.dist, manna: this.mannaCount, words: this.wordsDone, newBest, partial,
     });
     this.ui.setBest(this.best, this.learned.size, WORDS.length);
@@ -865,14 +924,16 @@ class Game {
     const sprite = this.spritePool.pop() || new THREE.Sprite();
     if (!sprite.parent) this.scene.add(sprite);
     sprite.visible = true;
-    sprite.material = kind === 'letter' ? this.letterMat(this.needLetter) : this.powerMat(type);
-    const size = kind === 'letter' ? 1.35 : 1.2;
+    sprite.material = kind === 'letter' ? this.letterMat(this.needLetter) : kind === 'tablet' ? this.tabletMat(type) : this.powerMat(type);
+    const size = kind === 'letter' ? 1.35 : kind === 'tablet' ? 1.6 : 1.2;
     sprite.scale.set(size, size, 1);
     const p = { kind, type, wz, x: LANES[laneIdx], y, sprite, ph: Math.random() * 6, beacon: null };
-    if (kind === 'letter') {
+    if (kind === 'letter' || kind === 'tablet') {
       const b = this.beacons.pop() || new THREE.Mesh(this.beaconGeo, this.beaconMat);
       if (!b.parent) this.scene.add(b);
       b.visible = true;
+      b.material = kind === 'tablet' ? this.tabletBeamMat : this.beaconMat;
+      b.scale.set(kind === 'tablet' ? 1.6 : 1, 1, kind === 'tablet' ? 1.6 : 1);
       p.beacon = b;
     }
     this.pickups.push(p);
@@ -993,6 +1054,11 @@ class Game {
       this.addPickup('power', type, wz, place(wz), 1.05);
       this.nextPowerWz = wz + rnd(260, 400) * (1 - 0.12 * this.upLevel('luck'));
     }
+    if (this.nextTablet && this.nextTablet.wz < b - 4) {
+      const wz = clamp(this.nextTablet.wz, a + 4, b - 4);
+      this.addPickup('tablet', this.nextTablet.i, wz, place(wz), 1.1);
+      this.nextTablet = null;
+    }
     if (this.nextHeartWz < b - 4) {
       const wz = clamp(this.nextHeartWz, a + 4, b - 4);
       this.addPickup('power', 'heart', wz, place(wz), 1.05);
@@ -1028,14 +1094,17 @@ class Game {
     this.dist += this.speed * dt;
     this.score += this.speed * dt * (this.mult || 1);
     if (!this.boarded && this.dist >= GATE_AT) { this.startBoardingTest(); return; }
+    if (!this.finished && this.dist >= FINISH_AT) { this.reachFinish(); if (this.state !== 'playing') return; }
     this.generate();
 
     const bi = biomeIndexAt(this.dist);
     if (bi !== this.biomeShown) this.dressFor(bi);
     if (bi !== this.biomeShown && this.biomeShown !== -1 && this.state === 'playing') {
       // Bonus for reaching a new place.
-      this.mannaCount += 50;
-      setTimeout(() => this.ui.popup('New place! +50'), 1200);
+      // Bonus for reaching a new place, bigger for every commandment you carry.
+      const bonus = 50 + 25 * this.tablets.length;
+      this.mannaCount += bonus;
+      setTimeout(() => this.ui.popup(`New place! +${bonus}`), 1200);
     }
     if (bi !== this.biomeShown) {
       if (this.biomeShown !== -1 || this.dist > 1) {
@@ -1314,14 +1383,18 @@ class Game {
     for (let i = this.pickups.length - 1; i >= 0; i--) {
       const p = this.pickups[i];
       const z = this.dist - p.wz;
-      if (z > 5) { this.releasePickup(p); this.pickups.splice(i, 1); continue; }
+      if (z > 5) {
+        if (p.kind === 'tablet') this.planTablet(this.dist + 250); // missed: it comes back further on
+        this.releasePickup(p); this.pickups.splice(i, 1); continue;
+      }
       const y = p.y + Math.sin(this.time * 3 + p.ph) * 0.12;
-      if (p.kind === 'letter' && this.powers.jetpack > 0 && z > -45 && z < 1) p.y += (JET_Y + 0.6 - p.y) * Math.min(1, dt * 4);
+      if ((p.kind === 'letter' || p.kind === 'tablet') && this.powers.jetpack > 0 && z > -45 && z < 1) p.y += (JET_Y + 0.6 - p.y) * Math.min(1, dt * 4);
       if (p.kind === 'letter') {
         const mat = this.letterMat(need);
         if (p.sprite.material !== mat) p.sprite.material = mat;
         p.beacon.position.set(p.x, 4.5, z);
       }
+      if (p.kind === 'tablet') p.beacon.position.set(p.x, 4.5, z);
       p.sprite.position.set(p.x, y, z);
       p.sprite.material.rotation = Math.sin(this.time * 2.2 + p.ph) * 0.12;
       if (this.state === 'playing' && Math.abs(z) < 0.85 && Math.abs(p.x - this.x) < 0.85 && y > this.y - 0.5 && y < this.y + top) {
@@ -1341,6 +1414,7 @@ class Game {
   }
 
   collectPickup(p, y, z) {
+    if (p.kind === 'tablet') { this.collectTablet(p.type); return; }
     if (p.kind === 'letter') {
       const ch = this.needLetter;
       const v = new THREE.Vector3(p.x, y, z).project(this.world.camera);
