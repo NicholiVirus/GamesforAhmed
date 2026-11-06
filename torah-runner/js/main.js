@@ -26,6 +26,11 @@ export const UPGRADES = [
   { id: 'speed', name: 'Swift feet', about: '+5% running speed per level', price: 1000, max: 5, icon: 'sneakers' },
   { id: 'passive', name: 'Manna blessing', about: '+1 manna every 2 s per level', price: 800, max: 5, icon: 'double' },
   { id: 'jet', name: 'Bigger jet tanks', about: '+1 s of jet pack per level', price: 900, max: 5, icon: 'jetpack' },
+  { id: 'magnet', name: 'Strong magnet', about: '+2 s of magnet per level', price: 700, max: 5, icon: 'magnet' },
+  { id: 'shieldUp', name: 'Lasting star', about: '+3 s of Star shield per level', price: 700, max: 5, icon: 'shield' },
+  { id: 'coin', name: 'Heavy shekels', about: '+1 manna per coin per level', price: 1500, max: 3, icon: 'double' },
+  { id: 'luck', name: 'Blessed path', about: 'Power-ups appear 12% more often per level', price: 1100, max: 5, icon: 'shofar' },
+  { id: 'start', name: 'Head start', about: 'Start each run with 3 s of jump sneakers per level', price: 600, max: 5, icon: 'sneakers' },
 ];
 const ACHIEVEMENTS = [
   { words: 5, manna: 100 }, { words: 10, manna: 200 }, { words: 25, manna: 400 }, { words: 50, manna: 750 },
@@ -355,6 +360,12 @@ class Game {
 
   upLevel(id) { return ((this.store.up || {})[id]) || 0; }
 
+  // Power-up length including shop upgrades.
+  powTime(type) {
+    const extra = { magnet: 2 * this.upLevel('magnet'), shield: 3 * this.upLevel('shieldUp') }[type] || 0;
+    return POWERS[type].time + extra;
+  }
+
   jetTime() { return POWERS.jetpack.time + this.upLevel('jet'); }
 
   bankManna() {
@@ -407,6 +418,8 @@ class Game {
 
   // Power-ups bought in the shop switch on at the start of the next run (one of each).
   applyBoosts() {
+    const hs = this.upLevel('start');
+    if (hs > 0) this.powers.sneakers = Math.max(this.powers.sneakers, 3 * hs);
     const inv = this.store.inv || {};
     const used = [];
     for (const it of SHOP) {
@@ -416,7 +429,7 @@ class Game {
       used.push(it.name);
       if (it.type === 'jetpack') this.startJetpack();
       else if (it.type === 'heart') { this.nextHeartWz = this.dist + 250; } // one heart to pick up
-      else this.powers[it.type] = POWERS[it.type].time;
+      else this.powers[it.type] = this.powTime(it.type);
     }
     if (used.length) {
       saveStore(this.store);
@@ -621,7 +634,7 @@ class Game {
     if (this.state !== 'playing' || this.powers.shield > 0 || this.starCount() < 1) { if (this.starCount() < 1) this.sound.play('bump'); return; }
     this.store.inv.shield--;
     saveStore(this.store);
-    this.powers.shield = POWERS.shield.time;
+    this.powers.shield = this.powTime('shield');
     this.sound.play('power');
     this.ui.popup('Star shield!');
     this.world.burst(this.x, 1, 0, 20, { color: [0.6, 0.85, 1], speed: 4, up: 3, life: 0.6 });
@@ -912,7 +925,7 @@ class Game {
       const r = Math.random();
       const type = r < 0.15 ? 'shield' : r < 0.29 ? 'magnet' : r < 0.4 ? 'double' : r < 0.5 ? 'shofar' : r < 0.7 ? 'jetpack' : r < 0.86 ? 'sneakers' : 'shabbat';
       this.addPickup('power', type, wz, place(wz), 1.05);
-      this.nextPowerWz = wz + rnd(260, 400);
+      this.nextPowerWz = wz + rnd(260, 400) * (1 - 0.12 * this.upLevel('luck'));
     }
     if (this.nextHeartWz < b - 4) {
       const wz = clamp(this.nextHeartWz, a + 4, b - 4);
@@ -983,7 +996,7 @@ class Game {
     this.ui.setManna(this.mannaCount);
     this.ui.setHearts(this.hearts, this.maxHearts);
     const list = [];
-    for (const k of ['jetpack', 'sneakers', 'shabbat', 'shield', 'magnet', 'double']) if (this.powers[k] > 0) list.push({ type: k, frac: this.powers[k] / (k === 'jetpack' ? this.jetTime() : POWERS[k].time) });
+    for (const k of ['jetpack', 'sneakers', 'shabbat', 'shield', 'magnet', 'double']) if (this.powers[k] > 0) list.push({ type: k, frac: Math.min(1, this.powers[k] / (k === 'jetpack' ? this.jetTime() : this.powTime(k))) });
     this.ui.setPowers(list);
   }
 
@@ -1210,7 +1223,7 @@ class Game {
   }
 
   collectManna(m, y, z) {
-    this.mannaCount += this.powers.double > 0 ? 2 : 1;
+    this.mannaCount += (this.powers.double > 0 ? 2 : 1) + this.upLevel('coin');
     // Coin streak: every 25 coins without crashing raises the score multiplier (up to ×5).
     this.streak = (this.streak || 0) + 1;
     const mult = Math.min(5, 1 + Math.floor(this.streak / 25));
@@ -1307,7 +1320,7 @@ class Game {
       this.ui.popup('Shofar blast!');
       this.shofarBlast();
     } else {
-      this.powers[p.type] = POWERS[p.type].time;
+      this.powers[p.type] = this.powTime(p.type);
       this.sound.play('power');
       this.ui.popup(POWERS[p.type].label);
     }

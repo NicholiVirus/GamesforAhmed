@@ -284,7 +284,13 @@ export class World {
       m.scale.setScalar(rnd(0.8, 1.2));
       elim.add(m);
     }
-    this.backdrops.push({ group: elim, mats: [em] });
+    // God's covenant rainbow after the flood (Genesis 9:13) arching over the oasis.
+    const bowMat = new THREE.MeshBasicMaterial({ vertexColors: true, fog: false, transparent: true, opacity: 0, depthWrite: false });
+    const bow = new THREE.Mesh(merge([0xe2483d, 0xff9a3c, 0xffd24a, 0x3fae5a, 0x2c6fd6, 0x7a4a9a].map((c, k) =>
+      part(new THREE.TorusGeometry(120 - k * 5, 2.5, 4, 40, Math.PI), c, [0, 0, 0], [0, 0, 0], [1, 1, 1], 0))), bowMat);
+    bow.position.set(40, -10, -420);
+    elim.add(bow);
+    this.backdrops.push({ group: elim, mats: [em, bowMat] });
     // Wilderness: mesas and the pillar of cloud.
     const wild = new THREE.Group();
     const mm = mk();
@@ -357,11 +363,21 @@ export class World {
     glow.scale.set(130, 90, 1);
     glow.position.set(0, 128, 0);
     mountain.add(glow);
+    // The two tablets of the covenant shining near the summit (Exodus 31:18).
+    const tab = new THREE.Mesh(merge([
+      part(new THREE.BoxGeometry(1, 1, 1), 0xd8d0c0, [-7, 0, 0], [0, 0, 0], [12, 16, 2]),
+      part(new THREE.BoxGeometry(1, 1, 1), 0xd8d0c0, [7, 0, 0], [0, 0, 0], [12, 16, 2]),
+      part(new THREE.CylinderGeometry(6, 6, 2, 12, 1, false, 0, Math.PI), 0xd8d0c0, [-7, 8, 0], [Math.PI / 2, 0, Math.PI / 2]),
+      part(new THREE.CylinderGeometry(6, 6, 2, 12, 1, false, 0, Math.PI), 0xd8d0c0, [7, 8, 0], [Math.PI / 2, 0, Math.PI / 2]),
+      ...[-11, -7, -3, 3, 7, 11].flatMap((x) => [-4, 0, 4].map((y) => part(new THREE.BoxGeometry(1, 1, 1), 0x5a4a3a, [x, y, 1.05], [0, 0, 0], [2.4, 0.8, 0.2]))),
+    ]), this.tabMat = mk());
+    tab.position.set(0, 150, 30);
+    mountain.add(tab);
     const bolt = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0xffffff, fog: false, transparent: true, opacity: 0 }));
     sinai.add(bolt);
     this.bolt = bolt;
     this.mountain = mountain;
-    this.backdrops.push({ group: sinai, mats: [sm, sc] });
+    this.backdrops.push({ group: sinai, mats: [sm, sc, this.tabMat] });
     // Jerusalem: golden stone city walls with towers and gates on the hills.
     const jlm = new THREE.Group();
     const jm = mk();

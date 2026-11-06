@@ -333,9 +333,79 @@ function buildPier() {
   return merge([box(0x8a6a48, [0, 0.4, 0], [3, 0.2, 6]), ...[-1.3, 1.3].flatMap((x) => [-2.5, 0, 2.5].map((z) => box(0x5a4030, [x, 0.1, z], [0.25, 0.8, 0.25])))]);
 }
 
+// ---- Torah-story landmarks
+// Egypt: a brick kiln with stacks of mud bricks and straw (Exodus 5: bricks without straw).
+function buildKiln() {
+  const P = [
+    part(new THREE.SphereGeometry(1.6, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), 0xa8683a, [0, 0, 0]),
+    part(CYL6, 0x8a5430, [0, 1.9, 0], [0, 0, 0], [0.35, 1.2, 0.35]),
+    box(0x2a1a10, [0, 0.45, 1.5], [0.7, 0.9, 0.2]),
+    box(0xff8a3d, [0, 0.35, 1.58], [0.45, 0.5, 0.04]),
+  ];
+  for (let r = 0; r < 3; r++) for (let k = 0; k < 4; k++) P.push(box([0xb8683a, 0xc47a44][(r + k) % 2], [2.4 + k * 0.42, 0.14 + r * 0.26, -0.6 + (r % 2) * 0.2], [0.4, 0.24, 0.6]));
+  for (let k = 0; k < 8; k++) P.push(box(0xe8c76a, [-2.2 + rnd(-0.4, 0.4), 0.15, rnd(-0.6, 0.6)], [0.6, 0.04, 0.05], [0, rnd(0, 3), 0]));
+  return merge(P);
+}
+// Egypt: a little basket among the reeds (Exodus 2).
+function buildBasketReeds() {
+  const P = [part(new THREE.CylinderGeometry(1.6, 1.6, 0.04, 12), 0x3f8fb0, [0, 0.03, 0], [0, 0, 0], [1, 1, 0.7], 0.02)];
+  P.push(part(new THREE.CylinderGeometry(0.45, 0.32, 0.3, 10), 0xc99a5b, [0, 0.18, 0], [0, 0, 0], [1.3, 1, 0.8]));
+  P.push(part(new THREE.SphereGeometry(0.42, 10, 5, 0, Math.PI * 2, 0, Math.PI / 2), 0xb8894a, [0, 0.3, -0.12], [0, 0, 0], [1.2, 0.6, 0.6]));
+  for (let i = 0; i < 16; i++) { const a = rnd(0, 6.28), r = rnd(1.1, 1.7), h = rnd(1, 1.8); P.push(box(i % 2 ? 0x6f8f3a : 0x587a2e, [Math.cos(a) * r, h / 2, Math.sin(a) * r * 0.7], [0.05, h, 0.05])); }
+  return merge(P);
+}
+// Red Sea: Pharaoh's chariot wheels left on the sea bed (Exodus 14:25).
+function buildLostWheel() {
+  return merge([
+    part(new THREE.TorusGeometry(0.6, 0.08, 6, 14), 0xc9a24a, [0, 0.45, 0], [0.5, 0.3, 0.9]),
+    ...[0, 1, 2, 3].map((k) => box(0xa8823a, [0, 0.45, 0], [1.15, 0.06, 0.06], [0.5, 0.3, 0.9 + k * 0.8])),
+    box(0x8a6a2a, [0.9, 0.12, 0.3], [1.4, 0.12, 0.12], [0, 0.5, 0]),
+  ]);
+}
+// Wilderness: manna on the ground like frost each morning (Exodus 16:14).
+function buildMannaField() {
+  const P = [];
+  for (let i = 0; i < 40; i++) P.push(part(ICO, i % 3 ? 0xffffff : 0xf6efd8, [rnd(-1.8, 1.8), 0.05, rnd(-1.8, 1.8)], [i, i, 0], [0.09, 0.05, 0.09]));
+  P.push(part(new THREE.CylinderGeometry(0.28, 0.22, 0.4, 10), 0xc99a5b, [1.3, 0.2, 0.8]));
+  return merge(P);
+}
+// Night camp: the Mishkan (Tabernacle) courtyard with its curtains, altar and tent (Exodus 26-27).
+function buildMishkan() {
+  const P = [];
+  const W = 7, D = 4;
+  for (const [x, z, w, d] of [[0, -D, W * 2, 0.06], [0, D, W * 2, 0.06], [-W, 0, 0.06, D * 2], [W, 0, 0.06, D * 2]]) P.push(box(0xf4f1ea, [x, 0.9, z], [w, 1.8, d]));
+  for (let x = -W; x <= W; x += 1.75) { P.push(box(0xf0b93a, [x, 1.0, D], [0.1, 2, 0.1]), box(0xf0b93a, [x, 1.0, -D], [0.1, 2, 0.1])); }
+  P.push(box(0x2c4ea3, [0, 1.0, D + 0.02], [3, 1.6, 0.04]), box(0x7a3a8a, [0, 1.2, D + 0.03], [3, 0.3, 0.04]), box(0xb83a2a, [0, 0.8, D + 0.03], [3, 0.3, 0.04]));
+  P.push(box(0x8a6a48, [-2.5, 0.6, 1], [1.4, 1.2, 1.4]), box(0xb08a5a, [-2.5, 1.25, 1], [1.5, 0.08, 1.5]));
+  P.push(box(0x6b3e1e, [3, 1.5, -1], [3.4, 3, 2.2]), box(0x2c4ea3, [3, 3.1, -1], [3.6, 0.2, 2.4]), box(0x7a3a8a, [3, 3.25, -1], [3.4, 0.12, 2.2]));
+  return merge(P);
+}
+// A great golden seven-branched menorah (Exodus 25:31-37).
+function buildMenorah() {
+  const gold = 0xf0b93a, P = [box(0xb08a5a, [0, 0.3, 0], [2, 0.6, 1]), box(gold, [0, 2.2, 0], [0.22, 3.4, 0.22])];
+  for (let k = 1; k <= 3; k++) {
+    const r = k * 0.7;
+    P.push(part(new THREE.TorusGeometry(r, 0.09, 6, 16, Math.PI), gold, [0, 2.6, 0], [0, 0, Math.PI]));
+    for (const sx of [-1, 1]) { P.push(box(gold, [sx * r, 3.2, 0], [0.18, 1.2, 0.18])); P.push(part(new THREE.ConeGeometry(0.12, 0.35, 6), 0xffb02e, [sx * r, 4.0, 0])); }
+  }
+  P.push(part(new THREE.ConeGeometry(0.12, 0.35, 6), 0xffb02e, [0, 4.1, 0]));
+  return merge(P);
+}
+// Jerusalem: an olive press (olive oil for the menorah).
+function buildOlivePress() {
+  return merge([
+    part(new THREE.CylinderGeometry(1.4, 1.5, 0.6, 12), 0xc8b088, [0, 0.3, 0]),
+    part(new THREE.CylinderGeometry(0.7, 0.7, 0.45, 12), 0xb8a078, [0.4, 0.85, 0], [Math.PI / 2, 0, 0]),
+    box(0x6b4a2a, [0, 1.0, 0], [3.2, 0.14, 0.14]),
+    ...Array.from({ length: 6 }, (_, k) => part(ICO, 0x5a6a2a, [rnd(-1, 1), 0.65, rnd(-1, 1)], [k, k, 0], [0.08, 0.08, 0.08])),
+  ]);
+}
+
 // side: 'edge' props sit just off the road; 'near' and 'far' are further out. face = turn toward the road.
 export const SCENERY = {
   egypt: [
+    { type: 'kiln', build: buildKiln, variants: 1, x: [8, 14], w: 1.5, face: true },
+    { type: 'basket', build: buildBasketReeds, variants: 1, x: [6, 10], w: 1, face: false },
     { type: 'palm', build: buildPalm, variants: 4, x: [4.6, 13], w: 5, face: false },
     { type: 'house', build: buildHouse, variants: 3, x: [9, 16], w: 2, face: true },
     { type: 'reeds', build: buildReeds, variants: 3, x: [3.7, 5.5], w: 3, face: false },
@@ -344,11 +414,13 @@ export const SCENERY = {
     { type: 'obeliskS', build: () => obstacleGeo('obelisk'), variants: 1, x: [6, 11], w: 1, face: true },
   ],
   sea: [
+    { type: 'wheel', build: buildLostWheel, variants: 2, x: [3.6, 4.3], w: 2, face: false },
     { type: 'coralbig', build: buildCoralBig, variants: 4, x: [3.6, 4.3], w: 4, face: false },
     { type: 'seaweed', build: buildSeaweed, variants: 3, x: [3.6, 4.4], w: 3, face: false, sway: true },
     { type: 'shells', build: buildShells, variants: 2, x: [3.5, 4.3], w: 2, face: false },
   ],
   wild: [
+    { type: 'mannaF', build: buildMannaField, variants: 2, x: [4.5, 9], w: 2, face: false },
     { type: 'dune', build: buildDune, variants: 4, x: [14, 40], w: 4, face: false },
     { type: 'acacia', build: buildAcacia, variants: 3, x: [5, 14], w: 3, face: false },
     { type: 'rock', build: buildRock, variants: 4, x: [4.2, 12], w: 3, face: false },
@@ -364,6 +436,8 @@ export const SCENERY = {
     { type: 'btent', build: buildBedouinTent, variants: 1, x: [13, 22], w: 1, face: true },
   ],
   night: [
+    { type: 'mishkan', build: buildMishkan, variants: 1, x: [16, 22], w: 1, face: true },
+    { type: 'menorah', build: buildMenorah, variants: 1, x: [7, 11], w: 0.7, face: true },
     { type: 'btent', build: buildBedouinTent, variants: 1, x: [8, 20], w: 4, face: true },
     { type: 'fire', build: buildCampfire, variants: 2, x: [5, 12], w: 3, face: false },
     { type: 'camelS', build: buildCamel, variants: 1, x: [7, 15], w: 2, face: false },
@@ -371,6 +445,8 @@ export const SCENERY = {
     { type: 'scrub', build: buildScrub, variants: 3, x: [3.6, 7], w: 2, face: false },
   ],
   jerusalem: [
+    { type: 'menorah', build: buildMenorah, variants: 1, x: [7, 12], w: 0.6, face: true },
+    { type: 'opress', build: buildOlivePress, variants: 1, x: [5, 10], w: 1, face: false },
     { type: 'olive', build: buildOlive, variants: 4, x: [4.4, 12], w: 4, face: false },
     { type: 'cypress', build: buildCypress, variants: 1, x: [5, 14], w: 2, face: false },
     { type: 'shouse', build: buildStoneHouse, variants: 4, x: [8, 18], w: 4, face: true },
