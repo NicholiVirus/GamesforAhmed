@@ -1,5 +1,6 @@
 // Roadside props for each region. A few random variants of each are built up front and reused.
 import * as THREE from './three.js';
+import { LANDMARKS } from './landmarks.js';
 import { part, box, merge, jagged, BOX, CYL6, ICO, buildCamel, OBSTACLES, obstacleGeo } from './models.js';
 
 const rnd = (a, b) => a + Math.random() * (b - a);
@@ -491,6 +492,8 @@ export const SCENERY = {
     { type: 'boulderS', build: () => obstacleGeo('boulder'), variants: 1, x: [5, 10], w: 1, face: false },
   ],
 };
+
+for (const id in LANDMARKS) if (SCENERY[id]) SCENERY[id].push(...LANDMARKS[id]);
 
 const variantCache = {};
 export function sceneryGeo(def) {
