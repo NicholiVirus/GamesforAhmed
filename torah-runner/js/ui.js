@@ -9,7 +9,7 @@ export class UI {
   constructor(h) {
     this.h = h;
     this.last = {};
-    this.screens = ['screen-loading', 'screen-start', 'screen-pause', 'screen-over', 'screen-scroll', 'screen-error', 'screen-word', 'screen-shop', 'screen-quiz', 'screen-map'];
+    this.screens = ['screen-loading', 'screen-start', 'screen-pause', 'screen-over', 'screen-scroll', 'screen-error', 'screen-word', 'screen-shop', 'screen-quiz', 'screen-map', 'screen-scores'];
     this.wordArmed = false;
     const on = (id, fn) => { const el = $(id); if (el) el.addEventListener('click', (e) => { e.stopPropagation(); fn(); }); };
     on('btn-play', () => h.play());
@@ -45,6 +45,13 @@ export class UI {
     });
     on('btn-word-continue', () => h.continueWord());
     on('btn-skip', () => h.skipRide());
+    on('btn-scores', () => h.openScores());
+    on('btn-scores-2', () => h.openScores());
+    on('btn-scores-close', () => h.closeScores());
+    const tabs = $('hs-tabs');
+    if (tabs) tabs.addEventListener('click', (e) => { const b = e.target.closest('button[data-tab]'); if (b) { e.stopPropagation(); h.scoresTab(b.dataset.tab); } });
+    const form = $('over-hs');
+    if (form) form.addEventListener('submit', (e) => { e.preventDefault(); e.stopPropagation(); h.saveName($('hs-name').value); $('hs-name').blur(); });
     this.icons = {};
   }
 
@@ -309,6 +316,40 @@ export class UI {
     $('over-words').innerHTML = s.words.length
       ? s.words.map((w) => `<li><span lang="he" dir="rtl">${w.he}</span><span>${w.tr}</span><span>${w.en}</span></li>`).join('')
       : `<li class="empty">${s.partial ? `Almost there: you caught <span lang="he">${s.partial.split(' of ')[0]}</span> of <span lang="he">${s.partial.split(' of ')[1]}</span>.` : 'No words this run.'}</li>`;
+  }
+
+  // Over screen: invite a name when the run made the top 10.
+  highScoreEntry(rank, name) {
+    const el = $('over-hs');
+    el.hidden = !rank;
+    if (!rank) return;
+    $('over-hs-rank').textContent = rank === 1 ? 'New high score! #1 on this device' : `Top 10! #${rank} on this device`;
+    $('hs-name').value = name || '';
+    $('btn-hs-save').textContent = 'Save name';
+  }
+
+  nameSaved() { $('btn-hs-save').textContent = 'Saved ✓'; }
+
+  // rows: [{ who, score, meta, me }]
+  renderScores(tab, rows, note, showEveryone) {
+    $('hs-tab-everyone').hidden = !showEveryone;
+    for (const b of $('hs-tabs').querySelectorAll('button')) b.setAttribute('aria-selected', String(b.dataset.tab === tab));
+    $('hs-note').textContent = note;
+    const list = $('hs-list');
+    list.textContent = '';
+    if (!rows.length) {
+      const li = document.createElement('li'); li.className = 'empty';
+      li.textContent = tab === 'device' ? 'No high scores yet. Go for a run!' : 'No scores on the shared board yet.';
+      list.appendChild(li);
+      return;
+    }
+    rows.forEach((r, i) => {
+      const li = document.createElement('li');
+      if (r.me) li.className = 'me';
+      const cells = [['hs-rank', `${i + 1}.`], ['hs-who', r.who], ['hs-score', fmt(r.score)], ['hs-meta', r.meta]];
+      for (const [cls, text] of cells) { const sp = document.createElement('span'); sp.className = cls; sp.textContent = text; li.appendChild(sp); }
+      list.appendChild(li);
+    });
   }
 
   renderScroll(words, learned) {

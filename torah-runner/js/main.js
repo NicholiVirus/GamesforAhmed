@@ -10,6 +10,7 @@ import {
 } from './models.js';
 import { TrainRide } from './train.js';
 import { Chaser } from './chaser.js';
+import { rankFor, addScore, SharedBoard } from './scores.js';
 
 const LANES = [-2, 0, 2];
 // What the main-menu shop sells, priced in manna saved from your runs.
@@ -62,6 +63,8 @@ const OBS_COLOR = {
   rollstone: [0.54, 0.45, 0.4],
 };
 
+const fmtNum = (n) => Math.floor(n || 0).toLocaleString('en-US');
+
 function loadStore() {
   try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch (e) { return {}; }
 }
@@ -95,10 +98,14 @@ class Game {
     const startAt = this.store.reached.includes(this.store.startAt) ? this.store.startAt : ROUTE[0];
     this.startDist = routeStart(startAt);
     this.best = { score: this.store.bestScore || 0, dist: this.store.bestDist || 0 };
+    this.store.scores = Array.isArray(this.store.scores) ? this.store.scores : [];
+    this.board = new SharedBoard();
+    this.board.onChange = () => { if (this.scoresOpen) this.renderScores(); };
     this.muted = boot.muted !== undefined ? !!boot.muted : !!this.store.muted;
     this.sound.setMuted(this.muted);
     this.ui = new UI({
       play: () => this.start(), pause: () => this.pause(), resume: () => this.resume(), home: () => this.home(),
+      openScores: () => this.openScores(), closeScores: () => this.closeScores(), scoresTab: (t) => this.scoresTab(t), saveName: (n) => this.saveName(n),
       sound: () => this.toggleSound(), openScroll: () => this.openScroll(), closeScroll: () => this.closeScroll(),
       openShop: () => this.openShop(), openMap: () => this.openMap(), pickStart: (id) => this.pickStart(id), unlockPlace: (id) => this.unlockPlace(id), buy: (t) => this.buy(t), buyUpgrade: (id) => this.buyUpgrade(id), buyLook: (kind, id) => this.buyLook(kind, id), useStar: () => this.useStar(), closeShop: () => this.ui.show('screen-start'),
       continueWord: () => this.continueWord(), skipRide: () => this.skipRide(),
@@ -826,6 +833,69 @@ class Game {
     this.ui.show('screen-scroll');
   }
 
+  // ------------------------------------------------------------ high scores
+  // Every finished run is checked against this device's top 10, and your best run goes on the shared board.
+  recordScore(score, place) {
+    const entry = { name: this.store.playerName || 'Runner', score, dist: Math.floor(this.dist), tablets: this.tablets.length, words: this.wordsDone.length, place, at: Date.now() };
+    this.lastEntry = null;
+    if (!rankFor(this.store.scores, score)) return 0;
+    const r = addScore(this.store.scores, entry);
+    this.store.scores = r.list;
+    this.lastEntry = entry;
+    this.board.post(entry).then((ok) => { if (ok && this.scoresOpen) this.renderScores(); });
+    return r.rank;
+  }
+
+  saveName(raw) {
+    const name = String(raw || '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, 16) || 'Runner';
+    this.store.playerName = name;
+    if (this.lastEntry) this.lastEntry.name = name;
+    saveStore(this.store);
+    this.ui.nameSaved();
+    this.sound.play('click');
+  }
+
+  openScores() {
+    this.sound.init();
+    this.sound.play('click');
+    this.scoresReturn = this.state === 'over' ? 'screen-over' : 'screen-start';
+    this.scoresOpen = true;
+    this.renderScores();
+    this.ui.show('screen-scores');
+  }
+
+  closeScores() {
+    this.scoresOpen = false;
+    this.ui.show(this.scoresReturn || 'screen-start');
+  }
+
+  scoresTab(t) {
+    this.scoresTabNow = t;
+    this.sound.play('click');
+    this.renderScores();
+  }
+
+  async renderScores() {
+    const tab = this.board.available && this.scoresTabNow === 'everyone' ? 'everyone' : 'device';
+    const meta = (e) => `${fmtNum(e.dist)} m · ${e.tablets || 0}/10 commandments · ${e.words || 0} word${e.words === 1 ? '' : 's'}${e.place ? ' · ' + e.place : ''}`;
+    if (tab === 'device') {
+      const rows = this.store.scores.map((e) => ({ who: e.name || 'Runner', score: e.score, meta: meta(e), me: e === this.lastEntry }));
+      this.ui.renderScores('device', rows, 'Your 10 best runs on this device.', this.board.available);
+      return;
+    }
+    const b = this.board;
+    const list = (b.rows || []).slice(0, 25);
+    const names = await b.names(list.map((r) => r.id));
+    if (!this.scoresOpen || this.scoresTabNow !== 'everyone') return;
+    const rows = list.map((r) => ({ who: names[r.id] || (r.id === b.me ? 'You' : 'A runner'), score: r.score, meta: meta(r), me: r.id === b.me }));
+    const note = b.state === 'loading' ? 'Loading the shared board…'
+      : b.state === 'stale' ? 'The shared board cannot be reached right now. Scores may be out of date.'
+      : b.state === 'error' ? 'The shared board is not available right now.'
+      : b.canPost ? 'Everyone who plays this page. Your best run is posted when a run ends.'
+      : 'Everyone who plays this page. You can view this board, but your runs are not posted here.';
+    this.ui.renderScores('everyone', rows, note, true);
+  }
+
   closeScroll() { this.ui.show(this.scrollReturn || 'screen-start'); }
 
   die() {
@@ -846,8 +916,9 @@ class Game {
     this.store.bestDist = this.best.dist;
     this.store.learned = [...this.learned];
     this.bankManna();
-    saveStore(this.store);
     const bi = biomeIndexAt(this.dist);
+    const hsRank = this.recordScore(score, BIOMES[bi].name);
+    saveStore(this.store);
     const lap = 1;
     const place = BIOMES[bi].name.replace(/^The /, 'the ');
     const n = this.wordsDone.length;
@@ -860,6 +931,7 @@ class Game {
       score, dist: this.dist, manna: this.mannaCount, words: this.wordsDone, newBest, partial,
     });
     this.ui.setBest(this.best, this.learned.size, WORDS.length);
+    this.ui.highScoreEntry(hsRank, this.store.playerName || '');
     this.ui.show('screen-over');
   }
 

@@ -318,6 +318,24 @@ kbd {
 .words li.empty { display: block; font-size: 0.9rem; color: var(--ink-soft); border: 0; }
 .scroll-list { list-style: none; margin: 12px 0 0; padding: 0; max-height: min(52vh, 460px); overflow-y: auto; }
 .scroll-list li.locked { opacity: 0.55; }
+/* ---------- high scores */
+.hs-tabs { display: flex; gap: 6px; margin-top: 10px; }
+.hs-tabs button { font: inherit; font-size: 0.85rem; font-weight: 700; padding: 6px 12px; border-radius: 999px; border: 0; cursor: pointer;
+  background: rgba(255, 252, 240, 0.35); color: var(--ink); box-shadow: inset 0 0 0 1.5px rgba(77, 63, 44, 0.45); }
+.hs-tabs button[aria-selected="true"] { background: var(--ink); color: #fbf1d6; box-shadow: none; }
+.hs-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 4px; max-height: min(50vh, 440px); overflow-y: auto; counter-reset: hs; }
+.hs-list li { display: grid; grid-template-columns: 30px 1fr auto; gap: 4px 10px; align-items: baseline; padding: 6px 8px; border-radius: 6px; background: rgba(255, 252, 240, 0.4); }
+.hs-list li.me { background: rgba(240, 185, 58, 0.35); box-shadow: inset 0 0 0 1.5px var(--gold); }
+.hs-list .hs-rank { font-weight: 800; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.hs-list li:nth-child(1) .hs-rank { color: #b8860b; } .hs-list li:nth-child(2) .hs-rank { color: #7d8691; } .hs-list li:nth-child(3) .hs-rank { color: #a0522d; }
+.hs-list .hs-who { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hs-list .hs-score { font-weight: 800; font-size: 1.1rem; font-variant-numeric: tabular-nums; text-align: right; }
+.hs-list .hs-meta { grid-column: 2 / -1; font-size: 0.78rem; color: var(--ink-soft); }
+.hs-list li.empty { display: block; color: var(--ink-soft); background: none; }
+.hs-entry { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; padding: 8px 10px; border-radius: 8px; background: rgba(240, 185, 58, 0.25); box-shadow: inset 0 0 0 1.5px var(--gold); }
+.hs-entry > b { flex-basis: 100%; }
+.hs-name { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 700; flex: 1 1 180px; }
+.hs-name input { flex: 1; min-width: 0; font: inherit; font-size: 16px; padding: 6px 8px; border-radius: 6px; border: 1.5px solid rgba(77, 63, 44, 0.55); background: #fffcf0; color: var(--ink); }
 .shop-wallet { display: inline-flex; align-items: center; gap: 4px; color: var(--ink); }
 .shop-list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
 .shop-list li { display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 8px; background: rgba(255, 252, 240, 0.45); }
@@ -436,6 +454,7 @@ kbd {
         </button>
         <button id="btn-shop" class="btn btn-ghost" type="button"><span class="manna-dot"></span>Shop</button>
         <button id="btn-map" class="btn btn-ghost" type="button">Journey map</button>
+        <button id="btn-scores" class="btn btn-ghost" type="button">High scores</button>
         <button id="btn-scroll" class="btn btn-ghost" type="button"><span>My scroll · 0/29</span></button>
         <button id="btn-sound" class="btn btn-ghost" type="button" aria-pressed="true"><span>Sound on</span></button>
       </div>
@@ -508,6 +527,11 @@ kbd {
       <h2 id="over-title">You reached Egypt</h2>
       <p class="lede" id="over-sub"></p>
       <span class="badge" id="over-best" hidden>New best score</span>
+      <form class="hs-entry" id="over-hs" hidden>
+        <b id="over-hs-rank">New high score · #1</b>
+        <label class="hs-name"><span>Your name</span><input id="hs-name" maxlength="16" autocomplete="nickname" enterkeyhint="done" placeholder="Runner"></label>
+        <button id="btn-hs-save" class="btn btn-ghost" type="submit">Save name</button>
+      </form>
       <div class="stats">
         <div class="stat"><span>Score</span><b id="stat-score">0</b></div>
         <div class="stat"><span>Distance</span><b id="stat-dist">0 m</b></div>
@@ -519,6 +543,7 @@ kbd {
         <button id="btn-again" class="btn btn-primary" type="button" data-autofocus>
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2a6 6 0 1 1-5.6 3.9l1.8.7A4 4 0 1 0 8 4v2L4.5 3 8 0z"/></svg>Run again
         </button>
+        <button id="btn-scores-2" class="btn btn-ghost" type="button">High scores</button>
         <button id="btn-scroll-2" class="btn btn-ghost" type="button"><span>My scroll</span></button>
         <button id="btn-home-2" class="btn btn-ghost" type="button">Main menu</button>
       </div>
@@ -557,6 +582,22 @@ kbd {
       <ul class="shop-list" id="shop-list"></ul>
       <div class="actions">
         <button id="btn-shop-close" class="btn btn-primary" type="button" data-autofocus>Done</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-scores" class="screen center" hidden aria-labelledby="scores-title">
+    <div class="scroll">
+      <span class="roller l" aria-hidden="true"></span><span class="roller r" aria-hidden="true"></span>
+      <h2 id="scores-title">High scores</h2>
+      <div class="hs-tabs" role="tablist" id="hs-tabs">
+        <button type="button" role="tab" data-tab="device" aria-selected="true">This device</button>
+        <button type="button" role="tab" data-tab="everyone" aria-selected="false" id="hs-tab-everyone" hidden>Everyone</button>
+      </div>
+      <p class="lede" id="hs-note"></p>
+      <ol class="hs-list" id="hs-list"></ol>
+      <div class="actions">
+        <button id="btn-scores-close" class="btn btn-primary" type="button" data-autofocus>Close</button>
       </div>
     </div>
   </section>
