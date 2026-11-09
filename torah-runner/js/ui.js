@@ -9,7 +9,7 @@ export class UI {
   constructor(h) {
     this.h = h;
     this.last = {};
-    this.screens = ['screen-loading', 'screen-start', 'screen-pause', 'screen-over', 'screen-scroll', 'screen-error', 'screen-word', 'screen-shop', 'screen-quiz', 'screen-map', 'screen-scores'];
+    this.screens = ['screen-loading', 'screen-start', 'screen-pause', 'screen-over', 'screen-scroll', 'screen-error', 'screen-word', 'screen-shop', 'screen-quiz', 'screen-map', 'screen-scores', 'screen-boss'];
     this.wordArmed = false;
     const on = (id, fn) => { const el = $(id); if (el) el.addEventListener('click', (e) => { e.stopPropagation(); fn(); }); };
     on('btn-play', () => h.play());
@@ -202,11 +202,13 @@ export class UI {
       const action = on ? `<button class="btn btn-ghost" type="button" data-look="${key}">Wearing · take off</button>`
         : has ? `<button class="btn btn-primary" type="button" data-look="${key}">Wear</button>`
           : btn(`data-look="${key}"`, it.price, wallet >= it.price);
-      return `<li><span class="swatch" style="background:${swatch}"></span><span class="shop-name"><b>${it.name}</b><small>${kind === 'skin' ? 'Outfit colour in every place' : 'Worn instead of a hat or head wrap'}</small></span>${action}</li>`;
+      const sub = it.famous ? it.about : kind === 'skin' ? 'Outfit colour in every place' : 'Worn instead of a hat or head wrap';
+      return `<li><span class="swatch" style="background:${swatch}"></span><span class="shop-name"><b>${it.name}</b><small>${sub}</small></span>${action}</li>`;
     };
-    const skins = L.SKINS.map((it) => look('skin', it, `linear-gradient(${hex(it.top)} 60%, ${hex(it.hem)} 60%)`)).join('');
+    const famous = L.SKINS.filter((it) => it.famous).map((it) => look('skin', it, `linear-gradient(${hex(it.hair || it.hatColor || it.wrap || 0x3a2618)} 34%, #c68a5e 34% 58%, ${hex(it.top)} 58%)`)).join('');
+    const skins = L.SKINS.filter((it) => !it.famous).map((it) => look('skin', it, `linear-gradient(${hex(it.top)} 60%, ${hex(it.hem)} 60%)`)).join('');
     const kips = L.KIPPAHS.map((it) => look('kippah', it, it.stripes ? `conic-gradient(${it.stripes.map(hex).join(',')})` : `radial-gradient(${hex(it.color)} 62%, ${hex(it.rim)} 64%)`)).join('');
-    $('shop-list').innerHTML = `<li class="shop-head">Upgrades · keep forever</li>${ups}<li class="shop-head">Power-ups · used on your next run</li>${items}<li class="shop-head">Outfit colours · keep forever</li>${skins}<li class="shop-head">Kippahs · keep forever</li>${kips}`;
+    $('shop-list').innerHTML = `<li class="shop-head">Upgrades · keep forever</li>${ups}<li class="shop-head">Power-ups · used on your next run</li>${items}<li class="shop-head">Famous Jewish people · keep forever</li>${famous}<li class="shop-head">Outfit colours · keep forever</li>${skins}<li class="shop-head">Kippahs · keep forever</li>${kips}`;
   }
 
   quiz(word, options, i, total, right, need, onPick) {

@@ -548,6 +548,103 @@ export class World {
     add(el, [...camp(-150, 0x8a2a2a, 0x8a2a2a), ...camp(150, 0xf4f1ea, 0x2c4ea3),
       ...[-60, -20, 25, 70].map((x) => part(new THREE.IcosahedronGeometry(1, 0), 0x5a7a3a, [x, 10, -330], [0, 0, 0], [12, 10, 12]))], elm);
     this.backdrops.push({ group: el, mats: [elm] });
+    // ---- Backdrops for the ten newer places (same order as in BIOMES).
+    const dome = (r = 1) => new THREE.SphereGeometry(r, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2);
+    // Eden: the tree of life towering over green hills, and rivers shining toward the horizon.
+    const ed = new THREE.Group(), edm = mk();
+    const edP = [
+      part(new THREE.SphereGeometry(1, 12, 6), 0x7ac05a, [-130, -8, -380], [0, 0, 0], [150, 40, 60]),
+      part(new THREE.SphereGeometry(1, 12, 6), 0x6ab04a, [140, -8, -400], [0, 0, 0], [160, 44, 70]),
+      part(cyl(6, 9, 70, 8), 0x7a5a3a, [0, 35, -420]),
+      part(new THREE.IcosahedronGeometry(1, 1), 0x3f8f3a, [0, 80, -420], [0, 0, 0], [55, 34, 40]),
+      part(new THREE.IcosahedronGeometry(1, 1), 0x5aa040, [-30, 70, -410], [0, 0, 0], [30, 22, 26]),
+      part(new THREE.IcosahedronGeometry(1, 1), 0x5aa040, [32, 72, -412], [0, 0, 0], [30, 22, 26]),
+    ];
+    for (let k = 0; k < 18; k++) edP.push(part(new THREE.IcosahedronGeometry(1, 0), 0xf0b93a, [-45 + rnd(0, 90), 62 + rnd(0, 36), -390], [k, k, 0], [3, 3, 3]));
+    for (const a of [-0.5, -0.17, 0.17, 0.5]) edP.push(part(cube, 0x8ad0f0, [Math.sin(a) * 160, 0.6, -260 - Math.cos(a) * 60], [0, a, 0], [8, 0.6, 260], 0.02));
+    add(ed, edP, edm);
+    this.backdrops.push({ group: ed, mats: [edm] });
+    // Beersheba: the open Negev with flat-topped hills, tents and a tamarisk on the skyline.
+    const bs = new THREE.Group(), bsm = mk();
+    const bsP = [...[[-140, -360, 1], [-60, -420, 0.7], [110, -380, 1.2], [190, -320, 0.8]].map(([x, z, k]) => part(cyl(24 * k, 32 * k, 18 * k, 7), 0xd8b080, [x, 9 * k, z], [0, 0, 0], [1, 1, 1], 0.03))];
+    for (let k = 0; k < 6; k++) bsP.push(part(new THREE.ConeGeometry(6, 7, 4), 0x3a2a20, [-60 + k * 18, 3.5, -300], [0, Math.PI / 4, 0]));
+    bsP.push(part(cyl(1.5, 2.2, 18, 6), 0x7a5a3a, [40, 9, -320]));
+    for (let k = 0; k < 9; k++) bsP.push(part(new THREE.IcosahedronGeometry(1, 0), 0x8aa878, [40 + rnd(-12, 12), 20 + rnd(0, 10), -320 + rnd(-6, 6)], [k, k, 0], [8, 5, 8]));
+    add(bs, bsP, bsm);
+    this.backdrops.push({ group: bs, mats: [bsm] });
+    // Ein Gedi: tall desert cliffs with a waterfall, and the blue Dead Sea below.
+    const eg = new THREE.Group(), egm = mk();
+    add(eg, [
+      part(cube, 0x7ac8d8, [0, 0.4, -300], [0, 0, 0], [900, 0.8, 140], 0.02),
+      ...[-220, -120, -20, 80, 180].map((x, k) => part(cube, [0xc8a070, 0xb89060][k % 2], [x, 40 + (k % 2) * 10, -400], [0, 0, 0], [110, 80 + (k % 2) * 20, 40], 0.04)),
+      part(cube, 0xbfe8f8, [-20, 45, -378], [0, 0, 0], [8, 90, 2], 0.02),
+      part(new THREE.SphereGeometry(1, 10, 6), 0x5a9a3a, [-20, 2, -370], [0, 0, 0], [40, 8, 16]),
+    ], egm);
+    this.backdrops.push({ group: eg, mats: [egm] });
+    // Jonah: open sea, a ship with a white sail, a whale's tail, and Nineveh far across the water.
+    const jn = new THREE.Group(), jnm = mk();
+    add(jn, [
+      part(cube, 0x3a6a9a, [0, 0.4, -250], [0, 0, 0], [900, 0.8, 300], 0.02),
+      part(cube, 0x7a4a24, [-80, 6, -320], [0, 0, 0], [40, 10, 12]),
+      part(cube, 0x5a3a1c, [-80, 30, -320], [0, 0, 0], [1.5, 40, 1.5]),
+      part(cube, 0xf4f1ea, [-79, 32, -320], [0, 0, 0], [1, 28, 22]),
+      part(cube, 0x4a6a8a, [70, 10, -300], [0, 0, 0.6], [6, 22, 4]),
+      part(cube, 0x4a6a8a, [62, 22, -300], [0, 0, -0.7], [18, 5, 4]),
+      part(cube, 0x4a6a8a, [80, 22, -300], [0, 0, 0.7], [18, 5, 4]),
+      part(cube, 0xc8a878, [140, 12, -460], [0, 0, 0], [160, 24, 10]),
+      ...[90, 120, 150, 180].map((x) => part(cube, 0xb89868, [x, 20, -460], [0, 0, 0], [10, 40, 12])),
+    ], jnm);
+    this.backdrops.push({ group: jn, mats: [jnm] });
+    // Babylon: a great ziggurat, the blue Ishtar gate and terraced hanging gardens by the river.
+    const bl = new THREE.Group(), blm = mk();
+    const blP = [part(cube, 0x6a9ab8, [0, 0.5, -280], [0, 0, 0], [900, 0.8, 40], 0.02)];
+    for (let t = 0; t < 6; t++) blP.push(part(cube, [0xc47a44, 0xb8683a, 0xa95c30][t % 3], [120, 8 + t * 16, -420], [0, 0, 0], [120 - t * 18, 16, 120 - t * 18]));
+    blP.push(part(cube, 0x2a5ab8, [-40, 30, -380], [0, 0, 0], [70, 60, 14]), part(cube, 0x7a9ab8, [-40, 18, -372], [0, 0, 0], [20, 36, 2]));
+    for (let k = 0; k < 7; k++) blP.push(part(cube, 0x2a5ab8, [-70 + k * 10, 63, -380], [0, 0, 0], [5, 6, 14]), part(cube, 0xf0b93a, [-60 + (k % 3) * 20, 20 + Math.floor(k / 3) * 14, -372.5], [0, 0, 0], [8, 4, 1]));
+    for (let t = 0; t < 4; t++) blP.push(part(cube, 0xc8a070, [-170, 8 + t * 14, -380], [0, 0, 0], [80 - t * 15, 14, 40]), part(new THREE.SphereGeometry(1, 8, 4), 0x4f9a3a, [-170, 16 + t * 14, -360], [0, 0, 0], [40 - t * 7, 5, 6]));
+    add(bl, blP, blm);
+    this.backdrops.push({ group: bl, mats: [blm] });
+    // Shushan: the Persian palace on its platform, rows of tall columns with bull capitals.
+    const sh = new THREE.Group(), shm = mk();
+    const shP = [part(cube, 0xd8c8a8, [0, 8, -400], [0, 0, 0], [320, 16, 80])];
+    for (let k = 0; k < 13; k++) { const x = -150 + k * 25; shP.push(part(cyl(3, 3.6, 60, 8), 0xe8e0d0, [x, 46, -380]), part(cube, 0xd8c8a0, [x, 78, -380], [0, 0, 0], [14, 5, 6])); }
+    shP.push(part(cube, 0xe8e0d0, [0, 84, -390], [0, 0, 0], [330, 6, 30]));
+    for (const [c, x] of [[0xffffff, -60], [0x3a9a5a, 0], [0x2c6fd6, 60]]) shP.push(part(cube, c, [x, 60, -375], [0, 0, 0], [40, 20, 1]));
+    add(sh, shP, shm);
+    this.backdrops.push({ group: sh, mats: [shm] });
+    // Modiin: dark hills under the stars, a giant glowing hanukkiah on the hilltop, and olive groves.
+    const md = new THREE.Group(), mdm = mk();
+    const mdP = [part(new THREE.SphereGeometry(1, 12, 6), 0x4a5a3a, [-140, -8, -380], [0, 0, 0], [150, 46, 60]), part(new THREE.SphereGeometry(1, 12, 6), 0x3e4e32, [120, -8, -400], [0, 0, 0], [180, 52, 70])];
+    mdP.push(part(cube, 0xc0c4ca, [120, 48, -390], [0, 0, 0], [70, 3, 3]), part(cube, 0xc0c4ca, [120, 38, -390], [0, 0, 0], [3, 24, 3]));
+    for (let k = 0; k < 9; k++) { const x = 88 + k * 8, h = k === 4 ? 66 : 58; mdP.push(part(cube, 0xc0c4ca, [x, h - 6, -390], [0, 0, 0], [1.6, 12, 1.6]), part(new THREE.ConeGeometry(2, 5, 6), 0xffb03a, [x, h + 2, -390])); }
+    for (let k = 0; k < 10; k++) mdP.push(part(new THREE.IcosahedronGeometry(1, 0), 0x5a6a3a, [-120 + k * 14, 20 + Math.sin(k) * 4, -340], [k, k, 0], [8, 6, 8]));
+    add(md, mdP, mdm);
+    this.backdrops.push({ group: md, mats: [mdm] });
+    // Safed: a white hill town with blue domes, and Mount Meron beyond.
+    const sf = new THREE.Group(), sfm = mk();
+    const sfP = [part(new THREE.SphereGeometry(1, 12, 6), 0x8a9a6a, [160, -10, -460], [0, 0, 0], [180, 80, 70]), part(dome(), 0x9aaa78, [-30, -4, -380], [0, 0, 0], [170, 60, 70])];
+    for (let k = 0; k < 22; k++) { const x = -140 + (k % 11) * 22 + rnd(-4, 4), y = 30 + Math.floor(k / 11) * 14 - Math.abs(x + 30) * 0.18; sfP.push(part(cube, k % 3 ? 0xf2eee4 : 0xe2dccc, [x, y, -350 - Math.floor(k / 11) * 12], [0, 0, 0], [14, 12, 12])); if (k % 4 === 0) sfP.push(part(dome(5), 0x3a8ad6, [x, y + 6, -350 - Math.floor(k / 11) * 12])); }
+    add(sf, sfP, sfm);
+    this.backdrops.push({ group: sf, mats: [sfm] });
+    // Brooklyn: the Brooklyn Bridge with its cables and the Manhattan skyline behind.
+    const br = new THREE.Group(), brm = mk();
+    const brP = [part(cube, 0x4a6a8a, [0, 0.4, -300], [0, 0, 0], [900, 0.8, 120], 0.02), ...skyline(18, 40, 130, [0x6a7a8c, 0x8a8478, 0x5a6478], 260, -440)];
+    for (const x of [-90, 90]) brP.push(part(cube, 0xb8a488, [x - 8, 45, -340], [0, 0, 0], [8, 90, 12]), part(cube, 0xb8a488, [x + 8, 45, -340], [0, 0, 0], [8, 90, 12]), part(cube, 0xb8a488, [x, 84, -340], [0, 0, 0], [26, 10, 12]));
+    brP.push(part(cube, 0x6a5a4a, [0, 26, -340], [0, 0, 0], [420, 4, 14]));
+    for (let k = 0; k < 14; k++) { const t = k / 13, x = -210 + t * 420; const y = 30 + 56 * (1 - Math.pow(Math.abs(Math.abs(x) - 90) / 120, 2)); brP.push(part(cube, 0x5a5a5a, [x, Math.max(30, y), -340], [0, 0, 0], [1, 1, 1])); }
+    for (const s of [-1, 1]) for (let k = 0; k < 8; k++) brP.push(part(cube, 0x5a5a5a, [s * (90 - 6 - k * 10), 30 + (85 - 30) * (1 - k / 8) / 2 + 2, -340], [0, 0, s * 0.55], [12, 0.6, 0.6]));
+    add(br, brP, brm);
+    this.backdrops.push({ group: br, mats: [brm] });
+    // Coney Island: the sea, the big wheel, the coaster's hills and the old parachute tower.
+    const cn = new THREE.Group(), cnm = mk();
+    const cnP = [part(cube, 0x3a8ac0, [0, 0.4, -260], [0, 0, 0], [900, 0.8, 300], 0.02)];
+    cnP.push(part(new THREE.TorusGeometry(40, 1.5, 6, 40), 0xf06d9a, [-90, 50, -380]), part(new THREE.TorusGeometry(26, 1, 6, 30), 0xffd24a, [-90, 50, -380]));
+    for (let k = 0; k < 16; k++) { const a = (k / 16) * Math.PI * 2; cnP.push(part(cube, [0xe2483d, 0x2c6fd6, 0x3fae5a, 0xffd24a][k % 4], [-90 + Math.cos(a) * 40, 50 + Math.sin(a) * 40 - 4, -378], [0, 0, 0], [6, 6, 6])); }
+    cnP.push(part(cube, 0x8a8a90, [-100, 24, -382], [0, 0, -0.3], [3, 52, 3]), part(cube, 0x8a8a90, [-80, 24, -382], [0, 0, 0.3], [3, 52, 3]));
+    for (let k = 0; k < 20; k++) { const x = 20 + k * 8, h = 14 + Math.abs(Math.sin(k * 0.6)) * 34; cnP.push(part(cube, 0xf4f1ea, [x, h / 2, -400], [0, 0, 0], [1.2, h, 1.2]), part(cube, 0xe2483d, [x, h, -400], [0, 0, 0], [8.5, 1.4, 4])); }
+    cnP.push(part(cube, 0xd84a3a, [210, 60, -420], [0, 0, 0], [4, 120, 4]), part(new THREE.TorusGeometry(26, 1.2, 6, 20), 0xd84a3a, [210, 118, -420], [Math.PI / 2, 0, 0]));
+    add(cn, cnP, cnm);
+    this.backdrops.push({ group: cn, mats: [cnm] });
     for (const b of this.backdrops) { b.group.visible = false; this.scene.add(b.group); }
   }
 

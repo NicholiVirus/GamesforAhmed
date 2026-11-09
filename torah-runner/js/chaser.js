@@ -81,10 +81,16 @@ const WHO = {
   ararat: 'giant', babel: 'soldier', jacob: 'raider', rephidim: 'raider', jordan: 'soldier', jericho: 'soldier', elah: 'giant',
   egypt: 'chariot', sea: 'chariot', elim: 'raider', wild: 'raider', night: 'raider', sinai: 'raider',
   jerusalem: 'legion', telaviv: 'guard', airport: 'guard', newyork: 'guard', donut: 'guard',
+  eden: 'raider', beersheba: 'raider', eingedi: 'soldier', jonah: 'guard', babylon: 'soldier', shushan: 'guard',
+  modiin: 'legion', safed: 'raider', brooklyn: 'guard', coney: 'guard', park: 'guard', harbor: 'guard',
 };
 const NAMES = { chariot: "Pharaoh's chariot", raider: 'An Amalekite raider', legion: 'A Roman legionary', guard: 'The airport guard', soldier: 'A soldier', giant: 'Goliath the giant' };
 // Who is chasing you in each place, when it is not the default for their kind.
 const PLACE_NAMES = {
+  eden: 'A sneaky fruit thief', beersheba: 'A Philistine well-filler', eingedi: "King Saul's soldiers", jonah: "Nineveh's city guard",
+  babylon: "Nebuchadnezzar's soldier", shushan: "Haman's guard", modiin: "Antiochus's soldier", safed: 'A mountain bandit',
+  newyork: 'A New York parking officer', donut: 'The donut-shop security guard', brooklyn: 'A runaway pretzel vendor', coney: 'A boardwalk lifeguard',
+  park: 'A Central Park ranger', harbor: 'A harbour patrol officer',
   ararat: 'A giant of the Nephilim', babel: 'A tower guard', jacob: "Esau's 400 riders", jordan: "The king of Jericho's men", jericho: 'A soldier of Jericho', elah: 'Goliath the giant',
 };
 

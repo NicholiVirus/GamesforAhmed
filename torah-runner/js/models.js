@@ -102,6 +102,16 @@ export const OUTFITS = {
   park: { top: 0x3f9a5a, hem: 0x2f7a48, belt: 0x6b3e1e, pants: 0xd8c8a0, shoe: 0x6b3e1e, wrap: null, cap: 0x3f9a5a },
   harbor: { top: 0x2c4ea3, hem: 0xffffff, belt: 0xffffff, pants: 0xf2f2ee, shoe: 0x1a1a1a, wrap: null, cap: 0xffffff },
   donut: { top: 0xf38bb8, hem: 0xffffff, belt: 0xffffff, pants: 0x3a3a44, shoe: 0xffffff, wrap: null, cap: 0xffffff },
+  eden: { top: 0xf4f0e2, hem: 0x6fb84e, belt: 0x8b5a2b, pants: 0xeee6d4, shoe: 0x8b5a2b, wrap: 0xd8f0c0, band: 0x6fb84e },
+  beersheba: { top: 0xb8864a, hem: 0x7a5228, belt: 0x4a2e14, pants: 0xe8d6b4, shoe: 0x5a3a1c, wrap: 0xf4ead4, band: 0x7a5228 },
+  eingedi: { top: 0x7a9a5a, hem: 0x5a7a3a, belt: 0x6b4a2a, pants: 0xe6d6b4, shoe: 0x5a3a1c, wrap: 0xf0e8d0, band: 0x5a7a3a },
+  jonah: { top: 0x3a7ab0, hem: 0x2a5a8a, belt: 0x8b5a2b, pants: 0xe6dccc, shoe: 0x5a3a1c, wrap: 0xffffff, band: 0x2a5a8a },
+  babylon: { top: 0x2a5aa8, hem: 0xf0b93a, belt: 0xf0b93a, pants: 0xe6d6b4, shoe: 0x5a3a1c, wrap: 0xf0e2c0, band: 0x2a5aa8 },
+  shushan: { top: 0x7a3a8a, hem: 0xf0b93a, belt: 0xf0b93a, pants: 0xeadbb8, shoe: 0x6b3e1e, wrap: 0xf6eed8, band: 0x7a3a8a },
+  modiin: { top: 0x2c4ea3, hem: 0xffffff, belt: 0xb07a3a, pants: 0xd8cfb8, shoe: 0x4a2e1c, wrap: 0xf4efe4, band: 0x2c4ea3 },
+  safed: { top: 0xf6f3ec, hem: 0x3a8ad6, belt: 0x3a8ad6, pants: 0x2a2a30, shoe: 0x1a1a1a, wrap: null, cap: 0x3a8ad6 },
+  brooklyn: { top: 0x8a3a2a, hem: 0x6a2a1e, belt: 0x222222, pants: 0x2f4a7a, shoe: 0xffffff, wrap: null, cap: 0x1a1a1a },
+  coney: { top: 0xffd24a, hem: 0xe2483d, belt: 0xe2483d, pants: 0x3a8fc8, shoe: 0xffffff, wrap: null, cap: 0xe2483d, short: true },
 };
 
 // Cosmetics bought in the shop: an outfit colour (replaces the place's top colour) and a kippah.
@@ -114,6 +124,27 @@ export const SKINS = [
   { id: 'gold', name: 'Golden', top: 0xf0b93a, hem: 0xb8862a, price: 600 },
   { id: 'midnight', name: 'Midnight', top: 0x1b1830, hem: 0x2c4ea3, price: 400 },
   { id: 'snow', name: 'Snow white', top: 0xf6f6f2, hem: 0x2c6fd6, price: 300 },
+  // Famous Jewish people: a whole look (clothes, hair, beard, glasses, hat) inspired by each person.
+  { id: 'einstein', famous: true, name: 'Albert Einstein', about: 'Scientist who discovered E = mc²', price: 2000,
+    top: 0x8a8a90, hem: 0x7a7a80, belt: 0x7a7a80, pants: 0x6a5038, shoe: 0x3a2a1c, hair: 0xf2f2f2, hairStyle: 'wild', mustache: 0xf2f2f2 },
+  { id: 'golda', famous: true, name: 'Golda Meir', about: 'Prime Minister of Israel and one of its founders', price: 1500,
+    top: 0x2a3450, hem: 0x2a3450, belt: 0x2a3450, pants: 0x2a3450, shoe: 0x1a1a1a, hair: 0x9a9a9a, hairStyle: 'bun' },
+  { id: 'herzl', famous: true, name: 'Theodor Herzl', about: 'Dreamed of a Jewish state: "If you will it, it is no dream"', price: 1500,
+    top: 0x1a1a1a, hem: 0x1a1a1a, belt: 0x1a1a1a, pants: 0x1a1a1a, shoe: 0x111111, hair: 0x1a120c, beard: 0x1a120c, beardLong: true, collar: 0xffffff, tie: 0x1a1a1a },
+  { id: 'rambam', famous: true, name: 'Maimonides (the Rambam)', about: 'Great rabbi, doctor and philosopher', price: 1800,
+    top: 0x3a6a4a, hem: 0xf0b93a, belt: 0xf0b93a, pants: 0xeadbb8, shoe: 0x6b3e1e, wrap: 0xffffff, band: 0xe8e0d0, beard: 0x2a1a10, beardLong: true },
+  { id: 'rbg', famous: true, name: 'Ruth Bader Ginsburg', about: 'Supreme Court Justice who fought for equal rights', price: 1800,
+    top: 0x111111, hem: 0x111111, belt: 0x111111, pants: 0x111111, shoe: 0x111111, hair: 0x2a1a10, hairStyle: 'bun', glasses: true, jabot: 0xf4f1ea },
+  { id: 'houdini', famous: true, name: 'Harry Houdini', about: "The world's greatest escape artist", price: 1200,
+    top: 0x1a1a1a, hem: 0x1a1a1a, belt: 0x1a1a1a, pants: 0x1a1a1a, shoe: 0x111111, hair: 0x1a120c, collar: 0xffffff, tie: 0x1a1a1a, hat: 'top' },
+  { id: 'levi', famous: true, name: 'Levi Strauss', about: 'Made the first blue jeans', price: 1200,
+    top: 0xf4f1ea, hem: 0x6b4a2a, belt: 0x6b4a2a, pants: 0x2c5aa0, shoe: 0x6b3e1e, hair: 0x8a8a8a, beard: 0x9a9a9a, vest: 0x6b4a2a },
+  { id: 'lazarus', famous: true, name: 'Emma Lazarus', about: 'Wrote the poem on the Statue of Liberty', price: 1200,
+    top: 0x7a2a3a, hem: 0x7a2a3a, belt: 0x5a1a2a, pants: 0x7a2a3a, shoe: 0x2a1a14, hair: 0x2a1a10, hairStyle: 'bun', collar: 0xf4f1ea },
+  { id: 'salk', famous: true, name: 'Jonas Salk', about: 'Made the polio vaccine and gave it to the world', price: 1500,
+    top: 0xffffff, hem: 0xffffff, belt: 0xffffff, pants: 0x3a3a44, shoe: 0x1a1a1a, hair: 0x3a2a1c, glasses: true, tie: 0x2c4ea3 },
+  { id: 'greenberg', famous: true, name: 'Hank Greenberg', about: 'Baseball star who would not play on Yom Kippur', price: 1000,
+    top: 0xf6f6f2, hem: 0xf6f6f2, belt: 0x1c2f6a, pants: 0xf6f6f2, shoe: 0x1a1a1a, hat: 'baseball', hatColor: 0x1c2f6a },
 ];
 export const KIPPAHS = [
   { id: 'white', name: 'White kippah', color: 0xf6f6f2, rim: 0x2c6fd6, price: 150 },
@@ -137,15 +168,32 @@ export function outfitGeos(o) {
     box(0x8b5a2b, [0.25, -0.27, 0.12], [0.2, 0.24, 0.14]),
     box(0xf0b93a, [0.25, -0.22, 0.2], [0.08, 0.05, 0.02]),
     box(0xf3e3c3, [0, 0.28, -0.12], [0.3, 0.07, 0.1]),
+    ...(o.vest ? [box(o.vest, [-0.15, 0.02, -0.165], [0.18, 0.5, 0.02]), box(o.vest, [0.15, 0.02, -0.165], [0.18, 0.5, 0.02])] : []),
+    ...(o.collar ? [box(o.collar, [-0.07, 0.26, -0.168], [0.12, 0.08, 0.02], [0, 0, 0.4]), box(o.collar, [0.07, 0.26, -0.168], [0.12, 0.08, 0.02], [0, 0, -0.4])] : []),
+    ...(o.tie ? [box(o.tie, [0, 0.1, -0.172], [0.07, 0.3, 0.02])] : []),
+    ...(o.jabot ? [box(o.jabot, [0, 0.17, -0.172], [0.22, 0.2, 0.03]), box(o.jabot, [0, 0.06, -0.176], [0.16, 0.08, 0.03])] : []),
   ]);
   const headParts = [
     box(skin, [0, 0, 0], [0.42, 0.42, 0.42]),
-    box(0x3a2618, [0, 0.12, 0.06], [0.44, 0.2, 0.36]),
+    box(o.hair || 0x3a2618, [0, 0.12, 0.06], [0.44, 0.2, 0.36]),
     box(ink, [-0.09, 0.02, -0.215], [0.07, 0.08, 0.02]),
     box(ink, [0.09, 0.02, -0.215], [0.07, 0.08, 0.02]),
     box(0xd99a6c, [0, -0.03, -0.225], [0.06, 0.07, 0.04]),
     box(0x8a4a3a, [0, -0.12, -0.215], [0.12, 0.03, 0.02]),
   ];
+  // Famous looks: hair styles, beards, glasses. The face is on the -z side.
+  if (o.hairStyle === 'wild') {
+    for (const [x, y, z, s] of [[-0.25, 0.1, 0.05, 0.14], [0.25, 0.1, 0.05, 0.14], [-0.2, 0.24, 0.1, 0.13], [0.2, 0.24, 0.1, 0.13], [0, 0.27, 0.12, 0.15], [-0.26, -0.02, 0.12, 0.1], [0.26, -0.02, 0.12, 0.1]])
+      headParts.push(part(ICO, o.hair, [x, y, z], [x * 5, y * 5, 0], [s, s, s]));
+  } else if (o.hairStyle === 'bun') {
+    headParts.push(part(ICO, o.hair, [0, 0.2, 0.22], [0.4, 0.2, 0], [0.13, 0.12, 0.12]), box(o.hair, [0, 0.0, 0.2], [0.44, 0.3, 0.06]));
+  }
+  if (o.mustache) headParts.push(box(o.mustache, [0, -0.085, -0.226], [0.2, 0.05, 0.03]));
+  if (o.beard) headParts.push(box(o.beard, [0, o.beardLong ? -0.26 : -0.2, -0.13], [0.42, o.beardLong ? 0.36 : 0.2, 0.22]), box(o.beard, [0, -0.085, -0.226], [0.18, 0.04, 0.03]));
+  if (o.glasses) {
+    for (const x of [-0.095, 0.095]) headParts.push(box(0x1b1830, [x, 0.02, -0.226], [0.13, 0.12, 0.012]), box(0xcfe6f2, [x, 0.02, -0.233], [0.09, 0.08, 0.008]));
+    headParts.push(box(0x1b1830, [0, 0.04, -0.23], [0.06, 0.02, 0.01]));
+  }
   // A Star of David lies flat on top of every hat: two thin triangles, one turned upside down.
   const starOn = (y, z, under, r, color) => {
     const c = new THREE.Color(under);
@@ -162,7 +210,13 @@ export function outfitGeos(o) {
   } else if (o.wrap) {
     headParts.push(box(o.wrap, [0, 0.19, 0], [0.47, 0.11, 0.47]), box(o.band, [0, 0.135, 0], [0.48, 0.035, 0.48]));
     starOn(0.251, 0.02, o.wrap, 0.11);
-  } else {
+  } else if (o.hat === 'top') {
+    headParts.push(part(new THREE.CylinderGeometry(0.2, 0.2, 0.36, 12), 0x111111, [0, 0.39, 0.02]), part(new THREE.CylinderGeometry(0.3, 0.3, 0.03, 14), 0x111111, [0, 0.22, 0.02]), part(new THREE.CylinderGeometry(0.205, 0.205, 0.06, 12, 1, true), 0x8a1a1a, [0, 0.27, 0.02]));
+    starOn(0.578, 0.02, 0x111111, 0.1);
+  } else if (o.hat === 'baseball') {
+    headParts.push(part(new THREE.SphereGeometry(0.23, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), o.hatColor, [0, 0.17, 0.02], [0, 0, 0], [1, 0.75, 1]), box(o.hatColor, [0, 0.18, -0.3], [0.32, 0.03, 0.2]));
+    starOn(0.345, 0.02, o.hatColor, 0.07);
+  } else if (o.cap !== undefined && o.cap !== null) {
     headParts.push(box(o.cap, [0, 0.22, 0.01], [0.46, 0.1, 0.46]), box(o.cap, [0, 0.18, -0.28], [0.36, 0.04, 0.18]));
     starOn(0.276, 0.03, o.cap, 0.11);
   }
@@ -229,7 +283,13 @@ export function buildPlayer() {
     const sk = SKINS.find((x) => x.id === style.skin), kp = KIPPAHS.find((x) => x.id === style.kippah);
     const o = { ...(OUTFITS[id] || OUTFITS.egypt) };
     if (sk) { o.top = sk.top; o.hem = sk.hem; }
-    if (kp) { o.kippah = kp; o.wrap = null; }
+    if (sk && sk.famous) {
+      // A famous look replaces the whole outfit, including what is worn on the head.
+      for (const k of ['belt', 'pants', 'shoe', 'hair', 'hairStyle', 'mustache', 'beard', 'beardLong', 'glasses', 'collar', 'tie', 'jabot', 'vest', 'hat', 'hatColor']) o[k] = sk[k];
+      o.short = false;
+      o.wrap = sk.wrap || null; o.band = sk.band || null; o.cap = null;
+    }
+    if (kp && !o.hat) { o.kippah = kp; o.wrap = null; }
     const key = id + '|' + (style.skin || '') + '|' + (style.kippah || '');
     const gg = outfitCache[key] || (outfitCache[key] = outfitGeos(o));
     torso.geometry = gg.torso; headMesh.geometry = gg.head; tail.geometry = gg.tail;
@@ -720,6 +780,16 @@ export const BIOME_OBSTACLES = {
   jericho: { low: ['rubble'], high: ['stonearch'], tall: ['block'], roll: ['rollstone'] },
   elah: { low: ['sheep', 'rocks'], high: ['tent'], tall: ['giantspear', 'boulder'], roll: [] },
   sinai: { low: ['ledge'], high: ['stonearch'], tall: ['boulder'], roll: ['rollstone'] },
+  eden: { low: ['log', 'bush'], high: ['arch'], tall: ['elephants', 'boulder'], roll: [] },
+  beersheba: { low: ['sheep', 'rocks'], high: ['tent'], tall: ['well', 'camel'], roll: ['tumble'] },
+  eingedi: { low: ['rocks', 'ledge'], high: ['stonearch'], tall: ['boulder', 'rockstack'], roll: ['rollstone'] },
+  jonah: { low: ['coral', 'jars'], high: ['arch'], tall: ['rockstack'], roll: [] },
+  babylon: { low: ['bricks', 'jars'], high: ['banner', 'scaffold'], tall: ['block', 'obelisk'], roll: [] },
+  shushan: { low: ['jars', 'bricks'], high: ['banner', 'stonearch'], tall: ['block', 'camel'], roll: [] },
+  modiin: { low: ['rocks', 'jars'], high: ['tent', 'banner'], tall: ['elephants', 'boulder'], roll: ['rollstone'] },
+  safed: { low: ['jars', 'rubble'], high: ['stonearch'], tall: ['block', 'well'], roll: [] },
+  brooklyn: { low: ['hydrants'], high: ['barrier'], tall: ['taxi', 'kiosk'], roll: [] },
+  coney: { low: ['suitcases', 'hydrants'], high: ['barrier'], tall: ['kiosk', 'cart'], roll: [] },
 };
 
 const geoCache = {};
@@ -786,6 +856,8 @@ function medallion(g, s, rim, face) {
 export const COIN_ERA = {
   egypt: 'ancient', sea: 'ancient', elim: 'ancient', wild: 'ancient', night: 'ancient', sinai: 'ancient',
   ararat: 'ancient', babel: 'ancient', jacob: 'ancient', rephidim: 'ancient', jordan: 'ancient', jericho: 'ancient', elah: 'ancient',
+  eden: 'ancient', beersheba: 'ancient', eingedi: 'ancient', jonah: 'ancient', babylon: 'ancient', shushan: 'ancient',
+  modiin: 'temple', safed: 'temple', brooklyn: 'modern', coney: 'modern',
   jerusalem: 'temple', telaviv: 'modern', airport: 'modern', newyork: 'modern', donut: 'modern',
 };
 const coinCache = {};

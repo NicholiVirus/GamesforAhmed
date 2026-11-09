@@ -2,6 +2,7 @@
 import * as THREE from './three.js';
 import { LANDMARKS } from './landmarks.js';
 import { LANDMARKS2 } from './landmarks3.js';
+import { LANDMARKS3 } from './landmarks4.js';
 import { part, box, merge, jagged, BOX, CYL6, ICO, buildCamel, OBSTACLES, obstacleGeo } from './models.js';
 
 const rnd = (a, b) => a + Math.random() * (b - a);
@@ -508,6 +509,18 @@ SCENERY.rephidim = pick2(['rock', 'btent', 'camelS', 'scrub', 'acacia']);
 SCENERY.jordan = pick2(['reeds', 'palm', 'ptree', 'rock', 'pond']);
 SCENERY.jericho = pick2(['palm', 'house', 'rock', 'reeds']);
 SCENERY.elah = pick2(['ptree', 'olive', 'rock', 'scrub']);
+SCENERY.eden = pick2(['ptree', 'palm', 'reeds', 'pond', 'olive', 'rock']);
+SCENERY.beersheba = pick2(['acacia', 'rock', 'btent', 'camelS', 'scrub', 'dune', 'wellS']);
+SCENERY.eingedi = pick2(['cliff', 'rock', 'palm', 'reeds', 'scrub', 'pool']);
+SCENERY.jonah = pick2(['palm', 'shells', 'rock', 'reeds', 'coralbig']);
+SCENERY.babylon = pick2(['palm', 'reeds', 'house', 'jars', 'smallpyr', 'olive']);
+SCENERY.shushan = pick2(['palm', 'shouse', 'cypress', 'jars', 'pool']);
+SCENERY.modiin = pick2(['olive', 'rock', 'cypress', 'fire', 'btent', 'scrub']);
+SCENERY.safed = pick2(['shouse', 'cypress', 'olive', 'rock', 'opress']);
+SCENERY.brooklyn = pick2(['sky', 'lamp', 'ptree', 'bench']);
+for (const d of SCENERY.brooklyn) if (d.type === 'sky') d.w = 2;
+SCENERY.coney = pick2(['umbrella', 'lamp', 'bench', 'lifeguard', 'palm']);
+for (const id in LANDMARKS3) SCENERY[id].push(...LANDMARKS3[id]);
 for (const id in LANDMARKS) if (SCENERY[id]) SCENERY[id].push(...LANDMARKS[id]);
 for (const id in LANDMARKS2) if (SCENERY[id]) SCENERY[id].push(...LANDMARKS2[id]);
 

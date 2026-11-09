@@ -11,6 +11,7 @@ import {
 import { TrainRide } from './train.js';
 import { Chaser } from './chaser.js';
 import { rankFor, addScore, SharedBoard } from './scores.js';
+import { Boss } from './boss.js';
 
 const LANES = [-2, 0, 2];
 // What the main-menu shop sells, priced in manna saved from your runs.
@@ -166,6 +167,8 @@ class Game {
     this.state = 'menu';
     this.camLook = new THREE.Vector3(0, 1, -10);
     this.ride = new TrainRide(this);
+    this.allWords = WORDS;
+    this.boss = new Boss(this);
     this.chaser = new Chaser(this.scene);
     this.ridePose = 'stand';
     this.resetRun();
@@ -213,6 +216,7 @@ class Game {
     this.endTitle = null;
     this.endSub = null;
     this.finished = false;
+    if (this.boss) this.boss.hide();
     this.tablets = []; // Ten Commandments collected this run (indexes into COMMANDMENTS)
     this.planTablet(this.startDist);
     this.lane = 1; this.prevLane = 1;
@@ -773,11 +777,31 @@ class Game {
       this.ui.hint(`<b>The end of the road!</b> You carried ${n} of 10 commandments. Start from Mount Ararat and find all 10 to win.`, 6000);
       return;
     }
+    this.startBoss();
+  }
+
+  // Final boss: the Golem of Prague, beaten in a word battle (see boss.js).
+  startBoss() {
+    this.state = 'boss';
+    this.touch = null;
+    for (const o of this.obs) this.releaseObs(o);
+    this.obs.length = 0;
+    for (const q of this.pickups) this.releasePickup(q);
+    this.pickups.length = 0;
+    this.chaser.reset();
+    this.ui.hud(false);
+    this.ui.hideHint();
+    this.slideT = 0; this.y = 0; this.vy = 0; this.grounded = true;
+    this.powers = { shield: 0, magnet: 0, double: 0, jetpack: 0, sneakers: 0 };
+    this.boss.start();
+  }
+
+  winGame() {
     const bonus = 1000;
     this.mannaCount += bonus;
     this.store.wins = (this.store.wins || 0) + 1;
     this.endTitle = 'You win! All Ten Commandments';
-    this.endSub = `You carried the Ten Commandments the whole way to the harbour. +${bonus} manna victory bonus. Wins so far: ${this.store.wins}.`;
+    this.endSub = `You carried the Ten Commandments the whole way and beat the Golem of Prague in a word battle. +${bonus} manna victory bonus. Wins so far: ${this.store.wins}.`;
     this.sound.stopMusic();
     this.sound.play('word');
     this.world.burst(this.x, 1.5, 0, 60, { color: [1, 0.9, 0.5], speed: 7, up: 7, life: 1.4 });
@@ -1220,6 +1244,9 @@ class Game {
       this.vy -= grav * dt;
       this.y += this.vy * dt;
       const gh = this.groundHeight();
+      // Jumping on a ramp: if the slope or walkway rises above your feet mid-jump, you ride up onto it
+      // instead of crashing into it.
+      if (this.y < gh && this.vy > 0) this.y = gh;
       if (this.y <= gh && this.vy <= 0) {
         this.y = gh; this.vy = 0; this.grounded = true;
         const c = this.world.cur.ground;
@@ -1675,6 +1702,9 @@ class Game {
     } else if (this.state === 'countdown') {
       worldDt = 0;
       this.updateCountdown(dt);
+    } else if (this.state === 'boss') {
+      worldDt = 0;
+      this.boss.update(dt);
     } else {
       worldDt = this.state === 'over' ? dt : 0;
       if (this.state === 'over') this.deadT += dt;

@@ -296,8 +296,9 @@ export const BIOME_LEN = 1950;
 // The journey through the Torah and Jewish history, in order. Each place is BIOME_LEN metres long;
 // the last place never ends.
 export const ROUTE = [
-  'ararat', 'babel', 'jacob', 'egypt', 'sea', 'elim', 'wild', 'rephidim', 'sinai', 'night',
-  'jordan', 'jericho', 'elah', 'jerusalem', 'telaviv', 'airport', 'newyork', 'donut', 'park', 'harbor',
+  'eden', 'ararat', 'babel', 'beersheba', 'jacob', 'egypt', 'sea', 'elim', 'wild', 'rephidim',
+  'sinai', 'night', 'jordan', 'jericho', 'elah', 'eingedi', 'jerusalem', 'jonah', 'babylon', 'shushan',
+  'modiin', 'safed', 'telaviv', 'airport', 'newyork', 'donut', 'brooklyn', 'coney', 'park', 'harbor',
 ];
 export const routeStart = (id) => ROUTE.indexOf(id) * BIOME_LEN;
 // You must pass the Hebrew test at the airport gate, just before New York.
@@ -460,6 +461,77 @@ export const BIOMES = [
     ground: 0xb8b070, road: 0xc8b890, sun: 0xffffff,
     hemiSky: 0xfff8e8, hemiGround: 0x7a7848, light: 0xfffbf0, lightI: 2.2, hemiI: 1.3,
     sunDir: [-0.35, 0.55, -1], stars: 0,
+  },
+  // ---- Ten more places (the route is now 30 places long).
+  {
+    id: 'eden', name: 'The Garden of Eden', he: 'גן עדן', line: 'A river flows out of Eden to water the garden',
+    skyTop: 0x4aa0e6, skyHorizon: 0xe2f6d6, skyBottom: 0xb6e09a, fog: 0xd2eec2,
+    ground: 0x6fb84e, road: 0xd8eab4, sun: 0xfffbe6,
+    hemiSky: 0xf0ffe6, hemiGround: 0x5a8f36, light: 0xfffcec, lightI: 2.2, hemiI: 1.4,
+    sunDir: [-0.25, 0.6, -1], stars: 0,
+  },
+  {
+    id: 'beersheba', name: 'Beersheba', he: 'באר שבע', line: 'Abraham digs wells and plants a tamarisk tree',
+    skyTop: 0x3c84cc, skyHorizon: 0xf2d8ae, skyBottom: 0xd6b486, fog: 0xe8cca2,
+    ground: 0xd2ac74, road: 0xe8d0a4, sun: 0xfff2d4,
+    hemiSky: 0xffe8c8, hemiGround: 0xa07a48, light: 0xfff0dc, lightI: 2.25, hemiI: 1.25,
+    sunDir: [0.35, 0.35, -1], stars: 0,
+  },
+  {
+    id: 'eingedi', name: 'Ein Gedi', he: 'עין גדי', line: 'David hides in the caves of the wild goats',
+    skyTop: 0x3a8ad6, skyHorizon: 0xd8eedc, skyBottom: 0xb8c89a, fog: 0xccdcc0,
+    ground: 0xc8a878, road: 0xe2cca0, sun: 0xfffaea,
+    hemiSky: 0xeefff0, hemiGround: 0x8a7a4a, light: 0xfffaf0, lightI: 2.2, hemiI: 1.3,
+    sunDir: [-0.3, 0.5, -1], stars: 0,
+  },
+  {
+    id: 'jonah', name: "Jonah's Sea", he: 'ים יונה', line: 'A storm, a ship and a great fish',
+    skyTop: 0x4a6a8e, skyHorizon: 0xb8d0dc, skyBottom: 0x86aab8, fog: 0x9ebccc,
+    ground: 0xd8c89a, road: 0xe6dcb8, sun: 0xf0f8ff,
+    hemiSky: 0xdcf0ff, hemiGround: 0x6a8a90, light: 0xeef6ff, lightI: 1.9, hemiI: 1.35,
+    sunDir: [0.35, 0.45, -1], stars: 0,
+  },
+  {
+    id: 'babylon', name: 'By the Rivers of Babylon', he: 'נהרות בבל', line: 'Harps hung on the willow trees',
+    skyTop: 0x2f6cb0, skyHorizon: 0xf0cf9a, skyBottom: 0xc8a06e, fog: 0xdcb886,
+    ground: 0xb89a62, road: 0xdcc08e, sun: 0xffeccc,
+    hemiSky: 0xffe4c0, hemiGround: 0x8a6a3a, light: 0xffeed8, lightI: 2.2, hemiI: 1.25,
+    sunDir: [-0.35, 0.3, -1], stars: 0,
+  },
+  {
+    id: 'shushan', name: 'Shushan the Palace', he: 'שושן הבירה', line: 'Queen Esther saves her people',
+    skyTop: 0x3a5aa8, skyHorizon: 0xf6c890, skyBottom: 0xd8986a, fog: 0xe8b080,
+    ground: 0xc89a6a, road: 0xe8d0a8, sun: 0xffe2b8,
+    hemiSky: 0xffdcc0, hemiGround: 0x8a5a3a, light: 0xffe6cc, lightI: 2.1, hemiI: 1.25,
+    sunDir: [0.4, 0.25, -1], stars: 0,
+  },
+  {
+    id: 'modiin', name: 'Modiin of the Maccabees', he: 'מודיעין', line: 'A little oil that lasted eight nights',
+    skyTop: 0x1a2250, skyHorizon: 0x6a6a9a, skyBottom: 0x404466, fog: 0x4c5070,
+    ground: 0x7a8a5a, road: 0xb8b08c, sun: 0xffe8c0,
+    hemiSky: 0xd0d0ff, hemiGround: 0x4a5034, light: 0xffe6c8, lightI: 1.4, hemiI: 1.25,
+    sunDir: [0.25, 0.55, -1], stars: 1,
+  },
+  {
+    id: 'safed', name: 'Safed', he: 'צפת', line: 'The blue city of the mystics, high in the hills',
+    skyTop: 0x3a7ad0, skyHorizon: 0xd6e6f4, skyBottom: 0xa8b8c8, fog: 0xc0d0e0,
+    ground: 0x9aa878, road: 0xe6e2d8, sun: 0xffffff,
+    hemiSky: 0xe8f2ff, hemiGround: 0x6a7a5a, light: 0xf6faff, lightI: 2.1, hemiI: 1.35,
+    sunDir: [-0.2, 0.55, -1], stars: 0,
+  },
+  {
+    id: 'brooklyn', name: 'Brooklyn', he: 'ברוקלין', line: 'Over the bridge to bagels and brownstones',
+    skyTop: 0x4a7ab8, skyHorizon: 0xf0d6b8, skyBottom: 0xb8a088, fog: 0xd8c0a8,
+    ground: 0x6a6a6a, road: 0x8a8a8a, sun: 0xfff0dc,
+    hemiSky: 0xffeedc, hemiGround: 0x6a5040, light: 0xfff0e0, lightI: 2.0, hemiI: 1.3,
+    sunDir: [-0.4, 0.3, -1], stars: 0,
+  },
+  {
+    id: 'coney', name: 'Coney Island', he: 'קוני איילנד', line: 'The boardwalk, the big wheel and the waves',
+    skyTop: 0x3a94e0, skyHorizon: 0xd8f0f8, skyBottom: 0xf0e0b8, fog: 0xe2eef0,
+    ground: 0xeedcb0, road: 0xb8946a, sun: 0xffffff,
+    hemiSky: 0xf0faff, hemiGround: 0xa89070, light: 0xfffcf4, lightI: 2.3, hemiI: 1.4,
+    sunDir: [0.3, 0.6, -1], stars: 0,
   },
 ];
 
