@@ -213,7 +213,7 @@ export class UI {
     };
     const famous = L.SKINS.filter((it) => it.famous).map((it) => look('skin', it, `linear-gradient(${hex(it.hair || it.hatColor || it.wrap || 0x3a2618)} 34%, #c68a5e 34% 58%, ${hex(it.top)} 58%)`)).join('');
     const skins = L.SKINS.filter((it) => !it.famous).map((it) => look('skin', it, `linear-gradient(${hex(it.top)} 60%, ${hex(it.hem)} 60%)`)).join('');
-    const kips = L.KIPPAHS.map((it) => look('kippah', it, it.stripes ? `conic-gradient(${it.stripes.map(hex).join(',')})` : `radial-gradient(${hex(it.color)} 62%, ${hex(it.rim)} 64%)`)).join('');
+    const kips = L.KIPPAHS.map((it) => look('kippah', it, it.stripes ? `conic-gradient(${it.stripes.map(hex).join(',')})` : it.spots ? `radial-gradient(circle at 30% 35%, ${hex(it.spots)} 9%, transparent 11%), radial-gradient(circle at 68% 40%, ${hex(it.spots)} 9%, transparent 11%), radial-gradient(circle at 48% 70%, ${hex(it.spots)} 9%, transparent 11%), ${hex(it.color)}` : `radial-gradient(${hex(it.color)} 62%, ${hex(it.rim)} 64%)`)).join('');
     $('shop-list').innerHTML = `<li class="shop-head">Upgrades · keep forever</li>${ups}<li class="shop-head">Power-ups · used on your next run</li>${items}<li class="shop-head">Famous Jewish people · keep forever</li>${famous}<li class="shop-head">Outfit colours · keep forever</li>${skins}<li class="shop-head">Kippahs · keep forever</li>${kips}`;
   }
 

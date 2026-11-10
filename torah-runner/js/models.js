@@ -154,7 +154,8 @@ export const KIPPAHS = [
   { id: 'red', name: 'Red kippah', color: 0xc8302a, rim: 0xf0b93a, price: 200 },
   { id: 'green', name: 'Green kippah', color: 0x2f8f4a, rim: 0xf0b93a, price: 200 },
   { id: 'gold', name: 'Gold kippah', color: 0xf0b93a, rim: 0x8a5a0b, price: 400 },
-  { id: 'rainbow', name: 'Rainbow kippah', color: 0xe2483d, rim: 0x3fae5a, price: 500, star: 0xffffff, stripes: [0xe2483d, 0xffd24a, 0x3fae5a, 0x2c6fd6] },
+  { id: 'rainbow', name: 'Rainbow kippah', color: 0xe2483d, rim: 0x3fae5a, price: 500, star: 0xffffff, stripes: [0x7a4a9a, 0x2c6fd6, 0x3fae5a, 0xffd24a, 0xff9a3c, 0xe2483d] },
+  { id: 'leopard', name: 'Leopard kippah', color: 0xd8a24a, rim: 0x3a2414, spots: 0x2a1a10, spots2: 0x8a5a2a, star: 0x2a1a10, price: 450 },
 ];
 
 export function outfitGeos(o) {
@@ -203,9 +204,23 @@ export function outfitGeos(o) {
   if (o.kippah) {
     // A kippah sits on the top of the head, a little toward the back.
     const k = o.kippah;
-    headParts.push(part(new THREE.SphereGeometry(0.2, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), k.color, [0, 0.21, 0.05], [0, 0, 0], [1, 0.45, 1]));
+    if (k.stripes) {
+      // Rainbow: the dome itself is made of coloured bands, from the top down.
+      const n = k.stripes.length, step = Math.PI / 2 / n;
+      k.stripes.forEach((c, i) => headParts.push(part(new THREE.SphereGeometry(0.2, 16, 3, 0, Math.PI * 2, i * step, step), c, [0, 0.21, 0.05], [0, 0, 0], [1, 0.45, 1], 0)));
+    } else {
+      headParts.push(part(new THREE.SphereGeometry(0.2, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), k.color, [0, 0.21, 0.05], [0, 0, 0], [1, 0.45, 1]));
+    }
+    if (k.spots) {
+      // Leopard: dark rosettes scattered over the dome.
+      for (let i = 0; i < 16; i++) {
+        const th = 0.25 + (i % 4) * 0.33, ph = i * 2.4;
+        const x = Math.sin(th) * Math.cos(ph) * 0.2, z = Math.sin(th) * Math.sin(ph) * 0.2, y = Math.cos(th) * 0.2 * 0.45;
+        headParts.push(part(ICO, k.spots, [x, 0.21 + y + 0.004, 0.05 + z], [i, i, 0], [0.026, 0.012, 0.026], 0));
+        if (i % 2) headParts.push(part(ICO, k.spots2 || k.spots, [x * 1.02, 0.21 + y + 0.006, 0.05 + z * 1.02], [i, 0, i], [0.012, 0.008, 0.012], 0));
+      }
+    }
     headParts.push(part(new THREE.CylinderGeometry(0.205, 0.205, 0.025, 12, 1, true), k.rim, [0, 0.215, 0.05]));
-    if (k.stripes) k.stripes.forEach((c, n) => headParts.push(part(new THREE.CylinderGeometry(0.16 - n * 0.03, 0.16 - n * 0.03, 0.02, 12, 1, true), c, [0, 0.24 + n * 0.012, 0.05])));
     starOn(0.302, 0.05, k.color, 0.085, k.star);
   } else if (o.wrap) {
     headParts.push(box(o.wrap, [0, 0.19, 0], [0.47, 0.11, 0.47]), box(o.band, [0, 0.135, 0], [0.48, 0.035, 0.48]));
