@@ -175,9 +175,9 @@ export class Boss {
     $('boss-tiles').innerHTML = '';
     for (const w of shuffle([...picks, ...decoys])) {
       const t = document.createElement('div');
-      t.className = 'boss-tile'; t.dataset.he = w.he; t.dataset.en = w.en; t.lang = 'he'; t.dir = 'rtl';
-      t.textContent = w.he;
-      t.title = w.tr;
+      t.className = 'boss-tile'; t.dataset.he = w.he; t.dataset.tr = w.tr; t.dataset.en = w.en;
+      t.textContent = w.tr; // the word spelled in English letters (Shalom, Torah…)
+      t.title = w.he;
       $('boss-tiles').appendChild(t);
     }
     $('boss-round').textContent = `Round ${this.round + 1} of ${ROUNDS}`;
@@ -190,7 +190,7 @@ export class Boss {
     if (tile.dataset.en === boxEl.dataset.en) {
       tile.classList.add('used');
       boxEl.classList.add('done');
-      boxEl.querySelector('.bb-slot').textContent = tile.dataset.he;
+      boxEl.querySelector('.bb-slot').textContent = tile.dataset.tr;
       this.used.add(tile.dataset.he);
       this.hp--;
       this.hitT = 0.4;
@@ -210,7 +210,7 @@ export class Boss {
     } else {
       boxEl.classList.add('wrong');
       setTimeout(() => boxEl.classList.remove('wrong'), 450);
-      this.say(`Wrong! ${tile.dataset.he} does not mean "${boxEl.dataset.en.toLowerCase()}".`);
+      this.say(`Wrong! ${tile.dataset.tr} does not mean "${boxEl.dataset.en.toLowerCase()}".`);
       this.hurt();
     }
   }

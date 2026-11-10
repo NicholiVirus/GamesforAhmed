@@ -88,21 +88,21 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .boss-boxes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .boss-box { font: inherit; display: grid; gap: 4px; justify-items: center; padding: 8px 6px; border-radius: 10px; border: 2px dashed rgba(77, 63, 44, 0.55); background: rgba(255, 252, 240, 0.6); color: var(--ink); cursor: pointer; min-height: 74px; }
 .boss-box .bb-en { font-weight: 800; font-size: 0.85rem; text-align: center; }
-.boss-box .bb-slot { font-family: var(--font-display); font-size: 1.4rem; color: rgba(77, 63, 44, 0.35); }
+.boss-box .bb-slot { font-weight: 800; font-size: 1.05rem; color: rgba(77, 63, 44, 0.35); }
 .boss-box.over { border-color: var(--gold); background: rgba(240, 185, 58, 0.25); }
 .boss-box.done { border-style: solid; border-color: #3f8f4a; background: rgba(63, 143, 74, 0.18); }
 .boss-box.done .bb-slot { color: #1f5a2a; }
 .boss-box.wrong { animation: bossShake 0.4s; border-color: #c0392b; }
 @keyframes bossShake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 .boss-tiles { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
-.boss-tile { font-family: var(--font-display); font-size: 1.6rem; line-height: 1; padding: 10px 14px; border-radius: 10px; background: linear-gradient(#f6d27a, #e8b64a); color: #1b1830; box-shadow: 0 3px 0 #a87a2a; cursor: grab; touch-action: none; }
+.boss-tile { font-weight: 800; font-size: 1.15rem; line-height: 1; padding: 10px 14px; border-radius: 10px; background: linear-gradient(#f6d27a, #e8b64a); color: #1b1830; box-shadow: 0 3px 0 #a87a2a; cursor: grab; touch-action: none; }
 .boss-tile.sel { outline: 3px solid #2c6fd6; }
 .boss-tile.lifted { opacity: 0.35; }
 .boss-tile.used { visibility: hidden; }
 .boss-tile.ghost { position: fixed; z-index: 100; pointer-events: none; transform: scale(1.08) rotate(-3deg); box-shadow: 0 10px 20px rgba(0,0,0,0.35); }
 .boss-erase { display: flex; margin: 10px auto 0; font-size: 1.1rem; }
 .boss-erase span { font-family: var(--font-display); font-size: 1.5rem; }
-@media (max-width: 560px) { .boss-boxes { grid-template-columns: repeat(2, 1fr); } .boss-tile { font-size: 1.4rem; padding: 9px 12px; } }
+@media (max-width: 560px) { .boss-boxes { grid-template-columns: repeat(2, 1fr); } .boss-tile { font-size: 1rem; padding: 9px 12px; } }
 .tablet-ico { display: inline-block; width: 11px; height: 14px; margin-right: 5px; background: #cfc7b8; border: 1.5px solid #7b7062; border-radius: 6px 6px 1px 1px; }
 #tablets { display: inline-flex; align-items: center; font-weight: 800; font-variant-numeric: tabular-nums; }
 .manna-dot {
@@ -625,7 +625,7 @@ kbd {
       </div>
       <p id="boss-say" class="boss-say" aria-live="polite"></p>
       <div id="boss-play">
-        <div class="boss-row"><span id="boss-round">Round 1 of 3</span><span>Drag each word into the box with its meaning</span><span id="boss-timer" class="boss-timer">35s</span></div>
+        <div class="boss-row"><span id="boss-round">Round 1 of 3</span><span>Drag each word into the box with its English meaning</span><span id="boss-timer" class="boss-timer">35s</span></div>
         <div id="boss-boxes" class="boss-boxes"></div>
         <div id="boss-tiles" class="boss-tiles"></div>
       </div>
