@@ -773,8 +773,12 @@ class Game {
   reachFinish() {
     this.finished = true;
     const n = this.tablets.length;
-    if (n < COMMANDMENTS.length) {
-      this.ui.hint(`<b>The end of the road!</b> You carried ${n} of 10 commandments. Start from Mount Ararat and find all 10 to win.`, 6000);
+    const w = this.wordsDone.length, NEED_WORDS = 26;
+    if (n < COMMANDMENTS.length || w < NEED_WORDS) {
+      const miss = [];
+      if (n < COMMANDMENTS.length) miss.push(`${n} of 10 commandments`);
+      if (w < NEED_WORDS) miss.push(`${w} of ${NEED_WORDS} words`);
+      this.ui.hint(`<b>The end of the road!</b> You have ${miss.join(' and ')}. To face the final boss you need all 10 commandments and at least ${NEED_WORDS} words in one run, starting from the Garden of Eden.`, 7000);
       return;
     }
     this.startBoss();
