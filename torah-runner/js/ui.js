@@ -38,11 +38,12 @@ export class UI {
     on('btn-shop-close', () => h.closeShop());
     const list = $('shop-list');
     if (list) list.addEventListener('click', (e) => {
-      const b = e.target.closest('button[data-buy], button[data-up], button[data-look]');
+      const b = e.target.closest('button[data-buy], button[data-up], button[data-look], button[data-preview]');
       if (!b) return;
       e.stopPropagation();
-      if (b.dataset.look) { const [k, id] = b.dataset.look.split(':'); h.buyLook(k, id); } else if (b.dataset.up) h.buyUpgrade(b.dataset.up); else h.buy(b.dataset.buy);
+      if (b.dataset.preview) { const [k, id] = b.dataset.preview.split(':'); h.previewLook(k, id); } else if (b.dataset.look) { const [k, id] = b.dataset.look.split(':'); h.buyLook(k, id); } else if (b.dataset.up) h.buyUpgrade(b.dataset.up); else h.buy(b.dataset.buy);
     });
+    on('btn-preview-back', () => h.endPreview());
     on('btn-word-continue', () => h.continueWord());
     on('btn-skip', () => h.skipRide());
     on('btn-scores', () => h.openScores());
@@ -88,6 +89,11 @@ export class UI {
 
   setScore(v, mult = 1) { const s = fmt(v) + (mult > 1 ? ` ×${mult}` : ''); if (this.last.score !== s) { this.last.score = s; $('score').textContent = s; } }
   setDist(m) { const s = fmt(m) + ' m'; if (this.last.dist !== s) { this.last.dist = s; $('dist').textContent = s; } }
+  showPreview(name) {
+    $('preview-name').textContent = name;
+    $('preview-bar').hidden = !name;
+  }
+
   setTablets(n) {
     if (this.last.tablets === n) return;
     this.last.tablets = n;
@@ -203,7 +209,7 @@ export class UI {
         : has ? `<button class="btn btn-primary" type="button" data-look="${key}">Wear</button>`
           : btn(`data-look="${key}"`, it.price, wallet >= it.price);
       const sub = it.famous ? it.about : kind === 'skin' ? 'Outfit colour in every place' : 'Worn instead of a hat or head wrap';
-      return `<li><span class="swatch" style="background:${swatch}"></span><span class="shop-name"><b>${it.name}</b><small>${sub}</small></span>${action}</li>`;
+      return `<li><span class="swatch" style="background:${swatch}"></span><span class="shop-name"><b>${it.name}</b><small>${sub}</small></span><span class="look-btns"><button class="btn btn-ghost" type="button" data-preview="${key}">Preview</button>${action}</span></li>`;
     };
     const famous = L.SKINS.filter((it) => it.famous).map((it) => look('skin', it, `linear-gradient(${hex(it.hair || it.hatColor || it.wrap || 0x3a2618)} 34%, #c68a5e 34% 58%, ${hex(it.top)} 58%)`)).join('');
     const skins = L.SKINS.filter((it) => !it.famous).map((it) => look('skin', it, `linear-gradient(${hex(it.top)} 60%, ${hex(it.hem)} 60%)`)).join('');

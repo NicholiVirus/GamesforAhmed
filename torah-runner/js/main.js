@@ -110,6 +110,7 @@ class Game {
       sound: () => this.toggleSound(), openScroll: () => this.openScroll(), closeScroll: () => this.closeScroll(),
       openShop: () => this.openShop(), openMap: () => this.openMap(), pickStart: (id) => this.pickStart(id), unlockPlace: (id) => this.unlockPlace(id), buy: (t) => this.buy(t), buyUpgrade: (id) => this.buyUpgrade(id), buyLook: (kind, id) => this.buyLook(kind, id), useStar: () => this.useStar(), closeShop: () => this.ui.show('screen-start'),
       continueWord: () => this.continueWord(), skipRide: () => this.skipRide(),
+      previewLook: (k, id) => this.previewLook(k, id), endPreview: () => this.endPreview(),
     });
 
     // Player, shield and a soft shadow.
@@ -465,6 +466,24 @@ class Game {
 
   // Cosmetics: buy once, then wear any you own. Wearing the same one again takes it off.
   look() { return { skin: this.store.skin, kippah: this.store.kippah }; }
+
+  // Try a cosmetic on before buying: the shop steps aside and the runner turns on the menu stage.
+  previewLook(kind, id) {
+    const item = (kind === 'skin' ? SKINS : KIPPAHS).find((x) => x.id === id);
+    if (!item) return;
+    const style = this.look();
+    style[kind] = id;
+    this.p.wear(this.outfit, style);
+    this.sound.play('click');
+    this.ui.show(null);
+    this.ui.showPreview(item.name);
+  }
+
+  endPreview() {
+    this.p.wear(this.outfit, this.look());
+    this.ui.showPreview('');
+    this.openShop();
+  }
 
   buyLook(kind, id) {
     const list = kind === 'skin' ? SKINS : KIPPAHS;
